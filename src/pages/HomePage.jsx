@@ -5,6 +5,7 @@ import HeroCarousel from '../components/HeroCarousel/HeroCarousel.jsx'
 import ProductCard from '../components/ProductCard/ProductCard.jsx'
 import Footer from '../components/Footer/Footer.jsx'
 import { supabase } from '../lib/supabase.js'
+import { sortByOrder } from '../lib/ordering.js'
 import { useSiteSettings } from '../cms/SiteSettingsContext.jsx'
 import { dummyProducts } from '../data/products.js'
 import './HomePage.css'
@@ -25,7 +26,15 @@ export default function HomePage() {
           .order('order', { ascending: true });
 
         if (slidesError) console.error('Error fetching hero slides:', slidesError);
-        else setHeroSlides(slides || []);
+        else setHeroSlides(sortByOrder((slides || []).filter((s) => s.is_active !== false))
+          .map((s) => ({
+            id: s.id,
+            title: s.title,
+            subtitle: s.subtitle,
+            description: s.description,
+            image: s.image,
+            cta: { text: s.cta_text, link: s.cta_link },
+          })));
 
         // Fetch brand partners
         const { data: partners, error: partnersError } = await supabase
@@ -34,7 +43,7 @@ export default function HomePage() {
           .order('order', { ascending: true });
 
         if (partnersError) console.error('Error fetching brand partners:', partnersError);
-        else setBrandPartners(partners || []);
+        else setBrandPartners(sortByOrder((partners || []).filter((p) => p.is_active !== false)));
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {

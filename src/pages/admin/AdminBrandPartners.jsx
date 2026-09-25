@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase.js';
+import { sortByOrder, nextOrder, normalizeOrderInput } from '../../lib/ordering.js';
 import './AdminBrandPartners.css';
 
 export default function AdminBrandPartners() {
@@ -31,7 +32,7 @@ export default function AdminBrandPartners() {
       .order('order', { ascending: true });
 
     if (error) console.error(error);
-    else setPartners(data || []);
+    else setPartners(sortByOrder(data || []));
     setLoading(false);
   };
 
@@ -44,7 +45,9 @@ export default function AdminBrandPartners() {
     else if (!isValidUrl(formData.website_url) && formData.website_url !== '') {
       newErrors.website_url = 'Format URL tidak valid';
     }
-    if (formData.order < 0) newErrors.order = 'Urutan minimal 0';
+    if (formData.order < 0 || !Number.isFinite(Number(formData.order))) {
+      newErrors.order = 'Urutan harus angka 0 atau lebih';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -74,13 +77,12 @@ export default function AdminBrandPartners() {
   };
 
   const handleAdd = () => {
-    const maxOrder = partners.length > 0 ? Math.max(...partners.map(p => p.order)) : 0;
     setFormData({
       id: null,
       name: '',
       logo: '',
       website_url: '',
-      order: maxOrder + 1,
+      order: nextOrder(partners),
       is_active: true,
     });
     setErrors({});
@@ -97,7 +99,7 @@ export default function AdminBrandPartners() {
       name: formData.name.trim(),
       logo: formData.logo.trim(),
       website_url: formData.website_url.trim() || null,
-      order: parseInt(formData.order) || 0,
+      order: normalizeOrderInput(formData.order),
       is_active: formData.is_active,
     };
 

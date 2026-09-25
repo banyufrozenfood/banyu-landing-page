@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase.js';
+import { sortByOrder, nextOrder, normalizeOrderInput } from '../../lib/ordering.js';
 import './AdminShared.css';
 import './AdminHeroSlides.css';
 
@@ -35,7 +36,7 @@ export default function AdminHeroSlides() {
       .order('order', { ascending: true });
 
     if (error) console.error(error);
-    else setSlides(data || []);
+    else setSlides(sortByOrder(data || []));
     setLoading(false);
   };
 
@@ -49,7 +50,9 @@ export default function AdminHeroSlides() {
     else if (!isValidUrl(formData.cta_link) && !formData.cta_link.startsWith('/')) {
       newErrors.cta_link = 'Gunakan URL lengkap (https://...) atau path relatif (contoh: /produk)';
     }
-    if (formData.order < 0) newErrors.order = 'Urutan minimal 0';
+    if (formData.order < 0 || !Number.isFinite(Number(formData.order))) {
+      newErrors.order = 'Urutan harus angka 0 atau lebih';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -79,7 +82,6 @@ export default function AdminHeroSlides() {
   };
 
   const handleAdd = () => {
-    const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : 0;
     setFormData({
       id: null,
       title: '',
@@ -88,7 +90,7 @@ export default function AdminHeroSlides() {
       image: '',
       cta_text: 'Lihat Produk',
       cta_link: '/produk',
-      order: maxOrder + 1,
+      order: nextOrder(slides),
       is_active: true,
     });
     setErrors({});
@@ -108,7 +110,7 @@ export default function AdminHeroSlides() {
       image: formData.image.trim(),
       cta_text: formData.cta_text.trim(),
       cta_link: formData.cta_link.trim(),
-      order: parseInt(formData.order) || 0,
+      order: normalizeOrderInput(formData.order),
       is_active: formData.is_active,
     };
 

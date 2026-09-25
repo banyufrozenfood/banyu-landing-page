@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase.js';
+import { sortByOrder, nextOrder, normalizeOrderInput } from '../../lib/ordering.js';
 import './AdminShared.css';
 
 export default function AdminBanners() {
@@ -23,7 +24,7 @@ export default function AdminBanners() {
       .order('order', { ascending: true });
     
     if (error) console.error(error);
-    else setBanners(data || []);
+    else setBanners(sortByOrder(data || []));
     setLoading(false);
   };
 
@@ -44,7 +45,7 @@ export default function AdminBanners() {
   };
 
   const handleAdd = () => {
-    setFormData({ id: null, title: '', subtitle: '', image: '', order: 0 });
+    setFormData({ id: null, title: '', subtitle: '', image: '', order: nextOrder(banners) });
     setShowForm(true);
   };
 
@@ -56,7 +57,7 @@ export default function AdminBanners() {
       title: formData.title,
       subtitle: formData.subtitle,
       image: formData.image,
-      order: parseInt(formData.order) || 0
+      order: normalizeOrderInput(formData.order)
     };
 
     let error;
