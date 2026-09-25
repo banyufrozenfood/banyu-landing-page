@@ -1,0 +1,192 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import Navbar from '../components/Navbar/Navbar.jsx'
+import HeroCarousel from '../components/HeroCarousel/HeroCarousel.jsx'
+import ProductCard from '../components/ProductCard/ProductCard.jsx'
+import Footer from '../components/Footer/Footer.jsx'
+import { supabase } from '../lib/supabase.js'
+import { useSiteSettings } from '../cms/SiteSettingsContext.jsx'
+import { dummyProducts } from '../data/products.js'
+import './HomePage.css'
+
+export default function HomePage() {
+  const { settings } = useSiteSettings();
+  const [heroSlides, setHeroSlides] = useState([]);
+  const [brandPartners, setBrandPartners] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch hero slides
+        const { data: slides, error: slidesError } = await supabase
+          .from('hero_slides')
+          .select('*')
+          .order('order', { ascending: true });
+
+        if (slidesError) console.error('Error fetching hero slides:', slidesError);
+        else setHeroSlides(slides || []);
+
+        // Fetch brand partners
+        const { data: partners, error: partnersError } = await supabase
+          .from('brand_partners')
+          .select('*')
+          .order('order', { ascending: true });
+
+        if (partnersError) console.error('Error fetching brand partners:', partnersError);
+        else setBrandPartners(partners || []);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  const featuredProducts = dummyProducts.filter((p) => p.is_featured).slice(0, 4);
+  const effectiveHeroSlides = heroSlides.length > 0 ? heroSlides : [
+    { id: 1, title: 'Frozen Food Berkualitas', subtitle: 'Untuk Keluarga Indonesia', description: 'Produk beku pilihan dengan bahan terbaik, diproses higienis dan dikemas vakum untuk menjaga kesegaran.', image: 'https://placehold.co/1200x600/0099FF/white?text=Banyu+Frozen+Food', cta: { text: 'Lihat Produk', link: '/produk' } },
+    { id: 2, title: 'Praktis & Lezat', subtitle: 'Siap Saji dalam Hitungan Menit', description: 'Nugget, sosis, dimsum, bakso — tinggal goreng atau kukus. Cocok untuk bekal sekolah dan menu harian.', image: 'https://placehold.co/1200x600/66CCFF/003366?text=Praktis+%26+Lezat', cta: { text: 'Pesan Sekarang', link: '/produk' } },
+    { id: 3, title: 'Pesan Mudah', subtitle: 'Via Tokopedia, Shopee & WhatsApp', description: 'Pilih channel favorit kamu untuk memesan. Pengiriman cepat ke seluruh Indonesia.', image: 'https://placehold.co/1200x600/0077CC/white?text=Pesan+Mudah', cta: { text: 'Hubungi Kami', link: '/lokasi' } },
+  ];
+
+  if (loading) return <div>Memuat halaman beranda...</div>;
+
+  const sections = settings.home.sections;
+
+  return (
+    <div className="home-page">
+      <Navbar />
+      <HeroCarousel slides={effectiveHeroSlides} defaultSlides={[
+        { id: 1, title: 'Frozen Food Berkualitas', subtitle: 'Untuk Keluarga Indonesia', description: 'Produk beku pilihan dengan bahan terbaik, diproses higienis dan dikemas vakum untuk menjaga kesegaran.', image: 'https://placehold.co/1200x600/0099FF/white?text=Banyu+Frozen+Food', cta: { text: 'Lihat Produk', link: '/produk' } },
+        { id: 2, title: 'Praktis & Lezat', subtitle: 'Siap Saji dalam Hitungan Menit', description: 'Nugget, sosis, dimsum, bakso — tinggal goreng atau kukus. Cocok untuk bekal sekolah dan menu harian.', image: 'https://placehold.co/1200x600/66CCFF/003366?text=Praktis+%26+Lezat', cta: { text: 'Pesan Sekarang', link: '/produk' } },
+        { id: 3, title: 'Pesan Mudah', subtitle: 'Via Tokopedia, Shopee & WhatsApp', description: 'Pilih channel favorit kamu untuk memesan. Pengiriman cepat ke seluruh Indonesia.', image: 'https://placehold.co/1200x600/0077CC/white?text=Pesan+Mudah', cta: { text: 'Hubungi Kami', link: '/lokasi' } },
+      ]} />
+
+      {/* Keunggulan Toko */}
+      {sections.advantages && (
+        <section className="advantages">
+          <div className="container">
+            <div className="section-title">
+              <h2>{settings.home.advantagesTitle}</h2>
+              <p>{settings.home.advantagesSubtitle}</p>
+            </div>
+            <div className="advantages__grid">
+              {settings.home.advantages.map((item, idx) => (
+                <div key={item.id || idx} className="advantage-card">
+                  <div className="advantage-card__icon">{item.icon}</div>
+                  <h3 className="advantage-card__title">{item.title}</h3>
+                  <p className="advantage-card__desc">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Produk Unggulan */}
+      {sections.featured && (
+        <section className="featured-products">
+          <div className="container">
+            <div className="section-title">
+              <h2>Produk Unggulan</h2>
+              <p>Pilihan terbaik yang paling disukai pelanggan kami</p>
+            </div>
+            <div className="featured-products__grid">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            <div className="featured-products__cta">
+              <Link to="/produk" className="btn btn-secondary">
+                Lihat Semua Produk
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Integrasi Marketplace */}
+      {sections.marketplace && (
+        <section className="marketplace">
+        <div className="container">
+          <div className="section-title">
+            <h2>Belanja di Marketplace Favorit</h2>
+            <p>Kunjungi toko kami di marketplace pilihan Anda</p>
+          </div>
+          <div className="marketplace__grid">
+            <a
+              href={settings.home.marketplace.tokopediaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="marketplace-card marketplace-card--tokopedia"
+            >
+              <div className="marketplace-card__icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2 2h20v20H2V2zm2 2v16h16V4H4zm3 3h10v2H7V7zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/>
+                </svg>
+              </div>
+              <div className="marketplace-card__info">
+                <h3>Tokopedia</h3>
+                <p>Kunjungi toko kami di Tokopedia untuk promo eksklusif dan gratis ongkir</p>
+              </div>
+              <span className="marketplace-card__arrow">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
+            </a>
+            <a
+              href={settings.home.marketplace.shopeeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="marketplace-card marketplace-card--shopee"
+            >
+              <div className="marketplace-card__icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2 2h20v20H2V2zm2 2v16h16V4H4zm4 4a4 4 0 018 0v1H8V8zm-1 3h10v7H7v-7zm2 2v3h6v-3H9z"/>
+                </svg>
+              </div>
+              <div className="marketplace-card__info">
+                <h3>Shopee</h3>
+                <p>Temukan produk kami di Shopee dengan cashback dan voucher menarik</p>
+              </div>
+              <span className="marketplace-card__arrow">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
+            </a>
+          </div>
+        </div>
+      </section>
+      )}
+
+      {/* Brand Partner */}
+      {sections.brandPartners && brandPartners.length > 0 && (
+        <section className="brand-partners">
+          <div className="container">
+            <div className="section-title">
+              <h2>Brand Partner Kami</h2>
+              <p>Kami bekerja sama dengan brand frozen food ternama di Indonesia</p>
+            </div>
+            <div className="brand-partners__grid">
+              {brandPartners.map((brand, idx) => (
+                <div key={brand.id || idx} className="brand-partner-card">
+                  <img src={brand.logo} alt={brand.name} loading="lazy" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <Footer />
+    </div>
+  )
+}

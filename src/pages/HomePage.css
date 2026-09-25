@@ -1,0 +1,424 @@
+/* ========================
+   Keunggulan Section
+======================== */
+.advantages {
+  padding: 6rem 0;
+  background: linear-gradient(to bottom, var(--bg-white), var(--bg-light));
+}
+
+.advantages__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2rem;
+}
+
+.advantage-card {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.advantage-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(0, 153, 255, 0.05), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.advantage-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-xl);
+  border-color: transparent;
+}
+
+.advantage-card:hover::before {
+  opacity: 1;
+}
+
+.advantage-card__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--primary-light), white);
+  box-shadow: 0 4px 10px rgba(0, 153, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 1.5rem;
+  transition: transform 0.4s ease;
+}
+
+.advantage-card:hover .advantage-card__icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.advantage-card__title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  color: var(--primary-dark);
+}
+
+.advantage-card__desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+@media (max-width: 1024px) {
+  .advantages {
+    padding: 4.5rem 0;
+  }
+
+  .advantages__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .advantages {
+    padding: 3.5rem 0;
+  }
+
+  .advantages__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .advantages__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .advantage-card {
+    padding: 2rem 1.25rem;
+  }
+}
+
+/* ========================
+   Produk Unggulan Section
+======================== */
+.featured-products {
+  padding: 5rem 0;
+}
+
+.featured-products__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.featured-products__cta {
+  text-align: center;
+  margin-top: 2.5rem;
+}
+
+@media (max-width: 1024px) {
+  .featured-products {
+    padding: 3.5rem 0;
+  }
+
+  .featured-products__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .featured-products {
+    padding: 3rem 0;
+  }
+
+  .featured-products__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .featured-products__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ========================
+   Marketplace Section
+======================== */
+.marketplace {
+  padding: 6rem 0;
+  background: linear-gradient(to bottom, var(--bg-light), var(--bg-white));
+}
+
+.marketplace__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.marketplace-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2.5rem;
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-md);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.marketplace-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-gray);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s ease;
+  z-index: -1;
+  border-radius: inherit;
+}
+
+.marketplace-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-xl);
+}
+
+.marketplace-card:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.marketplace-card--tokopedia:hover {
+  border-color: #42b549;
+}
+.marketplace-card--tokopedia:hover::before {
+  background: rgba(66, 181, 73, 0.05);
+}
+
+.marketplace-card--shopee:hover {
+  border-color: #EE4D2D;
+}
+.marketplace-card--shopee:hover::before {
+  background: rgba(238, 77, 45, 0.05);
+}
+
+.marketplace-card__icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.4s ease;
+}
+
+.marketplace-card:hover .marketplace-card__icon {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.marketplace-card--tokopedia .marketplace-card__icon {
+  background: linear-gradient(135deg, #E8F5E9, #c8e6c9);
+  color: #42b549;
+  box-shadow: 0 4px 10px rgba(66, 181, 73, 0.2);
+}
+
+.marketplace-card--shopee .marketplace-card__icon {
+  background: linear-gradient(135deg, #FFF3EE, #ffe0d2);
+  color: #EE4D2D;
+  box-shadow: 0 4px 10px rgba(238, 77, 45, 0.2);
+}
+
+.marketplace-card__info {
+  flex: 1;
+}
+
+.marketplace-card__info h3 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.marketplace-card__info p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.marketplace-card__arrow {
+  color: var(--text-light);
+  flex-shrink: 0;
+  transition: transform 0.4s ease, color 0.4s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-gray);
+}
+
+.marketplace-card:hover .marketplace-card__arrow {
+  transform: translateX(8px);
+  background: var(--primary);
+  color: white;
+}
+
+@media (max-width: 1024px) {
+  .marketplace {
+    padding: 4.5rem 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .marketplace {
+    padding: 3.5rem 0;
+  }
+
+  .marketplace__grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .marketplace-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .marketplace-card__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+  }
+
+  .marketplace-card__icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .marketplace-card__info h3 {
+    font-size: 1.25rem;
+  }
+  
+  .marketplace-card__info p {
+    font-size: 0.938rem;
+  }
+}
+
+/* ========================
+   Brand Partner Section
+======================== */
+.brand-partners {
+  padding: 6rem 0;
+  background: var(--bg-white);
+}
+
+.brand-partners__grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2rem;
+  align-items: center;
+}
+
+.brand-partner-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-partner-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px var(--primary);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.brand-partner-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
+}
+
+.brand-partner-card:hover::after {
+  opacity: 1;
+}
+
+.brand-partner-card img {
+  max-height: 56px;
+  width: auto;
+  object-fit: contain;
+  filter: grayscale(100%) opacity(0.6);
+  transition: all 0.4s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-partner-card:hover img {
+  filter: grayscale(0%) opacity(1);
+  transform: scale(1.05);
+}
+
+@media (max-width: 1024px) {
+  .brand-partners {
+    padding: 4.5rem 0;
+  }
+
+  .brand-partners__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .brand-partners {
+    padding: 3.5rem 0;
+  }
+
+  .brand-partners__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+  
+  .brand-partner-card {
+    min-height: 80px;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-partners__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .brand-partner-card img {
+    max-height: 40px;
+  }
+}

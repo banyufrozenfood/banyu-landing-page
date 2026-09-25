@@ -1,0 +1,137 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import { supabase } from '../lib/supabase.js'
+import { RADIUS_OPTIONS } from './defaults.js'
+import { loadSettingsDoc, persistSettingsDoc } from './store.js'
+import './cms.css'
+
+const SiteSettingsContext = createContext(null)
+
+function setMeta(selector, attr, value) {
+  if (!value) return
+  let el = document.head.querySelector(selector)
+  if (!el) {
+    el = document.createElement('meta')
+    for (const [k, v] of Object.entries(attr)) {
+      if (k !== 'content') el.setAttribute(k, v)
+    }
+    document.head.appendChild(el)
+  }
+  el.setAttribute('content', value)
+}
+
+export function SiteSettingsProvider({ children }) {
+  const location = useLocation()
+  const [doc, setDoc] = useState(null)
+  const [isPreview, setIsPreview] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function init() {
+      const wantPreview = new URLSearchParams(window.location.search).get('preview') === 'draft'
+      let allowed = false
+      if (wantPreview) {
+        try {
+          const { data } = await supabase.auth.getSession()
+          allowed = !!data?.session
+        } catch {
+          allowed = false
+        }
+      }
+      const loaded = await loadSettingsDoc()
+      if (cancelled) return
+      setIsPreview(allowed)
+      setDoc(loaded)
+      setLoading(false)
+    }
+    init()
+    return () => { cancelled = true }
+  }, [])
+
+  const settings = useMemo(() => (doc ? (isPreview ? doc.draft : doc.published) : null), [doc, isPreview])
+
+  useEffect(() => {
+    if (!settings) return
+    const a = settings.appearance
+    const root = document.documentElement.style
+    root.setProperty('--primary', a.primary)
+    root.setProperty('--primary-dark', a.primaryDark)
+    root.setProperty('--primary-light', a.primaryLight)
+    root.setProperty('--secondary', a.secondary)
+    root.setProperty('--accent', a.accent)
+    root.setProperty('--accent-dark', a.accentDark)
+    const radii = (RADIUS_OPTIONS.find((r) => r.value === a.radius) || RADIUS_OPTIONS[1]).radii
+    root.setProperty('--radius-sm', radii.sm)
+    root.setProperty('--radius-md', radii.md)
+    root.setProperty('--radius-lg', radii.lg)
+    root.setProperty('--radius-xl', radii.xl)
+  }, [settings])
+
+  useEffect(() => {
+    if (!settings) return
+    document.title = settings.seo.title || settings.identity.businessName
+    setMeta('meta[name="description"]', { name: 'description' }, settings.seo.description)
+    setMeta('meta[property="og:title"]', { property: 'og:title' }, settings.seo.title)
+    setMeta('meta[property="og:description"]', { property: 'og:description' }, settings.seo.description)
+    if (settings.seo.ogImage) setMeta('meta[property="og:image"]', { property: 'og:image' }, settings.seo.ogImage)
+    if (settings.identity.faviconUrl) {
+      let link = document.head.querySelector('link[rel="icon"]')
+      if (!link) {
+        link = document.createElement('link')
+        link.rel = 'icon'
+        document.head.appendChild(link)
+      }
+      link.href = settings.identity.faviconUrl
+    }
+  }, [settings])
+
+  const saveDraft = useCallback(async (draft) => {
+    const next = { ...doc, draft, updatedAt: new Date().toISOString() }
+    const saved = await persistSettingsDoc(next)
+    setDoc({ ...next, ...saved })
+  }, [doc])
+
+  const publish = useCallback(async (draft) => {
+    const now = new Date().toISOString()
+    const next = { ...doc, draft, published: draft, updatedAt: now, publishedAt: now }
+    const saved = await persistSettingsDoc(next)
+    setDoc({ ...next, ...saved })
+  }, [doc])
+
+  const value = useMemo(() => {
+    if (!doc) return null
+    return {
+      settings,
+      loading,
+      isPreview,
+      storageMode: doc.mode,
+      draft: doc.draft,
+      published: doc.published,
+      updatedAt: doc.updatedAt,
+      publishedAt: doc.publishedAt,
+      hasUnpublished: JSON.stringify(doc.draft) !== JSON.stringify(doc.published),
+      saveDraft,
+      publish,
+    }
+  }, [doc, settings, loading, isPreview, saveDraft, publish])
+
+  if (loading || !value) return null
+
+  return (
+    <SiteSettingsContext.Provider value={value}>
+      {children}
+      {isPreview && (
+        <div className="cms-preview-bar">
+          Mode Pratinjau — perubahan belum diterbitkan ke pengunjung.
+        </div>
+      )}
+    </SiteSettingsContext.Provider>
+  )
+}
+
+export function useSiteSettings() {
+  const ctx = useContext(SiteSettingsContext)
+  if (!ctx) throw new Error('useSiteSettings harus dipakai di dalam SiteSettingsProvider')
+  return ctx
+}
