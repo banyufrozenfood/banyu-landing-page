@@ -41,19 +41,6 @@ export const DEFAULT_SETTINGS = {
   footer: {
     description:
       'Toko frozen food berkualitas untuk keluarga Indonesia. Produk beku pilihan dengan bahan terbaik, diproses higienis.',
-    navLinks: [
-      { id: 'f1', label: 'Home', link: '/' },
-      { id: 'f2', label: 'Semua Produk', link: '/produk' },
-      { id: 'f3', label: 'Lokasi Toko', link: '/lokasi' },
-    ],
-    categoryLinks: [
-      { id: 'c1', label: 'Nugget', link: '/produk?category=1' },
-      { id: 'c2', label: 'Sosis', link: '/produk?category=2' },
-      { id: 'c3', label: 'Bakso', link: '/produk?category=3' },
-      { id: 'c4', label: 'Dimsum', link: '/produk?category=4' },
-      { id: 'c5', label: 'Kentang', link: '/produk?category=5' },
-      { id: 'c6', label: 'Camilan', link: '/produk?category=6' },
-    ],
     creditNote: 'Project RPL — SMK Negeri 1 Cimahi',
   },
   home: {

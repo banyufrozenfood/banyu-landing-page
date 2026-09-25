@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import ImagePicker from '../../components/ui/ImagePicker.jsx'
@@ -100,14 +101,6 @@ function validate(form) {
   form.navbar.menu.forEach((m, i) => {
     if (!m.label.trim()) errors[`menu.${i}.label`] = 'Nama menu wajib diisi.'
     if (!isValidInternalLink(m.link)) errors[`menu.${i}.link`] = 'Link halaman harus diawali / (contoh: /produk).'
-  })
-  form.footer.navLinks.forEach((l, i) => {
-    if (!l.label.trim()) errors[`navLinks.${i}.label`] = 'Nama link wajib diisi.'
-    if (!isValidInternalLink(l.link)) errors[`navLinks.${i}.link`] = 'Link halaman harus diawali / (contoh: /produk).'
-  })
-  form.footer.categoryLinks.forEach((l, i) => {
-    if (!l.label.trim()) errors[`categoryLinks.${i}.label`] = 'Nama link wajib diisi.'
-    if (!isValidInternalLink(l.link)) errors[`categoryLinks.${i}.link`] = 'Link halaman harus diawali / (contoh: /produk?category=1).'
   })
   COLOR_FIELDS.forEach(({ key }) => {
     if (!isValidHexColor(form.appearance[key])) errors[`appearance.${key}`] = 'Warna harus format hex, contoh: #0099FF.'
@@ -301,16 +294,21 @@ export default function AdminSettings() {
 
           {tab === 'menu' && (
             <>
+              <div className="settings-note">
+                <strong>Cukup atur menu di sini sekali.</strong> Menu ini muncul di bagian atas website (navbar)
+                dan <em>otomatis</em> juga tampil di footer bagian "Navigasi".
+              </div>
               <EditableList
-                title="Menu Navbar"
+                title="Menu Website"
                 addLabel="Tambah Menu"
                 items={form.navbar.menu}
                 onChange={(items) => update((f) => { f.navbar.menu = items })}
                 makeItem={() => ({ id: uid(), label: '', link: '/', visible: true })}
+                emptyNote="Belum ada menu. Klik tombol tambah untuk menambahkan."
                 renderItem={(item, set, i) => (
                   <>
-                    <input placeholder="Nama menu" value={item.label} onChange={(e) => set({ label: e.target.value })} />
-                    <input placeholder="/produk" value={item.link} onChange={(e) => set({ link: e.target.value })} />
+                    <input placeholder="Nama menu (contoh: Produk)" value={item.label} onChange={(e) => set({ label: e.target.value })} />
+                    <input placeholder="Link halaman (contoh: /produk)" value={item.link} onChange={(e) => set({ link: e.target.value })} />
                     <Toggle checked={item.visible} onChange={(v) => set({ visible: v })} label="Tampilkan" />
                     {(err(`menu.${i}.label`) || err(`menu.${i}.link`)) && (
                       <p className="field-error">{err(`menu.${i}.label`) || err(`menu.${i}.link`)}</p>
@@ -318,44 +316,19 @@ export default function AdminSettings() {
                   </>
                 )}
               />
-              <Field label="Teks Tombol WhatsApp di Navbar">
+              <Field label="Teks Tombol WhatsApp di Navbar" hint="Contoh: WhatsApp, Pesan Sekarang, atau Hubungi Kami.">
                 <input value={form.navbar.ctaLabel} onChange={(e) => update((f) => { f.navbar.ctaLabel = e.target.value })} />
               </Field>
+
+              <div className="settings-note">
+                <strong>Daftar "Kategori" di footer terisi otomatis</strong> dari data Kategori Anda.
+                Untuk menambah atau mengubahnya, buka menu{' '}
+                <Link to="/admin/categories">Kategori</Link> — tidak perlu diatur manual di sini.
+              </div>
+
               <Field label="Deskripsi di Footer" hint="Kalimat pendek tentang bisnis Anda di bagian bawah website.">
                 <textarea rows={3} value={form.footer.description} onChange={(e) => update((f) => { f.footer.description = e.target.value })} />
               </Field>
-              <EditableList
-                title="Link Navigasi Footer"
-                addLabel="Tambah Link"
-                items={form.footer.navLinks}
-                onChange={(items) => update((f) => { f.footer.navLinks = items })}
-                makeItem={() => ({ id: uid(), label: '', link: '/' })}
-                renderItem={(item, set, i) => (
-                  <>
-                    <input placeholder="Nama link" value={item.label} onChange={(e) => set({ label: e.target.value })} />
-                    <input placeholder="/lokasi" value={item.link} onChange={(e) => set({ link: e.target.value })} />
-                    {(err(`navLinks.${i}.label`) || err(`navLinks.${i}.link`)) && (
-                      <p className="field-error">{err(`navLinks.${i}.label`) || err(`navLinks.${i}.link`)}</p>
-                    )}
-                  </>
-                )}
-              />
-              <EditableList
-                title="Link Kategori di Footer"
-                addLabel="Tambah Link Kategori"
-                items={form.footer.categoryLinks}
-                onChange={(items) => update((f) => { f.footer.categoryLinks = items })}
-                makeItem={() => ({ id: uid(), label: '', link: '/produk' })}
-                renderItem={(item, set, i) => (
-                  <>
-                    <input placeholder="Nama kategori" value={item.label} onChange={(e) => set({ label: e.target.value })} />
-                    <input placeholder="/produk?category=1" value={item.link} onChange={(e) => set({ link: e.target.value })} />
-                    {(err(`categoryLinks.${i}.label`) || err(`categoryLinks.${i}.link`)) && (
-                      <p className="field-error">{err(`categoryLinks.${i}.label`) || err(`categoryLinks.${i}.link`)}</p>
-                    )}
-                  </>
-                )}
-              />
               <Field label="Catatan Kecil di Footer" hint="Contoh: nama sekolah atau kredit project.">
                 <input value={form.footer.creditNote} onChange={(e) => update((f) => { f.footer.creditNote = e.target.value })} />
               </Field>

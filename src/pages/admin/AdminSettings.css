@@ -20,6 +20,24 @@
   color: #92400e;
 }
 
+.settings-note {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
+  color: #166534;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.settings-note a {
+  color: #15803d;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .settings-tabs {
   display: flex;
   flex-wrap: wrap;

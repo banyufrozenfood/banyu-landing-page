@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../../lib/supabase.js'
+import { dummyCategories } from '../../data/products.js'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import './Footer.css'
 
@@ -30,7 +33,23 @@ const socialIcons = {
 
 export default function Footer() {
   const { settings } = useSiteSettings()
-  const { identity, contact, socials, footer } = settings
+  const { identity, contact, socials, footer, navbar } = settings
+  const [categories, setCategories] = useState(dummyCategories)
+
+  useEffect(() => {
+    let active = true
+    async function loadCategories() {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name', { ascending: true })
+      if (active && !error && data && data.length > 0) setCategories(data)
+    }
+    loadCategories()
+    return () => { active = false }
+  }, [])
+
+  const navLinks = (navbar.menu || []).filter((m) => m.visible !== false && m.label)
 
   return (
     <footer className="footer">
@@ -53,7 +72,7 @@ export default function Footer() {
           <div className="footer__links">
             <h4>Navigasi</h4>
             <ul>
-              {footer.navLinks.map((l) => (
+              {navLinks.map((l) => (
                 <li key={l.id}><Link to={l.link}>{l.label}</Link></li>
               ))}
             </ul>
@@ -62,8 +81,8 @@ export default function Footer() {
           <div className="footer__links">
             <h4>Kategori</h4>
             <ul>
-              {footer.categoryLinks.map((l) => (
-                <li key={l.id}><Link to={l.link}>{l.label}</Link></li>
+              {categories.map((c) => (
+                <li key={c.id}><Link to={`/produk?category=${c.id}`}>{c.name}</Link></li>
               ))}
             </ul>
           </div>
