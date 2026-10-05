@@ -4,9 +4,9 @@
 | | |
 |---|---|
 | **Nama Produk** | Website Katalog Banyu |
-| **Versi Dokumen** | 1.0 |
-| **Tanggal** | September 2026 |
-| **Tim** | Project RPL — SMK Negeri 1 Cimahi, Kelas XI RPL A |
+| **Versi Dokumen** | 1.1 |
+| **Tanggal** | September 2026 (diperbarui Oktober 2026 sesuai implementasi) |
+| **Tim** | Project RPL — SMK Negeri 1 Cimahi, Kelas XII RPL A |
 | **Tipe Website** | Katalog Digital (tanpa checkout) |
 
 ---
@@ -33,23 +33,30 @@ Banyu adalah toko frozen food yang saat ini menjual produk melalui Tokopedia, Sh
 
 Website Banyu Frozen Food memiliki beberapa kelompok pengguna dengan kebutuhan dan tujuan penggunaan yang berbeda. Setiap kelompok pengguna membutuhkan pengalaman yang disesuaikan dengan kebutuhannya.
 
+| Pengguna | Kebutuhan |
+|---|---|
+| **Pengunjung / Calon Pembeli** | Melihat katalog, mencari & memfilter produk, memesan via keranjang WhatsApp atau marketplace |
+| **Admin / Owner Toko** | Mengelola produk, kategori, carousel, banner, brand partner, media, dan pengaturan situs lewat panel `/admin` |
+
 ---
 
 ## 3. ⚙️ Ruang Lingkup (Scope)
 
 ### 3.1 Masuk Scope ✅
 - Website katalog (Home, Produk, Detail Produk, Lokasi)
+- Keranjang belanja + checkout via satu pesan WhatsApp
 - Integrasi CTA ke Tokopedia, Shopee, dan WhatsApp
 - Panel admin: kelola produk & kategori (foto, nama, detail, harga, stok)
+- Media library dan pengaturan situs (alur draft → pratinjau → terbit)
 - Google Maps terintegrasi di halaman Lokasi
 - Desain responsif (desktop, tablet, mobile)
 
 ### 3.2 Di Luar Scope ❌
-- Shopping cart & checkout
 - Payment gateway
 - Halaman "Tentang" (dihapus dari scope)
 - Sistem login/akun untuk customer
 - Real-time sync stok dengan marketplace
+- Moderasi ulasan pelanggan (tabel database disiapkan, UI belum dibangun)
 
 ---
 
@@ -62,25 +69,25 @@ Website Banyu Frozen Food memiliki beberapa kelompok pengguna dengan kebutuhan d
 | F-02 | Hero Carousel | Looping produk unggulan otomatis + navigasi manual | Must Have |
 | F-03 | Section Keunggulan | 4–5 keunggulan toko dengan icon | Must Have |
 | F-04 | Produk Unggulan | Grid 4 produk + link "Lihat Semua" | Must Have |
-| F-05 | Integrasi Marketplace | 2 kotak navigasi ke Tokopedia & Shopee | Must Have |
+| F-05 | Integrasi Marketplace | Kartu navigasi Tokopedia & Shopee (tampil hanya jika URL diisi di Pengaturan) | Must Have |
 | F-06 | Brand Partner | Logo brand/supplier yang bekerja sama | Should Have |
-| F-07 | Footer | Info toko, kontak, sosmed, kategori, newsletter | Must Have |
+| F-07 | Footer | Info toko, kontak, sosmed, kategori otomatis, copyright | Must Have |
 
 ### 4.2 Halaman Produk (`/produk`)
 | ID | Fitur | Deskripsi | Prioritas |
 |---|---|---|---|
-| F-08 | Filter & Search | Filter kategori, harga, rating; search by nama | Must Have |
-| F-09 | Grid Produk | Card produk (foto, nama, harga, rating) | Must Have |
-| F-10 | Sorting | Terbaru, termurah, termahal, rating tertinggi | Should Have |
+| F-08 | Filter & Search | Filter kategori, rentang harga min–maks; search nama, kategori, deskripsi; filter tersinkron ke URL | Must Have |
+| F-09 | Grid Produk | Card produk (foto, kategori, nama, harga, tombol +, badge Unggulan/Habis) | Must Have |
+| F-10 | Sorting | Terbaru, termurah, termahal | Should Have |
 | F-11 | Pagination | Navigasi antar halaman produk | Should Have |
 
 ### 4.3 Detail Produk (`/produk/:id`)
 | ID | Fitur | Deskripsi | Prioritas |
 |---|---|---|---|
 | F-12 | Galeri Foto | Foto utama + thumbnail | Must Have |
-| F-13 | Info Produk | Nama, harga, rating, deskripsi, spesifikasi | Must Have |
-| F-14 | CTA Multi-channel | Tombol ke Tokopedia / Shopee / WhatsApp (pre-filled message) | Must Have |
-| F-15 | Ulasan Pelanggan | Rating & review dari customer | Should Have |
+| F-13 | Info Produk | Nama, kategori, harga, stok, deskripsi & spesifikasi (tab) | Must Have |
+| F-14 | CTA Multi-channel | Tombol Tambah ke Keranjang + Beli di Tokopedia / Shopee (link global dari Pengaturan) | Must Have |
+| F-15 | Ulasan Pelanggan | Rating & review — belum tampil di UI, tabel `reviews` disiapkan untuk fase berikutnya | Should Have |
 | F-16 | Produk Terkait | Rekomendasi produk sejenis | Could Have |
 
 ### 4.4 Halaman Lokasi (`/lokasi`)
@@ -94,10 +101,18 @@ Website Banyu Frozen Food memiliki beberapa kelompok pengguna dengan kebutuhan d
 |---|---|---|---|
 | F-19 | Login Admin | Autentikasi untuk akses panel | Must Have |
 | F-20 | CRUD Produk | Tambah/edit/hapus produk (foto, nama, deskripsi, harga, stok, kategori) | Must Have |
-| F-21 | CRUD Kategori | Tambah/edit/hapus kategori (icon, nama, deskripsi) | Must Have |
-| F-22 | Kelola Banner Hero | Atur gambar & urutan carousel homepage | Should Have |
-| F-23 | Moderasi Review | Approve/reject review customer | Could Have |
-| F-24 | Dashboard Ringkas | Statistik jumlah produk, rating rata-rata | Could Have |
+| F-21 | CRUD Kategori | Tambah/edit/hapus kategori (nama, deskripsi) | Must Have |
+| F-22 | Kelola Slide Beranda | Atur judul, subjudul, deskripsi, gambar, teks & link tombol, urutan angka, status aktif | Should Have |
+| F-23 | Moderasi Review | Approve/reject review customer — belum diimplementasi | Could Have |
+| F-24 | Dashboard Ringkas | Total produk & kategori, status website draft/terbit, kartu panduan, aksi cepat | Could Have |
+
+### 4.6 Keranjang & Pengaturan Situs
+| ID | Fitur | Deskripsi | Prioritas |
+|---|---|---|---|
+| F-25 | Keranjang & Checkout WA | Tambah/ubah/hapus item (tersimpan di localStorage), total otomatis, checkout satu pesan WhatsApp berisi daftar item + total + permintaan info ongkir | Must Have |
+| F-26 | Media Library | Upload gambar, tambah dari link, filter kategori, pencarian, salin link, hapus dengan konfirmasi | Must Have |
+| F-27 | Pengaturan Website | 5 tab (Kontak & Jam Buka, Sosial Media, Navbar & Footer, Isi Beranda, SEO) + alur Simpan Draft / Pratinjau / Terbitkan | Must Have |
+| F-28 | Kelola Banner | CRUD banner (judul, subjudul, gambar, urutan angka) — data tersimpan, belum ditampilkan di halaman publik | Could Have |
 
 ---
 
@@ -129,11 +144,15 @@ Filter/Search produk yang diinginkan
    ↓
 Klik produk → Halaman Detail Produk
    ↓
-Baca deskripsi, spesifikasi, ulasan
+Baca deskripsi & spesifikasi
    ↓
-Klik CTA: Tokopedia / Shopee / WhatsApp
+Tambah ke keranjang (dari kartu produk atau halaman detail)
    ↓
-Lanjut transaksi di platform pilihan
+Buka drawer keranjang → ubah jumlah / hapus item
+   ↓
+Klik "Pesan via WhatsApp" → chat terbuka berisi daftar item + total + permintaan info ongkir
+   ↓
+(Alternatif) Klik CTA Tokopedia / Shopee → lanjut transaksi di marketplace
 ```
 
 ### 6.2 Flow Admin — Tambah Produk Baru
@@ -193,22 +212,21 @@ Produk tampil otomatis di website
 
 | Fase | Fokus |
 |---|---|
-| **Fase 1 (Sekarang)** | Website katalog + panel admin dasar (CRUD produk & kategori) |
+| **Fase 1 (Sekarang)** | Website katalog + keranjang WhatsApp + panel admin lengkap (produk, kategori, carousel, banner, brand partner, media, pengaturan) |
 | **Fase 2** | Tambah fitur analytics sederhana, moderasi review |
-| **Fase 3** | Evaluasi kebutuhan shopping cart/checkout jika volume order website meningkat |
+| **Fase 3** | Evaluasi payment gateway / checkout penuh jika volume order website meningkat |
 
 ---
 
 ## 11. ✅ Kriteria Penerimaan (Acceptance Criteria)
 
-- [ ] Semua halaman (Home, Produk, Detail Produk, Lokasi) dapat diakses dan tampil sesuai desain
-- [ ] Website responsif di minimal 3 ukuran layar (mobile, tablet, desktop)
-- [ ] CTA WhatsApp membuka chat dengan pesan pre-filled sesuai produk
-- [ ] CTA Tokopedia & Shopee mengarahkan ke link toko yang benar
-- [ ] Admin dapat menambah, mengedit, dan menghapus produk beserta foto
-- [ ] Admin dapat menambah, mengedit, dan menghapus kategori
-- [ ] Google Maps menampilkan lokasi toko dengan akurat
-- [ ] Tidak ada fitur shopping cart/checkout yang tersisa di UI
+- [x] Semua halaman (Home, Produk, Detail Produk, Lokasi) dapat diakses dan tampil sesuai desain
+- [x] Website responsif di minimal 3 ukuran layar (mobile, tablet, desktop)
+- [x] Keranjang: tambah/ubah/hapus item, total otomatis, checkout membuka chat WA berisi daftar item + total
+- [x] CTA Tokopedia & Shopee mengarahkan ke link toko yang benar (tersembunyi jika URL kosong)
+- [x] Admin dapat menambah, mengedit, dan menghapus produk beserta foto
+- [x] Admin dapat menambah, mengedit, dan menghapus kategori
+- [x] Google Maps menampilkan lokasi toko dengan akurat
 
 ---
 

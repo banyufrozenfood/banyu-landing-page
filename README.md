@@ -9,18 +9,20 @@ Website resmi Banyu, toko frozen food lokal Cimahi. Pengunjung bisa melihat prod
 ### Halaman Publik
 - **Beranda** — Hero carousel, keunggulan toko, produk unggulan, tombol marketplace (Tokopedia/Shopee), brand partner
 - **Katalog Produk** (`/produk`) — Filter kategori, rentang harga, pencarian, urutan, pagination
-- **Detail Produk** (`/produk/:id`) — Galeri foto, deskripsi, spesifikasi, produk terkait
-- **Lokasi** (`/lokasi`) — Google Maps, jam operasional, kontak
+- **Detail Produk** (`/produk/:id`) — Breadcrumb, galeri foto, info harga & stok, tombol keranjang + Tokopedia/Shopee, tab deskripsi/spesifikasi, produk terkait
+- **Lokasi** (`/lokasi`) — Google Maps, jam operasional, kontak, tombol WhatsApp/telepon, galeri foto toko
 
 ### Keranjang Belanja
 Pengunjung menambah produk ke keranjang, lalu menekan tombol "Pesan via WhatsApp". Satu pesan otomatis terkirim berisi seluruh item, jumlah, harga total, dan permintaan info ongkir.
 
 ### Panel Admin (`/admin`)
 - Login dengan email + password (Supabase Auth)
-- Kelola produk: tambah, edit, hapus — termasuk upload foto
-- Kelola kategori, hero carousel, banner, brand partner
-- Kelola pengaturan situs: nama toko, logo, kontak, warna, teks, link marketplace — semua tanpa sentuh kode
-- Media library untuk upload dan pilih gambar
+- Dashboard: total produk & kategori, status website (draft/belum terbit), kartu panduan, aksi cepat
+- Kelola produk: tambah, edit, hapus — foto diisi sebagai URL gambar (pisahkan dengan koma jika lebih dari satu)
+- Kelola kategori (nama + deskripsi), hero carousel, banner, brand partner
+- Media library: upload gambar, tambah dari link, filter kategori, pencarian, salin link gambar
+- Kelola pengaturan situs: kontak & jam buka, sosial media, teks footer, isi beranda (termasuk link Tokopedia/Shopee), SEO — dengan alur Simpan Draft → Pratinjau → Terbitkan
+- Nama toko, logo, dan warna tema saat ini hanya bisa diubah lewat kode (`src/cms/defaults.js`), belum tersedia di panel admin
 
 ---
 
@@ -33,7 +35,7 @@ Pengunjung menambah produk ke keranjang, lalu menekan tombol "Pesan via WhatsApp
 | Routing | React Router v7 |
 | Database & Auth | Supabase (PostgreSQL + Row Level Security) |
 | Storage | Supabase Storage (bucket `media`) |
-| Deploy | Netlify |
+| Deploy | Netlify & Vercel |
 
 ---
 
@@ -52,7 +54,7 @@ src/
 │   ├── ProductCard/
 │   └── ui/          # CartDrawer, ImagePicker, ScrollToTop, Toast
 ├── lib/
-│   ├── ordering.js  # Helper urutan drag-and-drop
+│   ├── ordering.js  # Helper kolom urutan numerik (sort, next, normalisasi)
 │   └── supabase.js  # Inisialisasi Supabase client
 └── pages/
     ├── admin/       # Semua halaman panel admin
@@ -102,13 +104,21 @@ Buka `http://localhost:5173`. Admin panel di `http://localhost:5173/admin`.
 
 ---
 
-## Deploy ke Netlify
+## Deploy
+
+### Netlify
 
 1. Push repo ke GitHub
 2. Hubungkan repo di Netlify → *New site from Git*
 3. Build command: `npm run build`, publish directory: `dist`
 4. Tambahkan environment variable `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` di Netlify → Site settings → Environment variables
 5. File `public/_redirects` sudah ada untuk menangani client-side routing
+
+### Vercel (alternatif)
+
+1. Import repo di Vercel → *Add New Project*
+2. Framework preset: Vite. Tambahkan environment variable yang sama seperti di atas
+3. File `vercel.json` sudah ada untuk rewrite semua route ke `/index.html`
 
 ---
 

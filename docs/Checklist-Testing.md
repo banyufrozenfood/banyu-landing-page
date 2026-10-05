@@ -18,9 +18,9 @@ Cara pakai:
 
 ## 2. Navbar & Global
 - [ ] Logo tampil, klik → kembali ke beranda
-- [ ] Menu Home, Produk, Lokasi berfungsi
-- [ ] Tombol WhatsApp di navbar membuka chat dengan nomor yang benar
-- [ ] Ikon keranjang tampil — badge muncul setelah produk ditambahkan
+- [ ] Menu Home, Produk, Lokasi berfungsi (diambil dari CMS Settings)
+- [ ] Ikon keranjang tampil — klik membuka drawer, badge muncul setelah produk ditambahkan
+- [ ] Di mobile: hamburger membuka/menutup menu
 
 ---
 
@@ -31,8 +31,9 @@ Cara pakai:
 - [ ] Section keunggulan tampil
 - [ ] Produk unggulan tampil (diambil dari Supabase)
 - [ ] Tombol marketplace tampil hanya jika URL diisi di Settings — tersembunyi jika kosong
-- [ ] Section brand partner tampil
-- [ ] Footer tampil lengkap: deskripsi, navigasi, kontak, copyright
+- [ ] Section brand partner tampil (hanya logo yang berstatus Aktif)
+- [ ] Footer tampil: deskripsi, navigasi, kategori (otomatis dari database), kontak, sosmed, copyright
+- [ ] Toggle section di Pengaturan → Isi Beranda menyembunyikan/menampilkan section beranda setelah Terbitkan
 
 ---
 
@@ -41,8 +42,9 @@ Cara pakai:
 - [ ] Spinner/loading tampil saat data belum siap
 - [ ] Filter kategori berfungsi — klik kategori memfilter produk
 - [ ] Search berfungsi — ketik nama produk, hasil berubah
-- [ ] Filter rentang harga berfungsi
+- [ ] Filter rentang harga berfungsi — isi min/maks lalu klik Terapkan
 - [ ] Sorting (terbaru, termurah, termahal) berfungsi
+- [ ] Filter tersimpan di URL — klik kategori dari footer langsung memfilter walau halaman sudah terbuka
 - [ ] Pagination berfungsi — halaman berikutnya menampilkan produk berbeda
 - [ ] Tombol "+" di setiap produk menambah ke keranjang + notifikasi toast muncul
 - [ ] Klik kartu produk → masuk ke halaman detail produk
@@ -55,8 +57,10 @@ Cara pakai:
 - [ ] Produk tanpa foto tidak crash (tampilkan placeholder)
 - [ ] Tab Spesifikasi berfungsi — tidak crash jika spesifikasi kosong
 - [ ] Tombol "Tambah ke Keranjang" bekerja + toast muncul
-- [ ] Produk terkait tampil di bawah (jika ada di kategori yang sama)
-- [ ] Tombol Back/breadcrumb berfungsi
+- [ ] Tombol Tokopedia/Shopee tampil jika URL diisi di Pengaturan, tersembunyi jika kosong
+- [ ] Produk terkait tampil di bawah (maks 4, kategori yang sama)
+- [ ] Breadcrumb Home / Produk / nama produk berfungsi
+- [ ] Buka ID produk yang tidak ada → tampil "Produk Tidak Ditemukan", bukan crash
 
 ---
 
@@ -73,8 +77,10 @@ Cara pakai:
 ---
 
 ## 7. Halaman Lokasi (`/lokasi`)
-- [ ] Peta Google Maps tampil
-- [ ] Alamat, jam operasional, nomor telepon, WhatsApp tampil dari Settings
+- [ ] Peta Google Maps tampil + tombol "Buka di Google Maps" membuka link yang benar
+- [ ] Alamat lengkap, jam operasional, nomor telepon, email tampil dari Settings
+- [ ] Tombol "Hubungi via WhatsApp" membuka chat dengan pesan otomatis; "Telepon Langsung" memanggil nomor toko
+- [ ] Galeri toko tampil (dari Media Library kategori Foto Toko)
 
 ---
 
@@ -86,26 +92,45 @@ Cara pakai:
 - [ ] Login dengan kredensial benar → masuk ke dashboard
 
 ### Dashboard
-- [ ] Angka produk, kategori, hero slide tampil
+- [ ] Angka Total Produk dan Kategori tampil
+- [ ] Status website tampil (Published / Ada draft belum terbit) + tanggal simpan & terbit
+- [ ] Kartu panduan tampil saat pertama kali (bisa ditutup)
 
 ### Produk
-- [ ] Daftar produk tampil
+- [ ] Daftar produk tampil + pencarian nama berfungsi
 - [ ] Tambah produk baru → produk muncul di daftar dan di website
+- [ ] Slug terisi otomatis dari nama (bisa diubah manual)
 - [ ] Edit produk → perubahan tersimpan
-- [ ] Hapus produk → produk hilang dari daftar dan website
+- [ ] Hapus produk → konfirmasi muncul, produk hilang dari daftar dan website
 
 ### Kategori
-- [ ] Tambah/edit/hapus kategori berfungsi
-- [ ] Kategori baru muncul di filter halaman Produk
+- [ ] Tambah/edit/hapus kategori (nama + deskripsi) berfungsi
+- [ ] Kategori baru muncul di filter halaman Produk dan footer
 
 ### Hero Carousel
-- [ ] Tambah/edit/hapus slide berfungsi
-- [ ] Slide aktif tampil di beranda
+- [ ] Tambah/edit/hapus slide berfungsi (judul, gambar, teks & link tombol wajib diisi)
+- [ ] Toggle Aktif/Nonaktif berfungsi — slide nonaktif tidak tampil di beranda
+- [ ] Urutan angka terkecil tampil pertama
+
+### Banner
+- [ ] Tambah/edit/hapus banner berfungsi (data tersimpan; banner belum tampil di halaman publik)
+
+### Brand Partner
+- [ ] Tambah/edit/hapus partner + toggle aktif berfungsi
+- [ ] Logo aktif tampil di beranda; klik logo membuka website partner (jika URL diisi)
+
+### Media Library
+- [ ] Upload gambar (PNG/JPG/WebP/SVG/GIF) dan tambah dari link berfungsi
+- [ ] Filter kategori (Gambar/Logo/Banner/Foto Toko) dan pencarian berfungsi
+- [ ] Tombol salin link (🔗) menyalin URL gambar
+- [ ] Hapus gambar menampilkan dialog konfirmasi
 
 ### Pengaturan
-- [ ] Ubah nama toko → setelah Terbitkan, nama berubah di website
-- [ ] Kosongkan URL Tokopedia → tombol Tokopedia hilang dari beranda
-- [ ] Isi URL Tokopedia → tombol Tokopedia muncul kembali
+- [ ] 5 tab tampil: Kontak & Jam Buka, Sosial Media, Navbar & Footer, Isi Beranda, SEO
+- [ ] Ubah teks footer → setelah Terbitkan, teks berubah di website
+- [ ] Kosongkan URL Tokopedia → tombol Tokopedia hilang dari beranda dan halaman detail
+- [ ] Alur Pratinjau → Simpan Draft → Terbitkan berfungsi; Batalkan Perubahan mengembalikan isian
+- [ ] Isian salah (mis. nomor WA bukan angka) menampilkan pesan error merah
 
 ---
 
