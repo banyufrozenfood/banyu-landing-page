@@ -38,6 +38,13 @@
   text-decoration: underline;
 }
 
+.settings-note--flow {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  border-left-color: #2563eb;
+  color: #1e40af;
+}
+
 .settings-tabs {
   display: flex;
   flex-wrap: wrap;

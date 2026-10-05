@@ -8,7 +8,7 @@ export default function AdminCategories() {
   
   // Form States
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ id: null, name: '', icon: '', description: '' });
+  const [formData, setFormData] = useState({ id: null, name: '', description: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function AdminCategories() {
   };
 
   const handleAdd = () => {
-    setFormData({ id: null, name: '', icon: '📦', description: '' });
+    setFormData({ id: null, name: '', description: '' });
     setShowForm(true);
   };
 
@@ -54,7 +54,6 @@ export default function AdminCategories() {
 
     const payload = {
       name: formData.name,
-      icon: formData.icon,
       description: formData.description
     };
 
@@ -108,16 +107,6 @@ export default function AdminCategories() {
                 />
               </div>
               <div className="form-group">
-                <label>Icon (Emoji/Teks) *</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={formData.icon} 
-                  onChange={(e) => setFormData({...formData, icon: e.target.value})}
-                  placeholder="Misal: 🍗"
-                />
-              </div>
-              <div className="form-group">
                 <label>Deskripsi</label>
                 <textarea 
                   rows="3" 
@@ -141,7 +130,6 @@ export default function AdminCategories() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Icon</th>
                   <th>Nama Kategori</th>
                   <th>Deskripsi</th>
                   <th>Aksi</th>
@@ -149,14 +137,13 @@ export default function AdminCategories() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan="5" className="text-center">Memuat data...</td></tr>
+                  <tr><td colSpan="4" className="text-center">Memuat data...</td></tr>
                 ) : categories.length === 0 ? (
-                  <tr><td colSpan="5" className="text-center">Belum ada kategori.</td></tr>
+                  <tr><td colSpan="4" className="text-center">Belum ada kategori.</td></tr>
                 ) : (
                   categories.map(cat => (
                     <tr key={cat.id}>
                       <td>{cat.id}</td>
-                      <td style={{ fontSize: '1.5rem' }}>{cat.icon}</td>
                       <td style={{ fontWeight: 500 }}>{cat.name}</td>
                       <td>{cat.description || '-'}</td>
                       <td>

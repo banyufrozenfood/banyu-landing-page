@@ -33,18 +33,15 @@ export default function AdminDashboard() {
       try {
         const [
           { count: productCount },
-          { count: categoryCount },
-          { count: reviewCount }
+          { count: categoryCount }
         ] = await Promise.all([
           supabase.from('products').select('*', { count: 'exact', head: true }),
-          supabase.from('categories').select('*', { count: 'exact', head: true }),
-          supabase.from('reviews').select('*', { count: 'exact', head: true })
+          supabase.from('categories').select('*', { count: 'exact', head: true })
         ]);
 
         setStats({
           products: productCount || 0,
-          categories: categoryCount || 0,
-          reviews: reviewCount || 0
+          categories: categoryCount || 0
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -123,14 +120,6 @@ export default function AdminDashboard() {
           <div className="stat-card__info">
             <h3>Kategori</h3>
             <p className="stat-value">{loading ? '...' : stats.categories}</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-card__icon review-icon">⭐</div>
-          <div className="stat-card__info">
-            <h3>Ulasan</h3>
-            <p className="stat-value">{loading ? '...' : stats.reviews}</p>
           </div>
         </div>
       </div>

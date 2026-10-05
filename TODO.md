@@ -1,130 +1,89 @@
-# ✅ TODO — Website Katalog Banyu Frozen Food
+# TODO — Website Banyu Frozen Food
 
-> Checklist pengembangan berdasarkan `PRD.md`. Update status seiring progress.
-
----
-
-## 🏗️ Setup & Persiapan
-
-- [x] Setup repository & struktur folder project
-- [x] Pilih & install tech stack (framework, CSS tool, dll)
-- [x] Setup design system (warna, font, spacing) sesuai PRD
-- [x] Siapkan aset (logo Banyu, foto produk, icon keunggulan, logo brand partner)
-- [x] Setup Google Maps API key untuk halaman Lokasi (Menggunakan Iframe Embed gratis)
+Checklist pengembangan. Semua item wajib sudah selesai.
 
 ---
 
-## 🏠 Homepage
-
-- [x] Navbar (logo + menu: Home, Produk, Lokasi)
-- [x] Hero Section — carousel produk (looping otomatis + navigasi manual dot/arrow)
-- [x] Hero Section — dekorasi produk (nugget/makanan) di sisi kuning
-- [x] Section Keunggulan (4–5 icon bulat + judul + deskripsi)
-- [x] Section Produk Unggulan (grid 4 produk + tombol "Lihat Semua")
-- [x] Section Integrasi Marketplace (2 kotak: Tokopedia & Shopee, klik → link toko)
-- [x] Section Brand Partner (logo-logo supplier)
-- [x] Footer lengkap (tentang, navigasi, kategori, kontak, newsletter, copyright)
-- [ ] Screenshot & review tampilan homepage (desktop, tablet, mobile)
+## Setup Awal
+- [x] Buat repository dan struktur folder
+- [x] Install tech stack: React 19, Vite, React Router, Supabase
+- [x] Setup design system (warna, font, spacing)
+- [x] Setup Supabase: buat project, jalankan schema SQL
+- [x] Buat akun admin di Supabase Auth
 
 ---
 
-## 🛍️ Halaman Produk (`/produk`)
-
-- [x] Header page + breadcrumb
-- [x] Sidebar filter (kategori, harga, rating)
-- [x] Search bar produk
-- [x] Grid produk (card: foto, nama, harga, rating)
-- [x] Sorting (terbaru, termurah, termahal, rating tertinggi)
-- [x] Pagination
-- [ ] Screenshot & review tampilan (desktop, tablet, mobile)
+## Komponen Global
+- [x] Navbar: logo, menu, tombol WhatsApp, ikon keranjang + badge
+- [x] Footer: info toko, navigasi, kategori, kontak, sosmed
+- [x] Keranjang belanja (CartContext + localStorage)
+- [x] Drawer keranjang (slide dari kanan)
+- [x] Notifikasi toast
 
 ---
 
-## 📄 Detail Produk (`/produk/:id`)
-
-- [x] Galeri foto (foto utama + thumbnail)
-- [x] Info produk (nama, harga, rating, status stok)
-- [x] Deskripsi & spesifikasi produk
-- [x] Tombol CTA: Tokopedia, Shopee, WhatsApp (pesan pre-filled sesuai produk)
-- [x] Section ulasan pelanggan (rating breakdown + list review)
-- [x] Section produk terkait
-- [ ] Screenshot & review tampilan (desktop, tablet, mobile)
+## Beranda (`/`)
+- [x] Hero carousel otomatis + navigasi panah & dot
+- [x] Section keunggulan toko
+- [x] Grid produk unggulan (fetch dari Supabase)
+- [x] Section marketplace (Tokopedia/Shopee — disembunyikan jika URL kosong)
+- [x] Section brand partner
+- [x] Footer
 
 ---
 
-## 📍 Halaman Lokasi (`/lokasi`)
-
-- [x] Embed Google Maps interaktif
-- [x] Detail alamat, jam operasional, kontak
-- [x] Tombol CTA (buka di Google Maps, hubungi WA, telepon)
-- [x] Galeri foto toko
-- [ ] Screenshot & review tampilan (desktop, tablet, mobile)
-
----
-
-## 🎛️ Panel Admin (`/admin`)
-
-- [x] Halaman login admin (Terhubung ke Supabase Auth)
-- [x] Dashboard ringkas (Statistik jumlah produk, kategori, ulasan)
-- [x] **Product Management**
-  - [x] List produk (tabel + search)
-  - [x] Form tambah produk (foto, nama, deskripsi, kategori, harga, stok, spesifikasi)
-  - [x] Form edit produk
-  - [x] Hapus produk (dengan konfirmasi)
-- [x] **Category Management**
-  - [x] List kategori
-  - [x] Form tambah kategori (icon, nama, deskripsi)
-  - [x] Form edit kategori
-  - [x] Hapus kategori (dengan konfirmasi)
-- [x] Kelola banner/hero carousel (list & delete selesai, form tambah/edit terhubung ke Supabase)
-- [ ] Moderasi review (approve/reject) — *opsional*
-- [ ] Screenshot & review tampilan admin panel
+## Katalog Produk (`/produk`)
+- [x] Fetch produk + kategori dari Supabase
+- [x] Filter kategori, rentang harga, pencarian nama
+- [x] Sorting: terbaru, termurah, termahal
+- [x] Pagination (6 produk per halaman)
+- [x] Loading state
 
 ---
 
-## 📱 Responsif & Cross-Platform
-
-- [x] Test tampilan di mobile (320–767px)
-- [x] Test tampilan di tablet (768–1024px)
-- [x] Test tampilan di desktop (1280px+)
-- [x] Test di Chrome, Firefox, Safari, Edge
-- [x] Pastikan tombol/CTA touch-friendly di mobile
-
----
-
-## ⚡ Optimasi & Quality Check
-
-- [x] Optimasi gambar (compress, lazy load)
-- [x] Cek waktu load halaman (target < 3 detik)
-- [x] Cek broken link (terutama CTA marketplace & WhatsApp)
-- [x] Validasi form admin (input kosong, format salah, dll)
-- [x] Cek SEO dasar (meta title, meta description, alt text gambar)
-- [x] Cek aksesibilitas dasar (kontras warna, ukuran font)
+## Detail Produk (`/produk/:id`)
+- [x] Fetch produk dari Supabase
+- [x] Galeri foto (foto utama + thumbnail, null-safe)
+- [x] Info: nama, harga, stok, deskripsi
+- [x] Tab spesifikasi (null-safe jika kosong)
+- [x] Tombol "Tambah ke Keranjang"
+- [x] Produk terkait (kategori sama)
 
 ---
 
-## 🚀 Deployment
-
-- [x] Setup hosting/deployment (Netlify/Vercel/hosting sekolah) (Konfigurasi Vercel & Netlify siap)
-- [ ] Konfigurasi domain (jika ada)
-- [x] Deploy versi awal untuk testing
-- [ ] Final review bersama sebelum go-live
-- [ ] Deploy versi production
-
----
-
-## 📚 Dokumentasi
-
-- [x] `README.md`
-- [x] `PRD.md`
-- [ ] Dokumentasi cara pakai panel admin (untuk owner toko)
-- [ ] Dokumentasi struktur database (jika ada backend)
+## Keranjang & Checkout
+- [x] Tambah produk dari ProductCard (tombol +)
+- [x] Tambah produk dari halaman detail
+- [x] Update jumlah (+/-)
+- [x] Hapus item
+- [x] Hitung total
+- [x] Checkout via WhatsApp: satu pesan berisi semua item + total + info ongkir
 
 ---
 
-## 🔮 Backlog (Fase Selanjutnya)
+## Halaman Lokasi (`/lokasi`)
+- [x] Google Maps embed (iframe)
+- [x] Alamat, jam operasional, telepon, WhatsApp dari CMS Settings
 
-- [ ] Analytics sederhana di dashboard admin
-- [ ] Evaluasi kebutuhan shopping cart/checkout
-- [ ] Integrasi email newsletter
-- [ ] Multi-admin dengan role/permission
+---
+
+## Panel Admin
+- [x] Halaman login (`/admin`)
+- [x] Layout sidebar admin + proteksi route
+- [x] Dashboard ringkasan (produk, kategori, hero slide)
+- [x] CRUD produk dengan upload foto
+- [x] CRUD kategori
+- [x] Kelola hero carousel
+- [x] Kelola banner
+- [x] Kelola brand partner
+- [x] Media library
+- [x] Pengaturan situs (nama, logo, kontak, marketplace URL, dll)
+
+---
+
+## Kualitas Kode
+- [x] Tidak ada import dummy data di halaman publik
+- [x] Semua halaman publik fetch dari Supabase
+- [x] File tidak terpakai sudah dihapus
+- [x] Build sukses tanpa error
+- [x] Lint 0 error

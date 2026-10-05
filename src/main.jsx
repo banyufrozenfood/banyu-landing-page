@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { ToastProvider } from './components/ui/Toast.jsx'
 import { SiteSettingsProvider } from './cms/SiteSettingsContext.jsx'
+import { CartProvider } from './components/CartContext.jsx'
 import './index.css'
 
 createRoot(document.getElementById('root')).render(
@@ -11,9 +12,11 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <ToastProvider>
         <SiteSettingsProvider>
-          <App />
+          <CartProvider>
+            <App />
+          </CartProvider>
         </SiteSettingsProvider>
       </ToastProvider>
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 )

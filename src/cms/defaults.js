@@ -51,8 +51,8 @@ export const DEFAULT_SETTINGS = {
       brandPartners: true,
     },
     marketplace: {
-      tokopediaUrl: '#',
-      shopeeUrl: '#',
+      tokopediaUrl: '',
+      shopeeUrl: '',
     },
     advantagesTitle: 'Kenapa Pilih Banyu?',
     advantagesSubtitle: 'Kami berkomitmen memberikan produk frozen food terbaik untuk keluarga Anda',

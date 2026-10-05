@@ -14,11 +14,13 @@ import AdminBrandPartners from './pages/admin/AdminBrandPartners.jsx'
 import AdminSettings from './pages/admin/AdminSettings.jsx'
 import AdminMedia from './pages/admin/AdminMedia.jsx'
 import AdminLayout from './components/AdminLayout/AdminLayout.jsx'
+import CartDrawer from './components/ui/CartDrawer.jsx'
 
 function App() {
   return (
     <>
       <ScrollToTop />
+      <CartDrawer />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/produk" element={<ProductsPage />} />
@@ -39,6 +41,18 @@ function App() {
           <Route path="/admin/media" element={<AdminMedia />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
         </Route>
+        
+        {/* Fallback untuk halaman yang tidak ditemukan */}
+        <Route path="*" element={
+          <div style={{ textAlign: 'center', padding: '100px 20px', minHeight: '60vh' }}>
+            <h1 style={{ fontSize: '3rem', color: '#0099FF', marginBottom: '1rem' }}>404</h1>
+            <h2 style={{ marginBottom: '2rem' }}>Halaman Tidak Ditemukan</h2>
+            <p style={{ marginBottom: '2rem' }}>Halaman yang Anda cari mungkin telah dihapus atau URL salah.</p>
+            <a href="/" style={{ padding: '10px 20px', background: '#0099FF', color: 'white', textDecoration: 'none', borderRadius: '8px' }}>
+              Kembali ke Beranda
+            </a>
+          </div>
+        } />
       </Routes>
     </>
   )

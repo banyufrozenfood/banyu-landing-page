@@ -31,12 +31,7 @@ Banyu adalah toko frozen food yang saat ini menjual produk melalui Tokopedia, Sh
 
 ## 2. 👥 Target Pengguna
 
-| Persona | Deskripsi | Kebutuhan |
-|---|---|---|
-| **Customer Baru** | Belum kenal Banyu, cari referensi frozen food lokal | Info produk jelas, testimoni, kepercayaan |
-| **Customer Lokal Cimahi** | Ingin pesan cepat & langsung | Tombol WhatsApp mudah diakses |
-| **Customer Luar Kota** | Prefer belanja via marketplace yang familiar | Tombol Tokopedia/Shopee jelas |
-| **Admin/Owner Toko** | Kelola produk, kategori, & konten | Panel admin yang mudah digunakan |
+Website Banyu Frozen Food memiliki beberapa kelompok pengguna dengan kebutuhan dan tujuan penggunaan yang berbeda. Setiap kelompok pengguna membutuhkan pengalaman yang disesuaikan dengan kebutuhannya.
 
 ---
 
@@ -219,4 +214,4 @@ Produk tampil otomatis di website
 
 ## 12. 👨‍💻 Kontributor
 
-Project RPL — SMK Negeri 1 Cimahi, Kelas XI RPL A
+Project RPL — SMK Negeri 1 Cimahi, Kelas XII RPL A

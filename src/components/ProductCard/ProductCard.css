@@ -128,6 +128,31 @@
   color: var(--primary);
 }
 
+.product-card__cart-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.product-card__cart-btn:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: scale(1.1);
+}
+
+.product-card__cart-btn:disabled {
+  background: var(--border);
+  cursor: not-allowed;
+}
+
 .product-card__rating {
   display: flex;
   align-items: center;

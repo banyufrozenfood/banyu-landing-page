@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { sortByOrder, nextOrder, normalizeOrderInput } from '../../lib/ordering.js';
+import ImagePicker from '../../components/ui/ImagePicker.jsx';
 import './AdminBrandPartners.css';
 
 export default function AdminBrandPartners() {
@@ -39,10 +40,9 @@ export default function AdminBrandPartners() {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Nama brand wajib diisi';
-    if (!formData.logo.trim()) newErrors.logo = 'URL Logo wajib diisi';
+    if (!formData.logo.trim()) newErrors.logo = 'Logo wajib dipilih atau diupload';
     else if (!isValidUrl(formData.logo)) newErrors.logo = 'Format URL tidak valid';
-    if (!formData.website_url.trim()) newErrors.website_url = 'Website URL opsional';
-    else if (!isValidUrl(formData.website_url) && formData.website_url !== '') {
+    if (formData.website_url.trim() && !isValidUrl(formData.website_url)) {
       newErrors.website_url = 'Format URL tidak valid';
     }
     if (formData.order < 0 || !Number.isFinite(Number(formData.order))) {
@@ -68,6 +68,15 @@ export default function AdminBrandPartners() {
       if (!error) fetchPartners();
       else alert('Gagal menghapus: ' + error.message);
     }
+  };
+
+  const handleToggleActive = async (partner) => {
+    const { error } = await supabase
+      .from('brand_partners')
+      .update({ is_active: !partner.is_active })
+      .eq('id', partner.id);
+    if (!error) fetchPartners();
+    else alert('Gagal mengubah status: ' + error.message);
   };
 
   const handleEdit = (partner) => {
@@ -190,6 +199,7 @@ export default function AdminBrandPartners() {
             loading={loading}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onToggleActive={handleToggleActive}
           />
         )}
       </div>
@@ -205,9 +215,6 @@ function BrandPartnerForm({ formData, setFormData, errors, saving, onSave, onCan
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => { const n = {...prev}; delete n[field]; return n; });
   };
-
-  // Live preview image
-  const previewImage = formData.logo || 'https://placehold.co/160x80/E5E7EB/9CA3AF?text=Logo';
 
   return (
     <div className="admin-form-container">
@@ -233,33 +240,18 @@ function BrandPartnerForm({ formData, setFormData, errors, saving, onSave, onCan
             </div>
 
             <div className="form-group">
-              <label>URL Logo <span className="required">*</span></label>
-              <input
-                type="url"
-                required
+              <label>Logo Brand <span className="required">*</span></label>
+              <ImagePicker
                 value={formData.logo}
-                onChange={(e) => handleChange('logo', e.target.value)}
-                placeholder="https://example.com/logo.png"
+                category="logo"
+                onChange={(url) => handleChange('logo', url)}
               />
               {errors.logo && <span className="error-text">{errors.logo}</span>}
               <span className="help-text">
-                <strong>Rekomendasi:</strong> File PNG transparan, transparan bg.
-                <br />Ukuran: 160×80px (rasio 2:1) ideal
-                <br />Format: PNG, JPG, WebP
-                <br />Hosting: Supabase Storage, ImgBB, Cloudinary, dll
+                Pilih dari Media Library, upload dari HP/komputer, atau pakai link.
+                <br />Disarankan PNG transparan rasio 2:1 (mis. 160×80px).
               </span>
             </div>
-
-            {/* Live Preview */}
-            <div className="live-preview">
-              <label>Pratinjau Logo (Live)</label>
-              <div className="preview-box">
-                <img src={previewImage} alt="Preview" onError={(e) => { e.target.src = 'https://placehold.co/160x80/E5E7EB/9CA3AF?text=Logo+Tidak+Valid'; }} />
-                {errors.logo && <div className="preview-error">⚠️ URL logo tidak valid</div>}
-              </div>
-            </div>
-
-            <span className="help-text">Pratinjau di atas menampilkan logo dalam grid 3 kolom di website.</span>
 
             <div className="form-group">
               <label>Website URL (Opsional)</label>
@@ -350,7 +342,7 @@ function BrandPartnerForm({ formData, setFormData, errors, saving, onSave, onCan
 // ============================================
 // SUB-COMPONENT: Table with Logos
 // ============================================
-function BrandPartnersTable({ partners, loading, onEdit, onDelete }) {
+function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActive }) {
   if (loading) return <div className="loading-state">Memuat data brand partner...</div>;
 
   return (
@@ -398,7 +390,7 @@ function BrandPartnersTable({ partners, loading, onEdit, onDelete }) {
                 <td>
                   <button
                     className={`status-toggle ${partner.is_active ? 'active' : 'inactive'}`}
-                    onClick={() => onToggleActive ? null : null}
+                    onClick={() => onToggleActive(partner)}
                     title={partner.is_active ? 'Klik untuk nonaktifkan' : 'Klik untuk aktifkan'}
                   >
                     <span className="status-dot" />

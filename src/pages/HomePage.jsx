@@ -7,13 +7,13 @@ import Footer from '../components/Footer/Footer.jsx'
 import { supabase } from '../lib/supabase.js'
 import { sortByOrder } from '../lib/ordering.js'
 import { useSiteSettings } from '../cms/SiteSettingsContext.jsx'
-import { dummyProducts } from '../data/products.js'
 import './HomePage.css'
 
 export default function HomePage() {
   const { settings } = useSiteSettings();
   const [heroSlides, setHeroSlides] = useState([]);
   const [brandPartners, setBrandPartners] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,6 +44,17 @@ export default function HomePage() {
 
         if (partnersError) console.error('Error fetching brand partners:', partnersError);
         else setBrandPartners(sortByOrder((partners || []).filter((p) => p.is_active !== false)));
+        
+        // Fetch featured products
+        const { data: products, error: productsError } = await supabase
+          .from('products')
+          .select('*, categories(name)')
+          .eq('is_featured', true)
+          .limit(4);
+          
+        if (productsError) console.error('Error fetching products:', productsError);
+        else setFeaturedProducts(products || []);
+        
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {
@@ -53,8 +64,6 @@ export default function HomePage() {
 
     fetchData();
   }, []);
-
-  const featuredProducts = dummyProducts.filter((p) => p.is_featured).slice(0, 4);
   const effectiveHeroSlides = heroSlides.length > 0 ? heroSlides : [
     { id: 1, title: 'Frozen Food Berkualitas', subtitle: 'Untuk Keluarga Indonesia', description: 'Produk beku pilihan dengan bahan terbaik, diproses higienis dan dikemas vakum untuk menjaga kesegaran.', image: 'https://placehold.co/1200x600/0099FF/white?text=Banyu+Frozen+Food', cta: { text: 'Lihat Produk', link: '/produk' } },
     { id: 2, title: 'Praktis & Lezat', subtitle: 'Siap Saji dalam Hitungan Menit', description: 'Nugget, sosis, dimsum, bakso — tinggal goreng atau kukus. Cocok untuk bekal sekolah dan menu harian.', image: 'https://placehold.co/1200x600/66CCFF/003366?text=Praktis+%26+Lezat', cta: { text: 'Pesan Sekarang', link: '/produk' } },
@@ -64,6 +73,10 @@ export default function HomePage() {
   if (loading) return <div>Memuat halaman beranda...</div>;
 
   const sections = settings.home.sections;
+  const tokopediaUrl = settings.home.marketplace?.tokopediaUrl || '';
+  const shopeeUrl = settings.home.marketplace?.shopeeUrl || '';
+  const hasTokopedia = !!tokopediaUrl && tokopediaUrl !== '#';
+  const hasShopee = !!shopeeUrl && shopeeUrl !== '#';
 
   return (
     <div className="home-page">
@@ -121,7 +134,7 @@ export default function HomePage() {
       )}
 
       {/* Integrasi Marketplace */}
-      {sections.marketplace && (
+      {sections.marketplace && (hasTokopedia || hasShopee) && (
         <section className="marketplace">
         <div className="container">
           <div className="section-title">
@@ -129,8 +142,9 @@ export default function HomePage() {
             <p>Kunjungi toko kami di marketplace pilihan Anda</p>
           </div>
           <div className="marketplace__grid">
+            {hasTokopedia && (
             <a
-              href={settings.home.marketplace.tokopediaUrl}
+              href={tokopediaUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="marketplace-card marketplace-card--tokopedia"
@@ -150,8 +164,10 @@ export default function HomePage() {
                 </svg>
               </span>
             </a>
+            )}
+            {hasShopee && (
             <a
-              href={settings.home.marketplace.shopeeUrl}
+              href={shopeeUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="marketplace-card marketplace-card--shopee"
@@ -171,6 +187,7 @@ export default function HomePage() {
                 </svg>
               </span>
             </a>
+            )}
           </div>
         </div>
       </section>
@@ -185,11 +202,24 @@ export default function HomePage() {
               <p>Kami bekerja sama dengan brand frozen food ternama di Indonesia</p>
             </div>
             <div className="brand-partners__grid">
-              {brandPartners.map((brand, idx) => (
-                <div key={brand.id || idx} className="brand-partner-card">
-                  <img src={brand.logo} alt={brand.name} loading="lazy" />
-                </div>
-              ))}
+              {brandPartners.map((brand, idx) => {
+                const logo = <img src={brand.logo} alt={brand.name} loading="lazy" />;
+                return brand.website_url ? (
+                  <a
+                    key={brand.id || idx}
+                    href={brand.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="brand-partner-card"
+                  >
+                    {logo}
+                  </a>
+                ) : (
+                  <div key={brand.id || idx} className="brand-partner-card">
+                    {logo}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

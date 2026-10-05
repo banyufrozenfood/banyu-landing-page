@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar/Navbar.jsx'
 import Footer from '../components/Footer/Footer.jsx'
 import ProductCard from '../components/ProductCard/ProductCard.jsx'
-import { dummyProducts, dummyCategories } from '../data/products.js'
+import { supabase } from '../lib/supabase.js'
 import './ProductsPage.css'
 
 const PRODUCTS_PER_PAGE = 6
@@ -19,23 +19,49 @@ export default function ProductsPage() {
     min: searchParams.get('minPrice') || '',
     max: searchParams.get('maxPrice') || '',
   })
-  const [minRating, setMinRating] = useState(
-    searchParams.get('rating') ? Number(searchParams.get('rating')) : 0
-  )
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest')
   const [currentPage, setCurrentPage] = useState(1)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
+  const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchAll() {
+      setLoading(true)
+      const [prodRes, catRes] = await Promise.all([
+        supabase.from('products').select('*, categories(name)'),
+        supabase.from('categories').select('*').order('name')
+      ])
+      
+      if (prodRes.data) setProducts(prodRes.data)
+      if (catRes.data) setCategories(catRes.data)
+      
+      setLoading(false)
+    }
+    fetchAll()
+  }, [])
+
+  // Sinkronkan filter dari URL agar link kategori (mis. dari footer) tetap
+  // memfilter walau halaman /produk sudah terbuka.
+  useEffect(() => {
+    const cat = searchParams.get('category')
+    setSelectedCategory(cat ? Number(cat) : null)
+    setSortBy(searchParams.get('sort') || 'newest')
+    setCurrentPage(1)
+  }, [searchParams])
+
   const filtered = useMemo(() => {
-    let result = [...dummyProducts]
+    let result = [...products]
 
     if (search.trim()) {
       const q = search.toLowerCase()
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q)
+          (p.categories?.name || '').toLowerCase().includes(q) ||
+          (p.description || '').toLowerCase().includes(q)
       )
     }
 
@@ -50,10 +76,6 @@ export default function ProductsPage() {
       result = result.filter((p) => p.price <= Number(priceRange.max))
     }
 
-    if (minRating > 0) {
-      result = result.filter((p) => p.rating >= minRating)
-    }
-
     switch (sortBy) {
       case 'cheapest':
         result.sort((a, b) => a.price - b.price)
@@ -61,17 +83,14 @@ export default function ProductsPage() {
       case 'expensive':
         result.sort((a, b) => b.price - a.price)
         break
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating)
-        break
       case 'newest':
       default:
-        result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         break
     }
 
     return result
-  }, [search, selectedCategory, priceRange, minRating, sortBy])
+  }, [products, search, selectedCategory, priceRange, sortBy])
 
   const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE)
   const paginatedProducts = filtered.slice(
@@ -106,18 +125,10 @@ export default function ProductsPage() {
     })
   }
 
-  const handleRatingClick = (rating) => {
-    const newRating = minRating === rating ? 0 : rating
-    setMinRating(newRating)
-    setCurrentPage(1)
-    updateParams({ rating: newRating || null })
-  }
-
   const clearFilters = () => {
     setSearch('')
     setSelectedCategory(null)
     setPriceRange({ min: '', max: '' })
-    setMinRating(0)
     setSortBy('newest')
     setCurrentPage(1)
     setSearchParams({})
@@ -135,7 +146,7 @@ export default function ProductsPage() {
     setSearchParams(params)
   }
 
-  const hasActiveFilters = selectedCategory || priceRange.min || priceRange.max || minRating > 0 || search
+  const hasActiveFilters = selectedCategory || priceRange.min || priceRange.max || search
 
   return (
     <div className="products-page">
@@ -209,13 +220,12 @@ export default function ProductsPage() {
             <div className="filter-group">
               <label className="filter-group__label">Kategori</label>
               <div className="filter-categories">
-                {dummyCategories.map((cat) => (
+                {categories.map((cat) => (
                   <button
                     key={cat.id}
                     className={`filter-category-btn${selectedCategory === cat.id ? ' filter-category-btn--active' : ''}`}
                     onClick={() => handleCategoryClick(cat.id)}
                   >
-                    <span className="filter-category-btn__icon">{cat.icon}</span>
                     <span>{cat.name}</span>
                   </button>
                 ))}
@@ -245,29 +255,6 @@ export default function ProductsPage() {
               </button>
             </div>
 
-            {/* Rating */}
-            <div className="filter-group">
-              <label className="filter-group__label">Rating Minimum</label>
-              <div className="filter-ratings">
-                {[4, 3, 2, 1].map((r) => (
-                  <button
-                    key={r}
-                    className={`filter-rating-btn${minRating === r ? ' filter-rating-btn--active' : ''}`}
-                    onClick={() => handleRatingClick(r)}
-                  >
-                    <span className="filter-rating-btn__stars">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={i < r ? '#FFD700' : '#E2E8F0'}>
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                      ))}
-                    </span>
-                    <span>{r}+ ke atas</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <button
               className="products-sidebar__apply-mobile btn btn-primary"
               onClick={() => setMobileFilterOpen(false)}
@@ -286,7 +273,7 @@ export default function ProductsPage() {
               <p className="products-toolbar__count">
                 Menampilkan <strong>{filtered.length}</strong> produk
                 {selectedCategory && (
-                  <> dalam kategori <strong>{dummyCategories.find(c => c.id === selectedCategory)?.name}</strong></>
+                  <> dalam kategori <strong>{categories.find(c => c.id === selectedCategory)?.name}</strong></>
                 )}
               </p>
               <div className="products-toolbar__sort">
@@ -295,12 +282,16 @@ export default function ProductsPage() {
                   <option value="newest">Terbaru</option>
                   <option value="cheapest">Termurah</option>
                   <option value="expensive">Termahal</option>
-                  <option value="rating">Rating Tertinggi</option>
                 </select>
               </div>
             </div>
 
-            {paginatedProducts.length > 0 ? (
+            {loading ? (
+              <div className="products-empty">
+                <span className="products-empty__icon">⏳</span>
+                <h3>Memuat produk...</h3>
+              </div>
+            ) : paginatedProducts.length > 0 ? (
               <div className="products-grid" key={`${search}-${selectedCategory}-${sortBy}-${currentPage}`}>
                 {paginatedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />

@@ -1,139 +1,117 @@
-# 🧊 Banyu Frozen Food — Website Katalog
+# Banyu Frozen Food — Website Katalog
 
-Website resmi **Banyu**, toko frozen food yang menyediakan produk beku berkualitas untuk keluarga Indonesia. Website ini berfungsi sebagai **katalog produk digital** — customer bisa melihat produk & detail lengkap, lalu melanjutkan pembelian melalui **Tokopedia**, **Shopee**, atau **WhatsApp**.
-
----
-
-## 📌 Tentang Project
-
-Banyu Website adalah landing page yang dirancang untuk menampilkan produk frozen food secara menarik dan informatif, tanpa fitur shopping cart/checkout. Tujuannya adalah membangun *brand presence* yang kuat sambil tetap mengarahkan transaksi ke channel penjualan yang sudah berjalan (marketplace & WhatsApp), sehingga menghindari kompleksitas payment gateway dan biaya development yang tinggi.
-
-### Kenapa Katalog Only?
-- ✅ Development lebih cepat & sederhana
-- ✅ Tidak perlu payment gateway atau sync inventory real-time
-- ✅ Owner tetap fokus berjualan lewat channel yang sudah familiar
-- ✅ Risiko keamanan transaksi rendah (dihandle oleh marketplace)
+Website resmi Banyu, toko frozen food lokal Cimahi. Pengunjung bisa melihat produk, menambah ke keranjang, lalu memesan sekaligus lewat satu pesan WhatsApp. Admin mengelola seluruh konten lewat panel tanpa menyentuh kode.
 
 ---
 
-## ✨ Fitur Utama
+## Fitur
 
-- 🏠 **Homepage** — Hero carousel produk, keunggulan toko, produk unggulan, integrasi marketplace, brand partner
-- 🛍️ **Halaman Produk** — Daftar seluruh produk dengan filter kategori, harga, dan rating
-- 📄 **Detail Produk** — Galeri foto, deskripsi, spesifikasi, ulasan pelanggan, produk terkait
-- 📍 **Halaman Lokasi** — Google Maps terintegrasi + info kontak & jam operasional
-- 🔗 **CTA Multi-channel** — Tombol langsung ke Tokopedia, Shopee, dan WhatsApp di setiap produk
-- 📱 **Fully Responsive** — Tampilan optimal di desktop, tablet, dan mobile
+### Halaman Publik
+- **Beranda** — Hero carousel, keunggulan toko, produk unggulan, tombol marketplace (Tokopedia/Shopee), brand partner
+- **Katalog Produk** (`/produk`) — Filter kategori, rentang harga, pencarian, urutan, pagination
+- **Detail Produk** (`/produk/:id`) — Galeri foto, deskripsi, spesifikasi, produk terkait
+- **Lokasi** (`/lokasi`) — Google Maps, jam operasional, kontak
 
----
+### Keranjang Belanja
+Pengunjung menambah produk ke keranjang, lalu menekan tombol "Pesan via WhatsApp". Satu pesan otomatis terkirim berisi seluruh item, jumlah, harga total, dan permintaan info ongkir.
 
-## 🖥️ Kompatibilitas Platform
-
-Website ini dibangun dengan pendekatan **mobile-first & responsive design**, sehingga tampil optimal di berbagai perangkat dan browser:
-
-| Platform | Status | Catatan |
-|---|---|---|
-| 💻 Desktop (1920px+) | ✅ Optimal | Layout grid penuh (4-6 kolom) |
-| 💻 Laptop (1280–1440px) | ✅ Optimal | Layout menyesuaikan (3-4 kolom) |
-| 📱 Tablet (768–1024px) | ✅ Optimal | Layout 2 kolom, navbar collapsible |
-| 📱 Mobile (320–767px) | ✅ Optimal | Layout 1 kolom, hamburger menu, tombol full-width |
-| 🌐 Chrome, Firefox, Safari, Edge | ✅ Didukung | Cross-browser tested |
-
-**Teknik responsif yang digunakan:**
-- CSS Flexbox & Grid untuk layout adaptif
-- Media queries di breakpoint utama (`480px`, `768px`, `1024px`, `1440px`)
-- Gambar responsif (`max-width: 100%`, lazy loading)
-- Font size & spacing menggunakan unit relatif (`rem`, `%`, `vw`)
-- Touch-friendly button size (minimal 44x44px) untuk mobile
+### Panel Admin (`/admin`)
+- Login dengan email + password (Supabase Auth)
+- Kelola produk: tambah, edit, hapus — termasuk upload foto
+- Kelola kategori, hero carousel, banner, brand partner
+- Kelola pengaturan situs: nama toko, logo, kontak, warna, teks, link marketplace — semua tanpa sentuh kode
+- Media library untuk upload dan pilih gambar
 
 ---
 
-## 🗂️ Struktur Halaman
+## Tech Stack
 
-```
-📁 Banyu Website
-├── 🏠 Home (/)
-│   ├── Navbar
-│   ├── Hero Section (carousel produk + dekorasi)
-│   ├── Keunggulan Toko
-│   ├── Produk Unggulan
-│   ├── Integrasi Marketplace (Tokopedia & Shopee)
-│   ├── Brand Partner
-│   └── Footer
-├── 🛍️ Produk (/produk)
-│   ├── Filter & Search
-│   └── Grid Produk
-├── 📄 Detail Produk (/produk/:id)
-│   ├── Galeri Foto
-│   ├── Info & Spesifikasi
-│   ├── CTA (Tokopedia / Shopee / WhatsApp)
-│   └── Ulasan Pelanggan
-└── 📍 Lokasi (/lokasi)
-    ├── Google Maps
-    └── Detail Kontak
-```
-
----
-
-## 🎨 Design System
-
-| Elemen | Value |
+| Bagian | Teknologi |
 |---|---|
-| Primary Color | `#0099FF` (Biru) |
-| Secondary Color | `#66CCFF` (Biru Muda) |
-| Accent Color | `#FFD700` (Kuning) |
-| Font | Sans-serif, modern & mudah dibaca |
-| Style | Clean, playful, food-focused |
+| Frontend | React 19 + Vite |
+| Styling | CSS murni (tanpa framework CSS) |
+| Routing | React Router v7 |
+| Database & Auth | Supabase (PostgreSQL + Row Level Security) |
+| Storage | Supabase Storage (bucket `media`) |
+| Deploy | Netlify |
 
 ---
 
-## 🛠️ Tech Stack
+## Struktur Folder
 
-> *(Sesuaikan dengan stack yang dipakai)*
-- **Frontend:** HTML5, CSS3, JavaScript
-- **Framework (opsional):** React / Vue / Tailwind CSS
-- **Maps:** Google Maps Embed API
-- **Deployment:** Netlify / Vercel / Hosting sekolah
+```
+src/
+├── assets/          # Logo SVG
+├── cms/             # Sistem CMS: context, store, validasi, defaults
+├── components/
+│   ├── AdminLayout/ # Layout sidebar admin
+│   ├── CartContext.jsx  # State keranjang belanja (localStorage)
+│   ├── Footer/
+│   ├── HeroCarousel/
+│   ├── Navbar/
+│   ├── ProductCard/
+│   └── ui/          # CartDrawer, ImagePicker, ScrollToTop, Toast
+├── lib/
+│   ├── ordering.js  # Helper urutan drag-and-drop
+│   └── supabase.js  # Inisialisasi Supabase client
+└── pages/
+    ├── admin/       # Semua halaman panel admin
+    ├── HomePage.jsx
+    ├── LocationPage.jsx
+    ├── ProductDetailPage.jsx
+    └── ProductsPage.jsx
+```
 
 ---
 
-## 🚀 Cara Menjalankan Project
+## Cara Menjalankan
 
+### Prasyarat
+- Node.js 18+
+- Akun Supabase (gratis)
+
+### Setup
+
+**1. Clone & install**
 ```bash
-# Clone repository
-git clone <repo-url>
-
-# Masuk ke folder project
-cd banyu-website
-
-# Install dependencies (jika pakai framework)
+git clone <url-repo>
+cd banyu-landing-page
 npm install
+```
 
-# Jalankan development server
+**2. Buat file `.env`**
+```env
+VITE_SUPABASE_URL=https://xxxxxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
+```
+Nilai diambil dari Supabase Dashboard → Project Settings → API.
+
+**3. Setup database**
+
+Jalankan seluruh isi `supabase-schema.sql` di Supabase Dashboard → SQL Editor → New query → Run.
+
+**4. Buat akun admin**
+
+Supabase Dashboard → Authentication → Users → Add user. Isi email dan password, centang *Auto Confirm User*.
+
+**5. Jalankan**
+```bash
 npm run dev
 ```
-
-Buka browser di `http://localhost:3000` (atau port sesuai konfigurasi).
-
----
-
-## 🔗 Channel Penjualan
-
-| Channel | Link |
-|---|---|
-| 🛒 Tokopedia | `[isi link toko]` |
-| 🛒 Shopee | `[isi link toko]` |
-| 📱 WhatsApp | `[isi nomor WA]` |
-| 📍 Lokasi Toko | Jl. Raya Cimahi No. 123, Cimahi, Jawa Barat |
+Buka `http://localhost:5173`. Admin panel di `http://localhost:5173/admin`.
 
 ---
 
-## 👨‍💻 Kontributor
+## Deploy ke Netlify
 
-Project RPL — SMK Negeri 1 Cimahi, Kelas XI RPL A
+1. Push repo ke GitHub
+2. Hubungkan repo di Netlify → *New site from Git*
+3. Build command: `npm run build`, publish directory: `dist`
+4. Tambahkan environment variable `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` di Netlify → Site settings → Environment variables
+5. File `public/_redirects` sudah ada untuk menangani client-side routing
 
 ---
 
-## 📄 Lisensi
+## Kompatibilitas Browser
 
-Project ini dibuat untuk keperluan tugas sekolah (RPL) dan penggunaan bisnis Banyu Frozen Food.
+Chrome, Firefox, Safari, Edge — versi dua tahun terakhir. Dioptimasi untuk mobile-first.

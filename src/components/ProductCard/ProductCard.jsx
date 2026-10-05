@@ -1,7 +1,15 @@
 import { Link } from 'react-router-dom'
+import { useCart } from '../CartContext.jsx'
 import './ProductCard.css'
 
 export default function ProductCard({ product }) {
+  const { addToCart } = useCart()
+
+  const handleAddToCart = (e) => {
+    e.preventDefault()
+    addToCart(product, 1)
+  }
+
   return (
     <Link to={`/produk/${product.id}`} className="product-card">
       <div className="product-card__img-wrap">
@@ -18,18 +26,17 @@ export default function ProductCard({ product }) {
         )}
       </div>
       <div className="product-card__info">
-        <span className="product-card__category">{product.category}</span>
+        <span className="product-card__category">{product.categories?.name || product.category || 'Umum'}</span>
         <h3 className="product-card__name">{product.name}</h3>
         <div className="product-card__meta">
           <span className="product-card__price">
             Rp {product.price.toLocaleString('id-ID')}
           </span>
-          <span className="product-card__rating">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFD700">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          <button className="product-card__cart-btn" onClick={handleAddToCart} disabled={product.stock === 0} aria-label="Tambah ke keranjang">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14"/>
             </svg>
-            {product.rating}
-          </span>
+          </button>
         </div>
       </div>
     </Link>

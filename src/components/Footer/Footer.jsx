@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase.js'
-import { dummyCategories } from '../../data/products.js'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import './Footer.css'
 
@@ -34,7 +33,7 @@ const socialIcons = {
 export default function Footer() {
   const { settings } = useSiteSettings()
   const { identity, contact, socials, footer, navbar } = settings
-  const [categories, setCategories] = useState(dummyCategories)
+  const [categories, setCategories] = useState([])
 
   useEffect(() => {
     let active = true

@@ -1,291 +1,166 @@
-# 🛠️ Panduan Panel Admin — Banyu Frozen Food
+# Panduan Panel Admin — Banyu Frozen Food
 
-Dokumentasi lengkap cara menggunakan panel admin untuk mengelola konten website katalog Banyu Frozen Food.
-
----
-
-## 📋 Daftar Isi
-
-1. [Prasyarat & Persiapan](#1-prasyarat--persiapan)
-2. [Cara Login](#2-cara-login)
-3. [Kenalan dengan Layout Panel](#3-kenalan-dengan-layout-panel)
-4. [Dashboard](#4-dashboard)
-5. [Manajemen Produk](#5-manajemen-produk)
-6. [Manajemen Kategori](#6-manajemen-kategori)
-7. [Manajemen Banner](#7-manajemen-banner)
-8. [Logout](#8-logout)
-9. [Catatan & Batasan Penting](#9-catatan--batasan-penting)
-10. [Troubleshooting](#10-troubleshooting)
+Panduan ini untuk owner/admin toko. Tidak perlu paham coding.
 
 ---
 
-## 1. Prasyarat & Persiapan
-
-Sebelum memakai panel admin, pastikan langkah setup berikut sudah dilakukan:
-
-### a. Setup environment variable
-
-Di file `.env` di root project, isi kedua variabel ini (dari dashboard Supabase → **Project Settings → API**):
-
-```env
-VITE_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-### b. Buat tabel database
-
-Jalankan seluruh isi file [`supabase-schema.sql`](../supabase-schema.sql) di **Supabase Dashboard → SQL Editor → New query → Run**.
-
-### c. Buat akun admin
-
-Panel admin memakai **Supabase Auth** (email + password). Buat akun admin:
-
-1. Buka **Supabase Dashboard → Authentication → Users → Add user**.
-2. Isi **Email** dan **Password**, centang **Auto Confirm User**.
-3. Contoh: `admin@banyu.com` / password pilihanmu.
-
-> ⚠️ Policy RLS memberi akses **penuh (CRUD)** hanya kepada user dengan status `authenticated`. User yang belum login hanya bisa **membaca** data (dan review yang berstatus `approved`).
-
-### d. Jalankan aplikasi
-
-```bash
-npm install
-npm run dev
-```
-
-Buka `http://localhost:5173/admin` (port Vite default adalah **5173**).
+## Daftar Isi
+1. [Cara Masuk](#1-cara-masuk)
+2. [Tampilan Panel](#2-tampilan-panel)
+3. [Dashboard](#3-dashboard)
+4. [Kelola Produk](#4-kelola-produk)
+5. [Kelola Kategori](#5-kelola-kategori)
+6. [Kelola Hero Carousel](#6-kelola-hero-carousel)
+7. [Kelola Brand Partner](#7-kelola-brand-partner)
+8. [Media Library](#8-media-library)
+9. [Pengaturan Situs](#9-pengaturan-situs)
+10. [Cara Keluar](#10-cara-keluar)
+11. [Masalah Umum](#11-masalah-umum)
 
 ---
 
-## 2. Cara Login
+## 1. Cara Masuk
 
-1. Akses halaman login di **`/admin`**.
-2. Masukkan **Email** dan **Password** akun admin.
-3. Klik tombol **Login**.
-4. Jika berhasil, kamu akan diarahkan otomatis ke `/admin/dashboard`.
-5. Jika gagal, muncul pesan error merah (misal: *Invalid login credentials*).
+1. Buka browser, ketik alamat website diikuti `/admin`. Contoh: `https://banyufrozenfood.com/admin`
+2. Isi **Email** dan **Password** yang sudah dibuat.
+3. Klik **Masuk**.
 
-**Catatan:**
-- Jika sudah login dan membuka `/admin`, kamu akan langsung di-redirect ke dashboard.
-- Semua route `/admin/*` (kecuali halaman login) dilindungi `AdminLayout`. Jika sesi tidak ada atau habis, kamu akan otomatis dilempar kembali ke halaman login `/admin`.
+> Akun admin dibuat oleh developer di Supabase Dashboard → Authentication → Users.
 
 ---
 
-## 3. Kenalan dengan Layout Panel
+## 2. Tampilan Panel
 
-Setelah login, semua halaman admin memakai layout yang sama:
+Setelah masuk, ada dua bagian utama:
 
-```
-┌────────────┬──────────────────────────────────────────┐
-│            │  Header: [☰] Panel Admin  |  Lihat Website  Admin  │
-│  SIDEBAR   ├──────────────────────────────────────────┤
-│            │                                          │
-│ 📊 Dashboard│         KONTEN HALAMAN (Outlet)          │
-│ 📦 Produk   │                                          │
-│ 🏷️ Kategori │                                          │
-│ 🖼️ Banners  │                                          │
-│            │                                          │
-│ 🚪 Logout  │                                          │
-└────────────┴──────────────────────────────────────────┘
-```
-
-| Elemen | Fungsi |
-|---|---|
-| **Sidebar** | Navigasi antar halaman admin. Menu aktif ditandai dengan highlight. |
-| **☰ (hamburger)** | Membuka sidebar di tampilan mobile/tablet. |
-| **Lihat Website** | Membuka halaman utama website dalam tab baru. |
-| **Logout** | Mengakhir sesi dan kembali ke halaman login. |
-
-**Menu sidebar:**
-
-| Ikon | Menu | Route | Fungsi |
-|---|---|---|---|
-| 📊 | Dashboard | `/admin/dashboard` | Ringkasan statistik |
-| 📦 | Produk | `/admin/products` | Kelola produk |
-| 🏷️ | Kategori | `/admin/categories` | Kelola kategori |
-| 🖼️ | Banners | `/admin/banners` | Kelola banner carousel |
+- **Sidebar kiri** — daftar menu: Dashboard, Produk, Kategori, Hero Carousel, Banner, Brand Partner, Media, Pengaturan
+- **Area kanan** — konten halaman yang sedang dibuka
 
 ---
 
-## 4. Dashboard
+## 3. Dashboard
 
-**Route:** `/admin/dashboard`
-
-Halaman ringkasan yang menampilkan:
-
-| Kartu Statistik | Sumber Data |
-|---|---|
-| 📦 **Total Produk** | Jumlah baris tabel `products` |
-| 🏷️ **Kategori** | Jumlah baris tabel `categories` |
-| ⭐ **Ulasan** | Jumlah baris tabel `reviews` |
-
-Di bawah kartu statistik terdapat **Panduan Singkat** sebagai pengingat singkat penggunaan menu.
-
-> 💡 Dashboard hanya menampilkan angka (read-only) — tidak ada aksi yang bisa dilakukan dari halaman ini.
+Menampilkan ringkasan: jumlah produk, jumlah kategori, jumlah hero slide. Tidak ada aksi di sini, hanya informasi sekilas.
 
 ---
 
-## 5. Manajemen Produk
+## 4. Kelola Produk
 
-**Route:** `/admin/products`
+### Melihat daftar produk
+Menu **Produk** → daftar semua produk dalam tabel.
 
-Mengelola semua produk yang tampil di website.
-
-### 5.1 Melihat & Mencari Produk
-
-- Tabel menampilkan: **foto + nama produk, kategori, harga (Rp), stok, aksi**.
-- Produk diurutkan dari yang **terbaru** (`created_at` descending).
-- Gunakan kolom pencarian **"Cari nama produk..."** untuk filter cepat (berdasarkan nama, tanpa memuat ulang data dari server).
-
-### 5.2 Menambah Produk
-
-1. Klik tombol **`+ Tambah Produk`** di pojok kanan atas.
-2. Isi form berikut:
-
-   | Field | Wajib? | Keterangan |
-   |---|---|---|
-   | **Nama Produk** | ✅ | Mengetik nama otomatis menghasilkan **slug** (bisa diedit manual). |
-   | **Slug URL** | ✅ | Dipakai untuk URL bersih (`/produk/nama-produk`). Harus unik. |
-   | **Kategori** | ✅ | Pilih dari dropdown kategori yang sudah dibuat. |
-   | **Harga (Rp)** | ✅ | Angka dalam Rupiah (tanpa titik/koma), mis. `35000`. |
-   | **Stok** | ✅ | Jumlah stok (angka). |
-   | **Deskripsi Produk** | ❌ | Teks bebas, mendukung beberapa baris. |
-   | **URL Gambar** | ❌ | Pisahkan banyak URL dengan **koma**. Contoh: `https://.../1.jpg, https://.../2.jpg`. Foto pertama jadi foto utama/thumbnail. |
-   | **URL Tokopedia** | ❌ | Link marketplace Tokopedia produk ini. |
-   | **URL Shopee** | ❌ | Link marketplace Shopee produk ini. |
-   | **Produk Unggulan** | ❌ | Centang agar tampil di **Homepage** (Produk Unggulan). |
-
-3. Klik **Simpan**. Tunggu hingga muncul kembali tabel (toast/sukses tidak tampil — form akan tertutup dan tabel termuat ulang).
-4. Klik **Batal** jika ingin membatalkan.
-
-### 5.3 Mengedit Produk
-
-1. Klik tombol **✏️** pada baris produk yang diinginkan.
-2. Form terbuka dengan data lama yang sudah terisi.
-3. Ubah field yang diinginkan, lalu klik **Simpan**.
-
-> ℹ️ Field **Gambar** ditampilkan sebagai teks URL yang dipisah koma (bukan upload file). Saat disimpan, teks itu dikonversi kembali menjadi array.
-
-### 5.4 Menghapus Produk
-
-1. Klik tombol **🗑️** pada baris produk.
-2. Konfirmasi dialog **"Yakin ingin menghapus produk ini?"** → klik OK.
-3. Produk dihapus permanen.
-
-> ⚠️ Menghapus produk juga **menghapus semua ulasan** yang terkait dengannya (relasi `ON DELETE CASCADE`).
-
----
-
-## 6. Manajemen Kategori
-
-**Route:** `/admin/categories`
-
-Mengelola pengelompokan produk (dipakai untuk filter halaman produk dan dropdown form produk).
-
-### 6.1 Melihat Kategori
-
-Tabel menampilkan: **ID, Icon, Nama Kategori, Deskripsi, Aksi**, diurutkan berdasarkan ID menaik.
-
-### 6.2 Menambah Kategori
-
-1. Klik **`+ Tambah Kategori`**.
+### Tambah produk baru
+1. Klik tombol **Tambah Produk**.
 2. Isi form:
-
-   | Field | Wajib? | Keterangan |
-   |---|---|---|
-   | **Nama Kategori** | ✅ | Contoh: `Daging Ayam`. |
-   | **Icon (Emoji/Teks)** | ✅ | Contoh: `🍗`. Default: `📦`. |
-   | **Deskripsi** | ❌ | Teks penjelasan opsional. |
-
+   - **Nama** — nama produk (wajib)
+   - **Kategori** — pilih dari daftar kategori yang sudah ada
+   - **Harga** — angka tanpa titik atau koma (contoh: `25000`)
+   - **Stok** — jumlah stok saat ini
+   - **Deskripsi** — penjelasan produk
+   - **Spesifikasi** — detail teknis produk (opsional)
+   - **Foto** — klik area upload atau pilih dari Media Library
+   - **Produk Unggulan** — centang jika ingin produk tampil di beranda
 3. Klik **Simpan**.
 
-### 6.3 Mengedit Kategori
+### Edit produk
+Klik ikon pensil (✏️) di baris produk yang ingin diubah → ubah isian → klik **Simpan**.
 
-Klik **✏️** pada baris → ubah data → **Simpan**.
-
-### 6.4 Menghapus Kategori
-
-1. Klik **🗑️** pada baris.
-2. Konfirmasi: *"Yakin ingin menghapus kategori ini? (Produk yang terhubung mungkin kehilangan kategori)"*.
-
-> ⚠️ Perilaku database: saat kategori dihapus, kolom `category_id` pada produk terkait di-set menjadi **NULL** (`ON DELETE SET NULL`) — produk **tidak ikut terhapus**, hanya kehilangan kategorinya. Sebaiknya pindahkan produk ke kategori lain terlebih dahulu sebelum menghapus.
+### Hapus produk
+Klik ikon tempat sampah (🗑️) → konfirmasi hapus. **Tidak bisa dibatalkan.**
 
 ---
 
-## 7. Manajemen Banner
+## 5. Kelola Kategori
 
-**Route:** `/admin/banners`
+Menu **Kategori** → daftar semua kategori (contoh: Nugget, Sosis, Dimsum).
 
-Mengelola banner carousel di halaman beranda.
-
-### 7.1 Melihat Banner
-
-Tabel menampilkan: **Urutan, Gambar (preview), Judul/Subjudul, Aksi**, diurutkan berdasarkan kolom `order` menaik.
-
-### 7.2 Menambah Banner
-
-1. Klik **`+ Tambah Banner`**.
-2. Isi form:
-
-   | Field | Wajib? | Keterangan |
-   |---|---|---|
-   | **Judul Banner** | ✅ | Contoh: `Promo Spesial Banyu`. |
-   | **Subjudul** | ❌ | Contoh: `Diskon 20% untuk pembelian minggu ini`. |
-   | **URL Gambar Banner** | ✅ | URL gambar langsung (bukan upload). Disarankan rasio **16:9** / lebar minimal **1200px**. |
-   | **Urutan (Angka)** | ✅ | Angka kecil tampil lebih dulu (`0` = paling awal). |
-
+### Tambah kategori
+1. Klik **Tambah Kategori**.
+2. Isi nama dan ikon (emoji).
 3. Klik **Simpan**.
 
-### 7.3 Mengedit / Menghapus Banner
+### Edit / Hapus
+Sama seperti produk — ikon pensil untuk edit, ikon tempat sampah untuk hapus.
 
-- **Edit:** klik **✏️** → ubah data → **Simpan**.
-- **Hapus:** klik **🗑️** → konfirmasi *"Yakin ingin menghapus banner ini?"* → OK.
-
----
-
-## 8. Logout
-
-Klik tombol **`🚪 Logout`** di bagian bawah sidebar. Sesi Supabase diakhiri dan kamu diarahkan kembali ke halaman login `/admin`.
+> Menghapus kategori tidak menghapus produk di dalamnya. Produk tersebut akan kehilangan kategorinya.
 
 ---
 
-## 9. Catatan & Batasan Penting
+## 6. Kelola Hero Carousel
 
-Poin-poin yang perlu diketahui tentang perilaku panel saat ini:
+Carousel adalah slide gambar besar yang berputar otomatis di bagian atas beranda.
 
-1. **Belum ada halaman kelola Review di panel.**
-   Tabel `reviews` ada di database (terhitung di dashboard), tetapi **belum ada UI moderasi**. Saat ini review masuk dengan status `pending` dan hanya tampil di website jika statusnya `approved`. Moderasi review dilakukan langsung via **Supabase Dashboard → Table Editor → reviews** (ubah kolom `status` menjadi `approved` / `rejected`).
+Menu **Hero Carousel** → daftar slide.
 
-2. **Gambar diunggah lewat URL, bukan file upload.**
-   Produk dan banner menerima URL gambar eksternal (mis. dari image host). Belum ada fitur upload file ke Supabase Storage.
+### Tambah slide
+1. Klik **Tambah Slide**.
+2. Isi judul, subjudul, deskripsi, gambar, teks tombol, dan link tombol.
+3. Centang **Aktif** agar slide tampil.
+4. Klik **Simpan**.
 
-3. **Tidak ada halaman kelola ulasan/rating manual.**
-   Kolom `rating` & `review_count` pada tabel `products` diisi manual (via form edit tidak tersedia — bisa lewat Supabase Table Editor bila perlu).
-
-4. **Keamanan.**
-   - Route admin dilindungi pengecekan sesi di `AdminLayout`.
-   - Akses tulis (INSERT/UPDATE/DELETE) hanya berhasil untuk user `authenticated` (RLS).
-   - Kunci `anon` tetap harus dijaga di `.env` — jangan commit `.env` ke version control.
-
-5. **Field `specs` (JSONB) pada produk belum punya form** di panel saat ini; bisa diisi langsung via Supabase Table Editor bila diperlukan.
+### Mengatur urutan
+Gunakan tombol panah atas/bawah di tabel untuk mengubah urutan slide.
 
 ---
 
-## 10. Troubleshooting
+## 7. Kelola Brand Partner
 
-| Masalah | Kemungkinan Penyebab | Solusi |
-|---|---|---|
-| Login gagal "Invalid login credentials" | Email/password salah atau user belum dibuat | Buat user di Supabase → Authentication → Users |
-| Halaman admin kosong / error `supabaseUrl is required` | Variabel `.env` belum diisi | Isi `VITE_SUPABASE_URL` & `VITE_SUPABASE_ANON_KEY`, lalu restart `npm run dev` |
-| Data tidak bisa disimpan (pesan permission) | RLS belum aktif / policy belum dibuat | Jalankan ulang `supabase-schema.sql` di SQL Editor |
-| Tabel ditemukan tetapi kosong | Belum ada data / policy SELECT memblokir | Cek isi tabel di Supabase → Table Editor |
-| Setelah edit, tabel tidak berubah | Cache state lokal | Muat ulang halaman (F5) |
-| Slug bentrok/duplikat | Slug harus unik | Ubah slug secara manual pada form |
-| Redirect terus ke `/admin` | Sesi login habis | Login ulang |
+Mengelola logo brand/supplier yang tampil di bagian bawah beranda.
+
+Menu **Brand Partner** → tambah, edit, hapus logo partner, atur urutan tampil.
 
 ---
 
-**File terkait:**
-- [`supabase-schema.sql`](../supabase-schema.sql) — skema database & policy RLS
-- [`docs/Dokumentasi-Struktur-Database.md`](./Dokumentasi-Struktur-Database.md) — dokumentasi struktur database lengkap
-- [`README.md`](../README.md) — overview project
+## 8. Media Library
+
+Tempat menyimpan semua gambar yang diupload.
+
+Menu **Media** → galeri gambar.
+
+### Upload gambar
+1. Klik **Upload Gambar**.
+2. Pilih file dari komputer (JPG, PNG, WebP).
+3. Gambar tersimpan dan siap dipilih saat isi form produk atau hero slide.
+
+### Hapus gambar
+Klik gambar → klik **Hapus**. Pastikan gambar tidak sedang dipakai oleh produk lain.
+
+---
+
+## 9. Pengaturan Situs
+
+Semua konten situs yang bisa diubah tanpa sentuh kode.
+
+Menu **Pengaturan** → beberapa tab:
+
+| Tab | Apa yang bisa diubah |
+|---|---|
+| Identitas | Nama toko, logo, deskripsi singkat |
+| Kontak | Nomor WhatsApp, alamat, jam buka, link Google Maps |
+| Isi Beranda | Teks sambutan, link Tokopedia, link Shopee |
+| Sosial Media | Link Instagram, Facebook, TikTok |
+| SEO | Judul halaman, deskripsi untuk Google |
+
+### Cara menyimpan & menerbitkan
+- Klik **Simpan Draft** untuk menyimpan tanpa langsung tampil di website.
+- Klik **Terbitkan** agar perubahan langsung tampil untuk pengunjung.
+
+> **Catatan Tokopedia/Shopee:** Jika link dikosongkan, tombol marketplace di beranda akan otomatis disembunyikan. Tidak perlu menghapus tombolnya secara manual.
+
+---
+
+## 10. Cara Keluar
+
+Klik nama/foto profil di pojok kiri bawah sidebar → klik **Keluar**.
+
+---
+
+## 11. Masalah Umum
+
+| Masalah | Solusi |
+|---|---|
+| Tidak bisa login | Periksa email/password. Hubungi developer jika lupa password. |
+| Produk tidak tampil di website | Pastikan produk sudah disimpan dan tidak disembunyikan. |
+| Foto tidak muncul | Coba upload ulang gambar melalui Media Library. |
+| Perubahan di Pengaturan tidak tampil | Pastikan sudah klik **Terbitkan**, bukan hanya **Simpan Draft**. |
+| Website error merah | Hubungi developer — kemungkinan ada masalah koneksi ke database. |

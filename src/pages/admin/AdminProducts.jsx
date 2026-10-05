@@ -231,27 +231,6 @@ export default function AdminProducts() {
                 />
               </div>
 
-              <div className="form-group-row" style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem' }}>
-                <div style={{ flex: 1 }}>
-                  <label>URL Tokopedia</label>
-                  <input 
-                    type="url" 
-                    value={formData.tokopedia_url || ''} 
-                    onChange={(e) => setFormData({...formData, tokopedia_url: e.target.value})}
-                    placeholder="https://tokopedia.com/..."
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label>URL Shopee</label>
-                  <input 
-                    type="url" 
-                    value={formData.shopee_url || ''} 
-                    onChange={(e) => setFormData({...formData, shopee_url: e.target.value})}
-                    placeholder="https://shopee.co.id/..."
-                  />
-                </div>
-              </div>
-
               <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <input 
                   type="checkbox" 

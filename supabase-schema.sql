@@ -1,6 +1,6 @@
 -- ==============================================
--- Supabase Schema untuk Banyu Frozen Food
--- Jalankan SQL ini di Supabase SQL Editor
+-- Supabase Schema — Banyu Frozen Food
+-- Jalankan di: Supabase Dashboard → SQL Editor → New query → Run
 -- ==============================================
 
 -- Tabel Kategori
@@ -19,19 +19,15 @@ CREATE TABLE products (
   slug TEXT UNIQUE NOT NULL,
   category_id BIGINT REFERENCES categories(id) ON DELETE SET NULL,
   price INTEGER NOT NULL DEFAULT 0,
-  rating NUMERIC(2,1) DEFAULT 0,
-  review_count INTEGER DEFAULT 0,
   stock INTEGER DEFAULT 0,
   description TEXT,
-  specs JSONB DEFAULT '{}',
-  images TEXT[] DEFAULT '{}',
-  tokopedia_url TEXT DEFAULT '#',
-  shopee_url TEXT DEFAULT '#',
+  specs JSONB DEFAULT '{}',    -- spesifikasi bebas, format: {"Berat": "500g", "Isi": "10 pcs"}
+  images TEXT[] DEFAULT '{}',  -- array URL foto produk
   is_featured BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Tabel Review
+-- Tabel Review (tidak dipakai di UI saat ini — disiapkan untuk fase berikutnya)
 CREATE TABLE reviews (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   product_id BIGINT REFERENCES products(id) ON DELETE CASCADE,
@@ -42,7 +38,7 @@ CREATE TABLE reviews (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Tabel Banner (existing)
+-- Tabel Banner
 CREATE TABLE banners (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   title TEXT NOT NULL,

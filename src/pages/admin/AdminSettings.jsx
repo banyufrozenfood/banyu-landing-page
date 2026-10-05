@@ -3,13 +3,10 @@ import { Link } from 'react-router-dom'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import ImagePicker from '../../components/ui/ImagePicker.jsx'
-import { RADIUS_OPTIONS } from '../../cms/defaults.js'
 import {
   isValidEmail,
   isValidWhatsapp,
   isValidUrl,
-  isValidInternalLink,
-  isValidHexColor,
 } from '../../cms/validate.js'
 import './AdminShared.css'
 import './AdminSettings.css'
@@ -17,22 +14,11 @@ import './AdminSettings.css'
 const uid = () => Math.random().toString(36).slice(2, 9)
 
 const TABS = [
-  { id: 'identitas', label: 'Identitas & Logo' },
   { id: 'kontak', label: 'Kontak & Jam Buka' },
   { id: 'sosial', label: 'Sosial Media' },
-  { id: 'menu', label: 'Menu & Footer' },
+  { id: 'menu', label: 'Navbar & Footer' },
   { id: 'beranda', label: 'Isi Beranda' },
-  { id: 'tampilan', label: 'Warna & Tampilan' },
   { id: 'seo', label: 'SEO' },
-]
-
-const COLOR_FIELDS = [
-  { key: 'primary', label: 'Warna Utama' },
-  { key: 'primaryDark', label: 'Warna Utama Gelap' },
-  { key: 'primaryLight', label: 'Warna Utama Terang' },
-  { key: 'secondary', label: 'Warna Sekunder' },
-  { key: 'accent', label: 'Warna Aksen' },
-  { key: 'accentDark', label: 'Warna Aksen Gelap' },
 ]
 
 function Field({ label, hint, error, children }) {
@@ -89,7 +75,6 @@ function EditableList({ items, onChange, title, addLabel, makeItem, renderItem, 
 
 function validate(form) {
   const errors = {}
-  if (!form.identity.businessName.trim()) errors['identity.businessName'] = 'Nama bisnis wajib diisi.'
   const c = form.contact
   if (!isValidWhatsapp(c.whatsapp)) errors['contact.whatsapp'] = 'Hanya angka 8–15 digit, diawali kode negara. Contoh: 6281234567890.'
   if (c.email && !isValidEmail(c.email)) errors['contact.email'] = 'Format email belum benar.'
@@ -98,16 +83,9 @@ function validate(form) {
   form.socials.forEach((s, i) => {
     if (s.url && !isValidUrl(s.url)) errors[`socials.${i}.url`] = 'Link harus diawali http:// atau https://.'
   })
-  form.navbar.menu.forEach((m, i) => {
-    if (!m.label.trim()) errors[`menu.${i}.label`] = 'Nama menu wajib diisi.'
-    if (!isValidInternalLink(m.link)) errors[`menu.${i}.link`] = 'Link halaman harus diawali / (contoh: /produk).'
-  })
-  COLOR_FIELDS.forEach(({ key }) => {
-    if (!isValidHexColor(form.appearance[key])) errors[`appearance.${key}`] = 'Warna harus format hex, contoh: #0099FF.'
-  })
   const mp = form.home.marketplace
   ;['tokopediaUrl', 'shopeeUrl'].forEach((key) => {
-    if (mp[key] !== '#' && !isValidUrl(mp[key])) errors[`marketplace.${key}`] = 'Link harus diawali http:// atau https://, atau isi # jika belum ada.'
+    if (mp[key] && mp[key] !== '#' && !isValidUrl(mp[key])) errors[`marketplace.${key}`] = 'Link harus diawali http:// atau https://, atau kosongkan jika belum ada.'
   })
   if (!form.seo.title.trim()) errors['seo.title'] = 'Judul website wajib diisi.'
   if (form.seo.ogImage && !isValidUrl(form.seo.ogImage)) errors['seo.ogImage'] = 'Link harus diawali http:// atau https://.'
@@ -124,13 +102,16 @@ function formatDateTime(value) {
 export default function AdminSettings() {
   const cms = useSiteSettings()
   const toast = useToast()
-  const [tab, setTab] = useState('identitas')
+  const [tab, setTab] = useState('kontak')
   const [form, setForm] = useState(() => structuredClone(cms.draft))
+  // baseline = draft terakhir yang sengaja disimpan/diterbitkan.
+  // Pratinjau sengaja TIDAK mengubah baseline agar "Batalkan Perubahan" tetap bisa mengembalikan.
+  const [baseline, setBaseline] = useState(() => structuredClone(cms.draft))
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [confirmPublish, setConfirmPublish] = useState(false)
 
-  const dirty = JSON.stringify(form) !== JSON.stringify(cms.draft)
+  const dirty = JSON.stringify(form) !== JSON.stringify(baseline)
   const err = (key) => errors[key]
 
   const update = (fn) => {
@@ -155,6 +136,7 @@ export default function AdminSettings() {
         await cms.saveDraft(form)
         toast.success('Perubahan berhasil disimpan sebagai draft.')
       }
+      setBaseline(structuredClone(form))
       return true
     } catch (e) {
       console.error('Gagal menyimpan pengaturan:', e)
@@ -166,9 +148,38 @@ export default function AdminSettings() {
   }
 
   const handlePreview = async () => {
-    const ok = await runSave(false)
-    if (!ok) return
-    window.open('/?preview=draft', '_blank')
+    const found = validate(form)
+    setErrors(found)
+    if (Object.keys(found).length > 0) {
+      toast.error('Periksa lagi isian yang ditandai merah.')
+      return
+    }
+    setSaving(true)
+    try {
+      // Simpan ke draft dulu supaya tab pratinjau bisa menampilkannya.
+      await cms.saveDraft(form)
+      window.open('/?preview=draft', '_blank')
+    } catch (e) {
+      console.error('Gagal menyiapkan pratinjau:', e)
+      toast.error('Gagal membuka pratinjau. Silakan coba lagi.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancel = async () => {
+    const reverted = structuredClone(baseline)
+    setForm(reverted)
+    setErrors({})
+    // Bila Pratinjau sempat menyimpan draft yang berbeda, kembalikan draft ke baseline.
+    if (JSON.stringify(cms.draft) !== JSON.stringify(reverted)) {
+      try {
+        await cms.saveDraft(reverted)
+      } catch (e) {
+        console.error('Gagal mengembalikan draft:', e)
+      }
+    }
+    toast.success('Perubahan dibatalkan, kembali ke draft terakhir yang disimpan.')
   }
 
   return (
@@ -203,27 +214,14 @@ export default function AdminSettings() {
         ))}
       </div>
 
+      <div className="settings-note settings-note--flow">
+        <strong>Cara pakai:</strong> ubah isi → <strong>Pratinjau</strong> (lihat dulu di tab baru) →
+        <strong> Simpan Draft</strong> (simpan, belum tampil ke pengunjung) → <strong>Terbitkan</strong> (baru tampil ke pengunjung).
+        <strong> Batalkan Perubahan</strong> mengembalikan semua isian ke draft terakhir yang kamu simpan.
+      </div>
+
       <div className="admin-card settings-card">
         <div className="admin-form-container admin-form">
-          {tab === 'identitas' && (
-            <>
-              <Field label="Nama Bisnis" error={err('identity.businessName')} hint="Muncul di logo teks, judul tab browser, dan footer.">
-                <input value={form.identity.businessName} onChange={(e) => update((f) => { f.identity.businessName = e.target.value })} />
-              </Field>
-              <div className="form-group-row" style={{ display: 'flex', gap: '1.5rem' }}>
-                <Field label="Logo Utama" hint="Untuk area terang (navbar). Disarankan PNG transparan.">
-                  <ImagePicker value={form.identity.logoUrl} category="logo" onChange={(url) => update((f) => { f.identity.logoUrl = url })} />
-                </Field>
-                <Field label="Logo Area Gelap" hint="Untuk footer berwarna gelap.">
-                  <ImagePicker value={form.identity.logoWhiteUrl} category="logo" onChange={(url) => update((f) => { f.identity.logoWhiteUrl = url })} />
-                </Field>
-                <Field label="Ikon Tab Browser (Favicon)" hint="Ukuran kecil, contoh: 64x64 px.">
-                  <ImagePicker value={form.identity.faviconUrl} category="logo" onChange={(url) => update((f) => { f.identity.faviconUrl = url })} />
-                </Field>
-              </div>
-            </>
-          )}
-
           {tab === 'kontak' && (
             <>
               <Field label="Nomor WhatsApp" error={err('contact.whatsapp')} hint="Format internasional tanpa + atau spasi. Contoh: 6281234567890.">
@@ -295,30 +293,10 @@ export default function AdminSettings() {
           {tab === 'menu' && (
             <>
               <div className="settings-note">
-                <strong>Cukup atur menu di sini sekali.</strong> Menu ini muncul di bagian atas website (navbar)
-                dan <em>otomatis</em> juga tampil di footer bagian "Navigasi".
+                <strong>Menu navigasi sudah tetap</strong> (Home, Produk, Lokasi). Menu ini muncul di bagian atas
+                website (navbar) dan <em>otomatis</em> juga di footer bagian "Navigasi" — tidak perlu diatur di sini.
+                Tombol di ujung navbar sekarang adalah <strong>Keranjang</strong> untuk pemesanan via WhatsApp.
               </div>
-              <EditableList
-                title="Menu Website"
-                addLabel="Tambah Menu"
-                items={form.navbar.menu}
-                onChange={(items) => update((f) => { f.navbar.menu = items })}
-                makeItem={() => ({ id: uid(), label: '', link: '/', visible: true })}
-                emptyNote="Belum ada menu. Klik tombol tambah untuk menambahkan."
-                renderItem={(item, set, i) => (
-                  <>
-                    <input placeholder="Nama menu (contoh: Produk)" value={item.label} onChange={(e) => set({ label: e.target.value })} />
-                    <input placeholder="Link halaman (contoh: /produk)" value={item.link} onChange={(e) => set({ link: e.target.value })} />
-                    <Toggle checked={item.visible} onChange={(v) => set({ visible: v })} label="Tampilkan" />
-                    {(err(`menu.${i}.label`) || err(`menu.${i}.link`)) && (
-                      <p className="field-error">{err(`menu.${i}.label`) || err(`menu.${i}.link`)}</p>
-                    )}
-                  </>
-                )}
-              />
-              <Field label="Teks Tombol WhatsApp di Navbar" hint="Contoh: WhatsApp, Pesan Sekarang, atau Hubungi Kami.">
-                <input value={form.navbar.ctaLabel} onChange={(e) => update((f) => { f.navbar.ctaLabel = e.target.value })} />
-              </Field>
 
               <div className="settings-note">
                 <strong>Daftar "Kategori" di footer terisi otomatis</strong> dari data Kategori Anda.
@@ -337,6 +315,11 @@ export default function AdminSettings() {
 
           {tab === 'beranda' && (
             <>
+              <div className="settings-note">
+                Nyalakan/matikan bagian yang ingin ditampilkan di beranda. Kamu juga bisa mengubah judul, kalimat
+                pendukung, dan daftar keunggulan di bawah. Perubahan baru terlihat pengunjung setelah di-<strong>Terbitkan</strong>
+                (atau cek dulu lewat <strong>Pratinjau</strong>).
+              </div>
               <div className="form-group">
                 <label>Bagian yang Ditampilkan di Beranda</label>
                 <div className="toggle-group">
@@ -347,10 +330,10 @@ export default function AdminSettings() {
                 </div>
               </div>
               <div className="form-group-row" style={{ display: 'flex', gap: '1.5rem' }}>
-                <Field label="Link Toko Tokopedia" error={err('marketplace.tokopediaUrl')} hint="Isi # jika belum ada.">
+                <Field label="Link Toko Tokopedia" error={err('marketplace.tokopediaUrl')} hint="Opsional. Kosongkan jika tidak ada, agar tombol Tokopedia otomatis disembunyikan.">
                   <input value={form.home.marketplace.tokopediaUrl} onChange={(e) => update((f) => { f.home.marketplace.tokopediaUrl = e.target.value })} />
                 </Field>
-                <Field label="Link Toko Shopee" error={err('marketplace.shopeeUrl')} hint="Isi # jika belum ada.">
+                <Field label="Link Toko Shopee" error={err('marketplace.shopeeUrl')} hint="Opsional. Kosongkan jika tidak ada, agar tombol Shopee otomatis disembunyikan.">
                   <input value={form.home.marketplace.shopeeUrl} onChange={(e) => update((f) => { f.home.marketplace.shopeeUrl = e.target.value })} />
                 </Field>
               </div>
@@ -374,39 +357,6 @@ export default function AdminSettings() {
                   </>
                 )}
               />
-            </>
-          )}
-
-          {tab === 'tampilan' && (
-            <>
-              <p className="field-hint">
-                Pilih warna dengan klik kotak warna. Perubahan hanya memengaruhi warna, bukan susunan desain.
-              </p>
-              <div className="color-grid">
-                {COLOR_FIELDS.map(({ key, label }) => (
-                  <Field key={key} label={label} error={err(`appearance.${key}`)}>
-                    <div className="color-input">
-                      <input
-                        type="color"
-                        value={/^#[0-9a-fA-F]{6}$/.test(form.appearance[key]) ? form.appearance[key] : '#000000'}
-                        onChange={(e) => update((f) => { f.appearance[key] = e.target.value.toUpperCase() })}
-                      />
-                      <input
-                        type="text"
-                        value={form.appearance[key]}
-                        onChange={(e) => update((f) => { f.appearance[key] = e.target.value })}
-                      />
-                    </div>
-                  </Field>
-                ))}
-              </div>
-              <Field label="Bentuk Sudut Kartu & Tombol" hint="Pilih tingkat kelengkungan sudut seluruh website.">
-                <select value={form.appearance.radius} onChange={(e) => update((f) => { f.appearance.radius = e.target.value })}>
-                  {RADIUS_OPTIONS.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-              </Field>
             </>
           )}
 
@@ -434,11 +384,11 @@ export default function AdminSettings() {
             <button type="button" className="btn-admin-primary btn-publish" disabled={saving} onClick={() => setConfirmPublish(true)}>
               Terbitkan
             </button>
-            <button type="button" className="btn-admin-secondary" disabled={!dirty || saving} onClick={() => { setForm(structuredClone(cms.draft)); setErrors({}) }}>
+            <button type="button" className="btn-admin-secondary" disabled={!dirty || saving} onClick={handleCancel}>
               Batalkan Perubahan
             </button>
           </div>
-          {dirty && <p className="field-hint">Ada perubahan yang belum disimpan sebagai draft.</p>}
+          {dirty && <p className="field-hint">Ada perubahan yang belum disimpan. Klik "Simpan Draft" untuk menyimpan, atau "Batalkan Perubahan" untuk mengabaikan.</p>}
         </div>
       </div>
 
