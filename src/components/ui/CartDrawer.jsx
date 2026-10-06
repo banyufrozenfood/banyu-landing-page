@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useCart } from '../CartContext.jsx'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import './CartDrawer.css'
@@ -6,32 +7,51 @@ export default function CartDrawer() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, isCartOpen, setIsCartOpen } = useCart()
   const { settings } = useSiteSettings()
 
+  useEffect(() => {
+    if (!isCartOpen) return
+    const onKey = (e) => { if (e.key === 'Escape') setIsCartOpen(false) }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [isCartOpen, setIsCartOpen])
+
   if (!isCartOpen) return null
 
   const handleCheckoutWA = () => {
     if (cartItems.length === 0) return
 
-    const intro = `Halo ${settings.identity.businessName}, saya ingin pesan produk berikut dari website:\n\n`
-    
-    const itemsText = cartItems.map((item, i) => 
-      `${i+1}. ${item.name} - ${item.quantity}x (Rp ${(item.price * item.quantity).toLocaleString('id-ID')})`
+    const lines = cartItems.map((item) =>
+      `• ${item.name} (${item.quantity}x) — Rp ${(item.price * item.quantity).toLocaleString('id-ID')}`
     ).join('\n')
-    
-    const totalText = `\n\nTotal: *Rp ${cartTotal.toLocaleString('id-ID')}*`
-    const addressInfo = `\n\nTolong infokan ongkos kirim ke alamat saya. Terima kasih.`
 
-    const message = encodeURIComponent(intro + itemsText + totalText + addressInfo)
-    const waUrl = `https://wa.me/${settings.contact.whatsapp}?text=${message}`
-    
+    const message =
+`Halo ${settings.identity.businessName}, saya mau pesan produk dari website:
+
+📋 *DETAIL PESANAN*
+${lines}
+Total Produk: Rp ${cartTotal.toLocaleString('id-ID')}
+
+📍 INFORMASI PENGIRIMAN
+• Nama:
+• Alamat Lengkap:
+• Patokan / Kecamatan:
+
+Mohon infokan total + ongkir dan pilihan pembayarannya ya min. Terima kasih!`
+
+    const waUrl = `https://wa.me/${settings.contact.whatsapp}?text=${encodeURIComponent(message)}`
+
     window.open(waUrl, '_blank')
   }
 
   return (
-    <div className="cart-overlay">
-      <div className="cart-drawer">
+    <div className="cart-overlay" onClick={() => setIsCartOpen(false)}>
+      <div className="cart-drawer" onClick={(e) => e.stopPropagation()}>
         <div className="cart-header">
           <h3>Keranjang Belanja</h3>
-          <button className="cart-close" onClick={() => setIsCartOpen(false)}>×</button>
+          <button className="cart-close" aria-label="Tutup keranjang" onClick={() => setIsCartOpen(false)}>×</button>
         </div>
         
         <div className="cart-items">
