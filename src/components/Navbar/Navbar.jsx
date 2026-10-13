@@ -41,6 +41,10 @@ export default function Navbar() {
   }, [isOpen])
 
   const menu = (settings?.navbar?.menu || []).filter((m) => m?.visible && m?.link && m?.label)
+  const ctaLabel = settings?.navbar?.ctaLabel || 'WhatsApp'
+  const waNumber = (settings?.contact?.whatsapp || '').replace(/\D/g, '')
+  const waMessage = settings?.contact?.whatsappMessage || 'Halo Banyu, saya ingin bertanya tentang produk'
+  const waUrl = waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}` : null
 
   return (
     <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
@@ -62,7 +66,7 @@ export default function Navbar() {
             </li>
           ))}
           <li className="navbar__cart-item">
-            <button className="navbar__cart-btn" onClick={() => setIsCartOpen(true)}>
+            <button className="navbar__cart-btn" onClick={() => setIsCartOpen(true)} aria-label="Buka keranjang">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="9" cy="21" r="1"></circle>
                 <circle cx="20" cy="21" r="1"></circle>
@@ -71,6 +75,13 @@ export default function Navbar() {
               {cartCount > 0 && <span className="navbar__cart-badge">{cartCount}</span>}
             </button>
           </li>
+          {waUrl && (
+            <li className="navbar__cta-item">
+              <a className="btn btn-primary navbar__cta" href={waUrl} target="_blank" rel="noopener noreferrer">
+                {ctaLabel}
+              </a>
+            </li>
+          )}
         </ul>
 
         <button
