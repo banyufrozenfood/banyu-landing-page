@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { sortByOrder, nextOrder, normalizeOrderInput } from '../../lib/ordering.js';
+import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx';
+import { uploadMediaFile } from '../../cms/store.js';
+import ImageCropper from '../../components/ui/ImageCropper.jsx';
 import './AdminShared.css';
 import './AdminHeroSlides.css';
 
@@ -24,33 +27,39 @@ export default function AdminHeroSlides() {
   });
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    fetchSlides();
-  }, []);
-
   const fetchSlides = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('hero_slides')
-      .select('*')
-      .order('order', { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from('hero_slides')
+        .select('*')
+        .order('order', { ascending: true });
 
-    if (error) console.error(error);
-    else setSlides(sortByOrder(data || []));
-    setLoading(false);
+      if (error) console.error(error);
+      else setSlides(sortByOrder(data || []));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchSlides();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.title.trim()) newErrors.title = 'Judul wajib diisi';
-    if (!formData.image.trim()) newErrors.image = 'URL Gambar wajib diisi';
-    else if (!isValidUrl(formData.image)) newErrors.image = 'Format URL tidak valid (contoh: https://example.com/image.jpg)';
-    if (!formData.cta_text.trim()) newErrors.cta_text = 'Teks tombol wajib diisi';
-    if (!formData.cta_link.trim()) newErrors.cta_link = 'Link tujuan wajib diisi';
-    else if (!isValidUrl(formData.cta_link) && !formData.cta_link.startsWith('/')) {
-      newErrors.cta_link = 'Gunakan URL lengkap (https://...) atau path relatif (contoh: /produk)';
+    if (!(formData.title || '').trim()) newErrors.title = 'Judul wajib diisi';
+    if (!(formData.image || '').trim()) newErrors.image = 'URL Gambar wajib diisi';
+    else if (!isValidHttpUrl(formData.image)) newErrors.image = 'Gunakan URL http(s) yang valid (contoh: https://example.com/image.jpg)';
+    if (!(formData.cta_text || '').trim()) newErrors.cta_text = 'Teks tombol wajib diisi';
+    if (!(formData.cta_link || '').trim()) newErrors.cta_link = 'Link tujuan wajib diisi';
+    else if (!isValidHttpUrl(formData.cta_link) && !(formData.cta_link || '').startsWith('/')) {
+      newErrors.cta_link = 'Gunakan URL lengkap https://... atau path relatif (contoh: /produk)';
     }
-    if (formData.order < 0 || !Number.isFinite(Number(formData.order))) {
+    if (formData.order === '' || formData.order == null || !Number.isFinite(Number(formData.order)) || Number(formData.order) < 0) {
       newErrors.order = 'Urutan harus angka 0 atau lebih';
     }
 
@@ -58,11 +67,11 @@ export default function AdminHeroSlides() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const isValidUrl = (string) => {
+  const isValidHttpUrl = (string) => {
     try {
-      new URL(string);
-      return true;
-    } catch (_) {
+      const u = new URL((string || '').trim());
+      return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
       return false;
     }
   };
@@ -76,7 +85,17 @@ export default function AdminHeroSlides() {
   };
 
   const handleEdit = (slide) => {
-    setFormData(slide);
+    setFormData({
+      id: slide.id ?? null,
+      title: slide.title || '',
+      subtitle: slide.subtitle || '',
+      description: slide.description || '',
+      image: slide.image || '',
+      cta_text: slide.cta_text || '',
+      cta_link: slide.cta_link || '',
+      order: slide.order ?? 0,
+      is_active: slide.is_active ?? true,
+    });
     setErrors({});
     setShowForm(true);
   };
@@ -104,12 +123,12 @@ export default function AdminHeroSlides() {
     setSaving(true);
 
     const payload = {
-      title: formData.title.trim(),
-      subtitle: formData.subtitle.trim(),
-      description: formData.description.trim(),
-      image: formData.image.trim(),
-      cta_text: formData.cta_text.trim(),
-      cta_link: formData.cta_link.trim(),
+      title: (formData.title || '').trim(),
+      subtitle: (formData.subtitle || '').trim(),
+      description: (formData.description || '').trim(),
+      image: (formData.image || '').trim(),
+      cta_text: (formData.cta_text || '').trim(),
+      cta_link: (formData.cta_link || '').trim(),
       order: normalizeOrderInput(formData.order),
       is_active: formData.is_active,
     };
@@ -132,13 +151,20 @@ export default function AdminHeroSlides() {
     }
   };
 
+  const [togglingId, setTogglingId] = useState(null);
   const toggleActive = async (slide) => {
-    const { error } = await supabase
-      .from('hero_slides')
-      .update({ is_active: !slide.is_active })
-      .eq('id', slide.id);
-    if (!error) fetchSlides();
-    else alert('Gagal mengubah status: ' + error.message);
+    if (togglingId) return
+    setTogglingId(slide.id)
+    try {
+      const { error } = await supabase
+        .from('hero_slides')
+        .update({ is_active: !slide.is_active })
+        .eq('id', slide.id);
+      if (!error) await fetchSlides();
+      else alert('Gagal mengubah status: ' + error.message);
+    } finally {
+      setTogglingId(null)
+    }
   };
 
   return (
@@ -153,7 +179,7 @@ export default function AdminHeroSlides() {
         </div>
         {!showForm && (
           <button className="btn-admin-primary" onClick={handleAdd}>
-            + Tambah Slide Baru
+            +Tambah Slide Baru
           </button>
         )}
       </div>
@@ -170,25 +196,19 @@ export default function AdminHeroSlides() {
         <div className="guide-preview">
           <div className="preview-frame">
             <div className="preview-label">TAMPILAN DI WEBSITE (Desktop)</div>
-            <div className="preview-hero">
-              <div className="preview-slide">
-                <div className="preview-overlay" />
-                <div className="preview-content">
-                  <span className="preview-subtitle">Subtitle (Teks kecil di atas judul)</span>
-                  <h1 className="preview-title">Judul Utama (Heading Besar)</h1>
-                  <p className="preview-desc">Deskripsi (Penjelasan 1-2 baris)</p>
-                  <button className="preview-cta">Teks Tombol (CTA)</button>
-                </div>
-              </div>
-              <div className="preview-indicators">
-                <span className="preview-dot active" />
-                <span className="preview-dot" />
-                <span className="preview-dot" />
+            <div className="preview-hero preview-hero--demo">
+              <img src="/hero-guide-bg.png" alt="" className="preview-hero-bg" aria-hidden="true" />
+              <div className="preview-overlay" />
+              <div className="preview-content">
+                <span className="preview-subtitle">Subtitle (Teks kecil di atas judul)</span>
+                <h2 className="preview-title">Judul Utama (Heading Besar)</h2>
+                <p className="preview-desc">Deskripsi singkat — 1 hingga 2 baris di bawah judul</p>
+                <button className="preview-cta">Teks Tombol</button>
               </div>
             </div>
             <div className="preview-notes">
-              <span>🖼️ Gambar: Full width, aspect ratio <strong>2:1 (1200×600px)</strong></span>
-              <span>📱 Mobile: Gambar akan di-crop otomatis, teks tetap terbaca</span>
+              <span>Gambar: Full width, aspect ratio <strong>2:1 (1200×600px)</strong></span>
+              <span>Mobile: Gambar di-crop otomatis, teks tetap terbaca</span>
             </div>
           </div>
         </div>
@@ -200,6 +220,7 @@ export default function AdminHeroSlides() {
             formData={formData}
             setFormData={setFormData}
             errors={errors}
+            setErrors={setErrors}
             saving={saving}
             onSave={handleSave}
             onCancel={() => { setShowForm(false); setErrors({}); }}
@@ -212,6 +233,7 @@ export default function AdminHeroSlides() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onToggleActive={toggleActive}
+            onAdd={handleAdd}
           />
         )}
       </div>
@@ -222,10 +244,27 @@ export default function AdminHeroSlides() {
 // ============================================
 // SUB-COMPONENT: Form with Live Preview
 // ============================================
-function HeroSlideForm({ formData, setFormData, errors, saving, onSave, onCancel, isEdit }) {
+function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSave, onCancel, isEdit }) {
+  const { storageMode } = useSiteSettings();
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropBusy, setCropBusy] = useState(false);
+
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => { const n = {...prev}; delete n[field]; return n; });
+  };
+
+  const handleCropConfirm = async (file) => {
+    setCropBusy(true);
+    try {
+      const item = await uploadMediaFile(storageMode, file, 'hero');
+      handleChange('image', item.url);
+      setCropOpen(false);
+    } catch (err) {
+      alert('Gagal menyimpan hasil crop: ' + err.message);
+    } finally {
+      setCropBusy(false);
+    }
   };
 
   // Live preview image
@@ -328,14 +367,47 @@ function HeroSlideForm({ formData, setFormData, errors, saving, onSave, onCancel
               </span>
             </div>
 
-            {/* Live Preview */}
+            {/* Live Preview Hero */}
             <div className="live-preview">
-              <label>Pratinjau Gambar (Live)</label>
-              <div className="preview-box">
-                <img src={previewImage} alt="Preview" onError={(e) => { e.target.src = 'https://placehold.co/1200x600/E5E7EB/9CA3AF?text=Gambar+Tidak+Valid'; }} />
+              <label>Pratinjau Slide (Live)</label>
+              <div className="live-preview-hero">
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="live-preview-hero__bg"
+                  onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x600/E5E7EB/9CA3AF?text=Gambar+Tidak+Valid'; }}
+                />
+                <div className="live-preview-hero__overlay" />
+                <div className="live-preview-hero__content">
+                  {formData.subtitle && <span className="lp-subtitle">{formData.subtitle}</span>}
+                  <h2 className="lp-title">{formData.title || 'Judul Slide'}</h2>
+                  {formData.description && <p className="lp-desc">{formData.description}</p>}
+                  {formData.cta_text && <button className="lp-cta" type="button">{formData.cta_text}</button>}
+                </div>
                 {errors.image && <div className="preview-error">⚠️ URL gambar tidak valid</div>}
               </div>
+              {formData.image && (
+                <button
+                  type="button"
+                  className="btn-admin-secondary"
+                  style={{ marginTop: '0.75rem' }}
+                  onClick={() => setCropOpen(true)}
+                  disabled={cropBusy}
+                >
+                  ✂️ Sesuaikan Gambar (Crop / Geser)
+                </button>
+              )}
             </div>
+
+            {cropOpen && formData.image && (
+              <ImageCropper
+                src={formData.image}
+                aspect={2}
+                title="Sesuaikan Gambar Slide (Crop / Geser)"
+                onConfirm={handleCropConfirm}
+                onClose={() => setCropOpen(false)}
+              />
+            )}
 
             <div className="form-group">
               <label>Teks Tombol (CTA) <span className="required">*</span></label>
@@ -421,7 +493,7 @@ function HeroSlideForm({ formData, setFormData, errors, saving, onSave, onCancel
 // ============================================
 // SUB-COMPONENT: Table with Thumbnails
 // ============================================
-function HeroSlidesTable({ slides, loading, onEdit, onDelete, onToggleActive }) {
+function HeroSlidesTable({ slides, loading, onEdit, onDelete, onToggleActive, onAdd }) {
   if (loading) return <div className="loading-state">Memuat data slide...</div>;
 
   return (
@@ -443,7 +515,7 @@ function HeroSlidesTable({ slides, loading, onEdit, onDelete, onToggleActive }) 
                 <div className="empty-state">
                   <span className="empty-icon">🎞️</span>
                   <p>Belum ada slide Hero Carousel</p>
-                  <button className="btn-admin-primary" onClick={() => window.location.href = '#/admin/hero-slides'}>Tambah Slide Pertama</button>
+                  <button className="btn-admin-primary" onClick={onAdd}>Tambah Slide Pertama</button>
                 </div>
               </td>
             </tr>
@@ -451,14 +523,14 @@ function HeroSlidesTable({ slides, loading, onEdit, onDelete, onToggleActive }) 
             slides.map(slide => (
               <tr key={slide.id}>
                 <td>
-                  <span className="order-badge">{slide.order}</span>
+                  <span className="order-circle">{slide.order}</span>
                 </td>
                 <td>
                   <img
                     src={slide.image}
                     alt={slide.title}
                     className="slide-thumb"
-                    onError={(e) => { e.target.src = 'https://placehold.co/140x70/E5E7EB/9CA3AF?text=Error'; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/140x70/E5E7EB/9CA3AF?text=Error'; }}
                   />
                 </td>
                 <td>
@@ -480,8 +552,12 @@ function HeroSlidesTable({ slides, loading, onEdit, onDelete, onToggleActive }) 
                 </td>
                 <td>
                   <div className="action-buttons">
-                    <button className="btn-action edit" onClick={() => onEdit(slide)} title="Edit">✏️</button>
-                    <button className="btn-action delete" onClick={() => onDelete(slide.id)} title="Hapus">🗑️</button>
+                    <button className="btn-action edit" onClick={() => onEdit(slide)} title="Edit">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button className="btn-action delete" onClick={() => onDelete(slide.id)} title="Hapus">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
                   </div>
                 </td>
               </tr>

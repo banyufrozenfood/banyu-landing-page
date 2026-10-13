@@ -4,19 +4,37 @@ import { useMediaLibrary } from '../../cms/useMedia.js'
 import { addMediaItem, uploadMediaFile } from '../../cms/store.js'
 import { IMAGE_TYPES, MAX_LOCAL_UPLOAD_BYTES, MAX_UPLOAD_BYTES, formatBytes, isValidUrl } from '../../cms/validate.js'
 import { useToast } from './Toast.jsx'
+import ImageCropper from './ImageCropper.jsx'
 import './ImagePicker.css'
 
-export default function ImagePicker({ value, onChange, category = 'gambar', hint }) {
+export default function ImagePicker({ value, onChange = () => {}, category = 'gambar', hint, cropAspect = 1 }) {
   const { storageMode } = useSiteSettings()
   const { items, refresh } = useMediaLibrary()
   const toast = useToast()
   const [open, setOpen] = useState(false)
+  const [cropOpen, setCropOpen] = useState(false)
   const [tab, setTab] = useState('library')
   const [urlInput, setUrlInput] = useState('')
   const [busy, setBusy] = useState(false)
   const fileRef = useRef(null)
 
   const maxBytes = storageMode === 'supabase' ? MAX_UPLOAD_BYTES : MAX_LOCAL_UPLOAD_BYTES
+
+  const handleCropConfirm = async (file) => {
+    setBusy(true)
+    try {
+      const item = await uploadMediaFile(storageMode, file, category)
+      await refresh()
+      onChange(item.url)
+      setCropOpen(false)
+      toast.success('Gambar disesuaikan dan disimpan.')
+    } catch (err) {
+      console.error('Upload hasil crop gagal:', err)
+      toast.error('Gagal menyimpan hasil crop. Silakan coba lagi.')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const handleFile = async (file) => {
     if (!file) return
@@ -37,20 +55,24 @@ export default function ImagePicker({ value, onChange, category = 'gambar', hint
       toast.success('Gambar berhasil dipasang.')
     } catch (err) {
       console.error('Upload gagal:', err)
-      toast.error('Gagal mengupload gambar. Silakan coba lagi.')
+      toast.error(err?.message || 'Gagal mengupload gambar. Silakan coba lagi.')
     } finally {
       setBusy(false)
+      if (fileRef.current) fileRef.current.value = ''
     }
   }
 
   const handleAddUrl = async () => {
-    if (!isValidUrl(urlInput) || !urlInput.trim()) {
+    const trimmed = (urlInput || '').trim()
+    if (!trimmed || !isValidUrl(trimmed)) {
       toast.error('Link gambar tidak valid.')
       return
     }
     setBusy(true)
     try {
-      const item = await addMediaItem(storageMode, { name: urlInput.split('/').pop() || 'gambar', url: urlInput.trim(), category, size: 0 })
+      const cleanForName = trimmed.split('?')[0].split('#')[0] || trimmed
+      const fallbackName = (cleanForName.split('/').pop() || 'gambar').slice(0, 100)
+      const item = await addMediaItem(storageMode, { name: fallbackName, url: trimmed, category, size: 0 })
       await refresh()
       onChange(item.url)
       setUrlInput('')
@@ -67,12 +89,17 @@ export default function ImagePicker({ value, onChange, category = 'gambar', hint
   return (
     <div className="image-picker">
       <div className="image-picker__preview">
-        {value ? <img src={value} alt="Pratinjau gambar" /> : <span className="image-picker__empty">Belum ada gambar</span>}
+        {value ? <img src={value} alt="Pratinjau gambar" onError={(e) => { e.target.onerror = null; e.target.style.opacity = '0.4'; }} /> : <span className="image-picker__empty">Belum ada gambar</span>}
       </div>
       <div className="image-picker__actions">
         <button type="button" className="btn-admin-secondary" onClick={() => setOpen(true)}>
           {value ? 'Ganti Gambar' : 'Pilih Gambar'}
         </button>
+        {value && (
+          <button type="button" className="btn-admin-secondary" onClick={() => setCropOpen(true)}>
+            Sesuaikan (Crop/Geser)
+          </button>
+        )}
         {value && (
           <button type="button" className="btn-admin-secondary" onClick={() => onChange('')}>
             Hapus
@@ -80,6 +107,16 @@ export default function ImagePicker({ value, onChange, category = 'gambar', hint
         )}
       </div>
       {hint && <p className="image-picker__hint">{hint}</p>}
+
+      {cropOpen && value && (
+        <ImageCropper
+          src={value}
+          aspect={cropAspect}
+          title="Sesuaikan Gambar (Crop / Geser)"
+          onConfirm={handleCropConfirm}
+          onClose={() => setCropOpen(false)}
+        />
+      )}
 
       {open && (
         <div className="image-picker__modal-overlay" onClick={() => setOpen(false)}>
@@ -97,10 +134,10 @@ export default function ImagePicker({ value, onChange, category = 'gambar', hint
             {tab === 'library' && (
               <div className="image-picker__grid">
                 {items.length === 0 && <p className="image-picker__empty-note">Belum ada gambar di Media Library. Upload dulu atau pakai link.</p>}
-                {items.map((m) => (
-                  <button type="button" key={m.id} className="image-picker__item" onClick={() => { onChange(m.url); setOpen(false); }}>
-                    <img src={m.url} alt={m.name} loading="lazy" />
-                    <span>{m.name}</span>
+                {(items || []).filter(Boolean).map((m) => (
+                  <button type="button" key={m.id} className="image-picker__item" onClick={() => { if (m?.url) { onChange(m.url); setOpen(false); } }}>
+                    <img src={m?.url} alt={m?.name || 'Gambar'} loading="lazy" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/160x160/E5E7EB/9CA3AF?text=Error'; }} />
+                    <span>{m?.name || 'Gambar'}</span>
                   </button>
                 ))}
               </div>
@@ -112,7 +149,7 @@ export default function ImagePicker({ value, onChange, category = 'gambar', hint
                   ref={fileRef}
                   type="file"
                   accept={IMAGE_TYPES.join(',')}
-                  onChange={(e) => handleFile(e.target.files[0])}
+                  onChange={(e) => handleFile(e.target.files?.[0])}
                 />
                 <p className="image-picker__hint">
                   Format: PNG, JPG, WebP, SVG, GIF. Maksimal {formatBytes(maxBytes)}.

@@ -1,15 +1,16 @@
 export function isValidEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim())
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((value || '').trim())
 }
 
 export function isValidWhatsapp(value) {
-  return /^[0-9]{8,15}$/.test(value.replace(/[\s-]/g, ''))
+  return /^[0-9]{8,15}$/.test((value || '').replace(/[\s-]/g, ''))
 }
 
 export function isValidUrl(value) {
-  if (!value.trim()) return true
+  const trimmed = (value || '').trim()
+  if (!trimmed) return true
   try {
-    const u = new URL(value)
+    const u = new URL(trimmed)
     return u.protocol === 'http:' || u.protocol === 'https:'
   } catch {
     return false
@@ -17,11 +18,11 @@ export function isValidUrl(value) {
 }
 
 export function isValidInternalLink(value) {
-  return /^\/[a-zA-Z0-9/?=&#_-]*$/.test(value.trim())
+  return /^\/[a-zA-Z0-9/?=&#_-]*$/.test((value || '').trim())
 }
 
 export function isValidHexColor(value) {
-  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim())
+  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test((value || '').trim())
 }
 
 export function isValidPrice(value) {

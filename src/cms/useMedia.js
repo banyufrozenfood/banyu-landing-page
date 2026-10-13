@@ -12,6 +12,8 @@ export function useMediaLibrary() {
       const res = await loadMedia()
       setMode(res.mode)
       setItems(res.items || [])
+    } catch (e) {
+      console.error('Gagal memuat media:', e)
     } finally {
       setLoading(false)
     }

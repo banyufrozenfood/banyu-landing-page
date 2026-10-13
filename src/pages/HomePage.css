@@ -45,24 +45,6 @@
   opacity: 1;
 }
 
-.advantage-card__icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, var(--primary-light), white);
-  box-shadow: 0 4px 10px rgba(0, 153, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  margin: 0 auto 1.5rem;
-  transition: transform 0.4s ease;
-}
-
-.advantage-card:hover .advantage-card__icon {
-  transform: scale(1.1) rotate(5deg);
-}
-
 .advantage-card__title {
   font-size: 1.125rem;
   font-weight: 800;
@@ -231,6 +213,12 @@
   transition: transform 0.4s ease;
 }
 
+.marketplace-card__icon img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
 .marketplace-card:hover .marketplace-card__icon {
   transform: scale(1.1) rotate(-5deg);
 }
@@ -308,9 +296,9 @@
     border-radius: 16px;
   }
 
-  .marketplace-card__icon svg {
-    width: 32px;
-    height: 32px;
+  .marketplace-card__icon img {
+    width: 42px;
+    height: 42px;
   }
 
   .marketplace-card__info h3 {

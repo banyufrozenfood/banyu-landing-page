@@ -61,7 +61,10 @@ Checklist pengembangan. Semua item wajib sudah selesai.
 - [x] Update jumlah (+/-)
 - [x] Hapus item
 - [x] Hitung total
-- [x] Checkout via WhatsApp: satu pesan berisi semua item + total + info ongkir
+- [x] Form data pemesan (nama & alamat pengiriman) sebelum checkout WhatsApp
+- [x] Pencatatan pesanan otomatis ke database (`whatsapp_orders` status pending)
+- [x] Checkout via WhatsApp: pesan otomatis berisi rincian item, nomor pesanan, dan alamat pemesan
+- [x] Keranjang otomatis kosong setelah checkout berhasil
 
 ---
 
@@ -75,14 +78,15 @@ Checklist pengembangan. Semua item wajib sudah selesai.
 ## Panel Admin
 - [x] Halaman login (`/admin`)
 - [x] Layout sidebar admin + proteksi route
-- [x] Dashboard: total produk & kategori, status website draft/terbit, kartu panduan, aksi cepat
-- [x] CRUD produk (nama, slug otomatis, kategori, harga, stok, deskripsi, URL gambar koma-pisah, unggulan) + pencarian
+- [x] Dashboard: total produk, kategori, pesanan menunggu, status website draft/terbit, kartu panduan, aksi cepat
+- [x] CRUD produk (nama, slug otomatis, kategori, harga, stok, deskripsi, URL gambar, opsi marketplace Tokopedia/Shopee per produk, unggulan) + pencarian
 - [x] CRUD kategori (nama + deskripsi)
 - [x] Kelola hero carousel (validasi form, live preview, urutan angka, toggle aktif)
 - [x] Kelola banner (judul, gambar, urutan) — data tersimpan, belum ditampilkan di halaman publik
 - [x] Kelola brand partner (ImagePicker, panduan visual, urutan, toggle aktif)
-- [x] Media library (upload, tambah dari link, filter kategori, pencarian, salin link, hapus dengan konfirmasi)
-- [x] Pengaturan situs 5 tab + alur Simpan Draft / Pratinjau / Terbitkan / Batalkan Perubahan
+- [x] Media library (upload, tambah dari link, filter kategori, filter status digunakan/belum digunakan + deteksi lokasi pakai, pencarian, salin link, hapus dengan konfirmasi)
+- [x] Manajemen Pesanan WhatsApp (`/admin/orders`): lihat pesanan masuk, konfirmasi pesanan (stok otomatis terpotong di DB), batalkan pesanan (stok otomatis dikembalikan)
+- [x] Pengaturan situs: kontak, sosmed, footer, isi beranda (toggle mandiri Tokopedia & Shopee, keunggulan, produk unggulan, partner), SEO + draft/publish flow
 
 ---
 

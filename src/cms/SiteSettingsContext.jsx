@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { RADIUS_OPTIONS } from './defaults.js'
 import { loadSettingsDoc, persistSettingsDoc } from './store.js'
@@ -21,29 +20,34 @@ function setMeta(selector, attr, value) {
 }
 
 export function SiteSettingsProvider({ children }) {
-  const location = useLocation()
   const [doc, setDoc] = useState(null)
   const [isPreview, setIsPreview] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
     async function init() {
-      const wantPreview = new URLSearchParams(window.location.search).get('preview') === 'draft'
-      let allowed = false
-      if (wantPreview) {
-        try {
-          const { data } = await supabase.auth.getSession()
-          allowed = !!data?.session
-        } catch {
-          allowed = false
+      try {
+        const wantPreview = new URLSearchParams(window.location.search).get('preview') === 'draft'
+        let allowed = false
+        if (wantPreview) {
+          try {
+            const { data } = await supabase.auth.getSession()
+            allowed = !!data?.session
+          } catch {
+            allowed = false
+          }
         }
+        const loaded = await loadSettingsDoc()
+        if (cancelled) return
+        setIsPreview(allowed)
+        setDoc(loaded)
+      } catch (e) {
+        if (!cancelled) setLoadError(e)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-      const loaded = await loadSettingsDoc()
-      if (cancelled) return
-      setIsPreview(allowed)
-      setDoc(loaded)
-      setLoading(false)
     }
     init()
     return () => { cancelled = true }
@@ -53,14 +57,14 @@ export function SiteSettingsProvider({ children }) {
 
   useEffect(() => {
     if (!settings) return
-    const a = settings.appearance
+    const a = settings.appearance || {}
     const root = document.documentElement.style
-    root.setProperty('--primary', a.primary)
-    root.setProperty('--primary-dark', a.primaryDark)
-    root.setProperty('--primary-light', a.primaryLight)
-    root.setProperty('--secondary', a.secondary)
-    root.setProperty('--accent', a.accent)
-    root.setProperty('--accent-dark', a.accentDark)
+    if (a.primary) root.setProperty('--primary', a.primary)
+    if (a.primaryDark) root.setProperty('--primary-dark', a.primaryDark)
+    if (a.primaryLight) root.setProperty('--primary-light', a.primaryLight)
+    if (a.secondary) root.setProperty('--secondary', a.secondary)
+    if (a.accent) root.setProperty('--accent', a.accent)
+    if (a.accentDark) root.setProperty('--accent-dark', a.accentDark)
     const radii = (RADIUS_OPTIONS.find((r) => r.value === a.radius) || RADIUS_OPTIONS[1]).radii
     root.setProperty('--radius-sm', radii.sm)
     root.setProperty('--radius-md', radii.md)
@@ -70,12 +74,14 @@ export function SiteSettingsProvider({ children }) {
 
   useEffect(() => {
     if (!settings) return
-    document.title = settings.seo.title || settings.identity.businessName
-    setMeta('meta[name="description"]', { name: 'description' }, settings.seo.description)
-    setMeta('meta[property="og:title"]', { property: 'og:title' }, settings.seo.title)
-    setMeta('meta[property="og:description"]', { property: 'og:description' }, settings.seo.description)
-    if (settings.seo.ogImage) setMeta('meta[property="og:image"]', { property: 'og:image' }, settings.seo.ogImage)
-    if (settings.identity.faviconUrl) {
+    const seo = settings.seo || {}
+    const identity = settings.identity || {}
+    document.title = seo.title || identity.businessName || 'Banyu Frozen Food'
+    setMeta('meta[name="description"]', { name: 'description' }, seo.description)
+    setMeta('meta[property="og:title"]', { property: 'og:title' }, seo.title)
+    setMeta('meta[property="og:description"]', { property: 'og:description' }, seo.description)
+    if (seo.ogImage) setMeta('meta[property="og:image"]', { property: 'og:image' }, seo.ogImage)
+    if (identity.faviconUrl) {
       let link = document.head.querySelector('link[rel="icon"]')
       if (!link) {
         link = document.createElement('link')
@@ -88,15 +94,25 @@ export function SiteSettingsProvider({ children }) {
 
   const saveDraft = useCallback(async (draft) => {
     const next = { ...doc, draft, updatedAt: new Date().toISOString() }
-    const saved = await persistSettingsDoc(next)
-    setDoc({ ...next, ...saved })
+    try {
+      const saved = await persistSettingsDoc(next)
+      setDoc({ ...next, ...saved })
+    } catch (e) {
+      console.error('Gagal menyimpan draft:', e)
+      throw e
+    }
   }, [doc])
 
   const publish = useCallback(async (draft) => {
     const now = new Date().toISOString()
     const next = { ...doc, draft, published: draft, updatedAt: now, publishedAt: now }
-    const saved = await persistSettingsDoc(next)
-    setDoc({ ...next, ...saved })
+    try {
+      const saved = await persistSettingsDoc(next)
+      setDoc({ ...next, ...saved })
+    } catch (e) {
+      console.error('Gagal menerbitkan:', e)
+      throw e
+    }
   }, [doc])
 
   const value = useMemo(() => {
@@ -116,7 +132,24 @@ export function SiteSettingsProvider({ children }) {
     }
   }, [doc, settings, loading, isPreview, saveDraft, publish])
 
-  if (loading || !value) return null
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#64748B' }}>
+        Memuat pengaturan situs...
+      </div>
+    )
+  }
+  if (loadError || !value) {
+    return (
+      <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#64748B' }}>
+        <h2>Gagal memuat pengaturan situs</h2>
+        <p>{loadError?.message || 'Data pengaturan tidak tersedia.'}</p>
+        <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '10px 20px' }}>
+          Muat Ulang
+        </button>
+      </div>
+    )
+  }
 
   return (
     <SiteSettingsContext.Provider value={value}>

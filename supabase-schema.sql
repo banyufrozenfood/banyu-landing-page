@@ -23,6 +23,10 @@ CREATE TABLE products (
   description TEXT,
   specs JSONB DEFAULT '{}',    -- spesifikasi bebas, format: {"Berat": "500g", "Isi": "10 pcs"}
   images TEXT[] DEFAULT '{}',  -- array URL foto produk
+  tokopedia_url TEXT,
+  shopee_url TEXT,
+  tokopedia_enabled BOOLEAN DEFAULT FALSE,
+  shopee_enabled BOOLEAN DEFAULT FALSE,
   is_featured BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -35,16 +39,6 @@ CREATE TABLE reviews (
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   comment TEXT,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Tabel Banner
-CREATE TABLE banners (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  title TEXT NOT NULL,
-  subtitle TEXT,
-  image TEXT NOT NULL,
-  "order" INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -96,7 +90,6 @@ INSERT INTO brand_partners (name, logo, website_url, "order", is_active) VALUES
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
-ALTER TABLE banners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hero_slides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE brand_partners ENABLE ROW LEVEL SECURITY;
 
@@ -104,7 +97,6 @@ ALTER TABLE brand_partners ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read categories" ON categories FOR SELECT USING (true);
 CREATE POLICY "Public read products" ON products FOR SELECT USING (true);
 CREATE POLICY "Public read approved reviews" ON reviews FOR SELECT USING (status = 'approved');
-CREATE POLICY "Public read banners" ON banners FOR SELECT USING (true);
 CREATE POLICY "Public read hero_slides" ON hero_slides FOR SELECT USING (is_active = TRUE);
 CREATE POLICY "Public read brand_partners" ON brand_partners FOR SELECT USING (is_active = TRUE);
 
@@ -115,7 +107,6 @@ CREATE POLICY "Public insert reviews" ON reviews FOR INSERT WITH CHECK (true);
 CREATE POLICY "Admin full access categories" ON categories FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Admin full access products" ON products FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Admin full access reviews" ON reviews FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full access banners" ON banners FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Admin full access hero_slides" ON hero_slides FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Admin full access brand_partners" ON brand_partners FOR ALL USING (auth.role() = 'authenticated');
 
@@ -174,3 +165,42 @@ CREATE POLICY "Admin update media files" ON storage.objects
   FOR UPDATE TO authenticated USING (bucket_id = 'media');
 CREATE POLICY "Admin delete media files" ON storage.objects
   FOR DELETE TO authenticated USING (bucket_id = 'media');
+
+-- Jika tabel products sudah dibuat sebelum kolom marketplace ditambahkan,
+-- jalankan blok ini juga. Aman dijalankan berulang.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS tokopedia_url TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS shopee_url TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS tokopedia_enabled BOOLEAN DEFAULT FALSE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS shopee_enabled BOOLEAN DEFAULT FALSE;
+
+-- ==============================================
+-- BARU: Pesanan WhatsApp & Manajemen Stok Otomatis
+-- ==============================================
+CREATE TABLE IF NOT EXISTS whatsapp_orders (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  order_number TEXT UNIQUE NOT NULL,
+  customer_name TEXT NOT NULL,
+  customer_address TEXT NOT NULL,
+  total INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS whatsapp_order_items (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  order_id BIGINT REFERENCES whatsapp_orders(id) ON DELETE CASCADE,
+  product_id BIGINT REFERENCES products(id) ON DELETE SET NULL,
+  product_name TEXT NOT NULL,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  unit_price INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE whatsapp_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE whatsapp_order_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admin full access whatsapp_orders" ON whatsapp_orders
+  FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin full access whatsapp_order_items" ON whatsapp_order_items
+  FOR ALL USING (auth.role() = 'authenticated');

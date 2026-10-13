@@ -30,15 +30,21 @@ export default function ProductsPage() {
   useEffect(() => {
     async function fetchAll() {
       setLoading(true)
-      const [prodRes, catRes] = await Promise.all([
-        supabase.from('products').select('*, categories(name)'),
-        supabase.from('categories').select('*').order('name')
-      ])
-      
-      if (prodRes.data) setProducts(prodRes.data)
-      if (catRes.data) setCategories(catRes.data)
-      
-      setLoading(false)
+      try {
+        const [prodRes, catRes] = await Promise.all([
+          supabase.from('products').select('*, categories(name)'),
+          supabase.from('categories').select('*').order('name')
+        ])
+
+        if (prodRes.error) console.error('Gagal memuat produk:', prodRes.error)
+        else setProducts(prodRes.data || [])
+        if (catRes.error) console.error('Gagal memuat kategori:', catRes.error)
+        else setCategories(catRes.data || [])
+      } catch (e) {
+        console.error('Gagal memuat data produk:', e)
+      } finally {
+        setLoading(false)
+      }
     }
     fetchAll()
   }, [])
@@ -46,46 +52,48 @@ export default function ProductsPage() {
   // Sinkronkan filter dari URL agar link kategori (mis. dari footer) tetap
   // memfilter walau halaman /produk sudah terbuka.
   useEffect(() => {
-    const cat = searchParams.get('category')
-    setSelectedCategory(cat ? Number(cat) : null)
+    const catRaw = searchParams.get('category')
+    const catNum = catRaw != null && catRaw !== '' ? Number(catRaw) : null
+    setSelectedCategory(Number.isFinite(catNum) ? catNum : null)
     setSortBy(searchParams.get('sort') || 'newest')
     setCurrentPage(1)
   }, [searchParams])
 
   const filtered = useMemo(() => {
-    let result = [...products]
+    const source = Array.isArray(products) ? products.filter(Boolean) : []
+    let result = [...source]
 
     if (search.trim()) {
       const q = search.toLowerCase()
       result = result.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) ||
-          (p.categories?.name || '').toLowerCase().includes(q) ||
-          (p.description || '').toLowerCase().includes(q)
+          (p?.name || '').toLowerCase().includes(q) ||
+          (p?.categories?.name || '').toLowerCase().includes(q) ||
+          (p?.description || '').toLowerCase().includes(q)
       )
     }
 
     if (selectedCategory) {
-      result = result.filter((p) => p.category_id === selectedCategory)
+      result = result.filter((p) => p?.category_id === selectedCategory)
     }
 
     if (priceRange.min) {
-      result = result.filter((p) => p.price >= Number(priceRange.min))
+      result = result.filter((p) => (Number(p?.price) || 0) >= Number(priceRange.min))
     }
     if (priceRange.max) {
-      result = result.filter((p) => p.price <= Number(priceRange.max))
+      result = result.filter((p) => (Number(p?.price) || 0) <= Number(priceRange.max))
     }
 
     switch (sortBy) {
       case 'cheapest':
-        result.sort((a, b) => a.price - b.price)
+        result.sort((a, b) => (Number(a?.price) || 0) - (Number(b?.price) || 0))
         break
       case 'expensive':
-        result.sort((a, b) => b.price - a.price)
+        result.sort((a, b) => (Number(b?.price) || 0) - (Number(a?.price) || 0))
         break
       case 'newest':
       default:
-        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        result.sort((a, b) => new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime())
         break
     }
 
@@ -93,6 +101,9 @@ export default function ProductsPage() {
   }, [products, search, selectedCategory, priceRange, sortBy])
 
   const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE)
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages)
+  }, [totalPages, currentPage])
   const paginatedProducts = filtered.slice(
     (currentPage - 1) * PRODUCTS_PER_PAGE,
     currentPage * PRODUCTS_PER_PAGE
@@ -220,13 +231,13 @@ export default function ProductsPage() {
             <div className="filter-group">
               <label className="filter-group__label">Kategori</label>
               <div className="filter-categories">
-                {categories.map((cat) => (
+                {(categories || []).filter(Boolean).map((cat) => (
                   <button
                     key={cat.id}
                     className={`filter-category-btn${selectedCategory === cat.id ? ' filter-category-btn--active' : ''}`}
                     onClick={() => handleCategoryClick(cat.id)}
                   >
-                    <span>{cat.name}</span>
+                    <span>{cat.name || '-'}</span>
                   </button>
                 ))}
               </div>

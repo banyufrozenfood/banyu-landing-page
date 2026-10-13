@@ -20,31 +20,53 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     // Redirect if already logged in
+    let mounted = true
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/admin/dashboard');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted && session) {
+          navigate('/admin/dashboard');
+        }
+      } catch {
+        // abaikan: tetap di halaman login
       }
     };
     checkSession();
+    return () => { mounted = false }
   }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmedEmail)) {
+      setError('Masukkan email yang valid.');
+      return;
+    }
+    if (!password) {
+      setError('Masukkan password.');
+      return;
+    }
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      });
 
-    if (error) {
-      console.error('Login gagal:', error.message);
-      setError(friendlyLoginError(error.message));
+      if (error) {
+        console.error('Login gagal:', error.message);
+        setError(friendlyLoginError(error.message));
+        setLoading(false);
+      } else {
+        setLoading(false);
+        navigate('/admin/dashboard');
+      }
+    } catch (err) {
+      console.error('Login gagal:', err);
+      setError(friendlyLoginError(err?.message || ''));
       setLoading(false);
-    } else {
-      navigate('/admin/dashboard');
     }
   };
 

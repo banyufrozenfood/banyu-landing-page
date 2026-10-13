@@ -72,11 +72,12 @@ export default function HomePage() {
 
   if (loading) return <div>Memuat halaman beranda...</div>;
 
-  const sections = settings.home.sections;
-  const tokopediaUrl = settings.home.marketplace?.tokopediaUrl || '';
-  const shopeeUrl = settings.home.marketplace?.shopeeUrl || '';
-  const hasTokopedia = !!tokopediaUrl && tokopediaUrl !== '#';
-  const hasShopee = !!shopeeUrl && shopeeUrl !== '#';
+  const sections = settings?.home?.sections || {};
+  const marketplace = settings?.home?.marketplace || {};
+  const tokopediaUrl = marketplace.tokopediaUrl || '';
+  const shopeeUrl = marketplace.shopeeUrl || '';
+  const hasTokopedia = marketplace.tokopediaEnabled !== false && !!tokopediaUrl && tokopediaUrl !== '#';
+  const hasShopee = marketplace.shopeeEnabled !== false && !!shopeeUrl && shopeeUrl !== '#';
 
   return (
     <div className="home-page">
@@ -92,15 +93,14 @@ export default function HomePage() {
         <section className="advantages">
           <div className="container">
             <div className="section-title">
-              <h2>{settings.home.advantagesTitle}</h2>
-              <p>{settings.home.advantagesSubtitle}</p>
+              <h2>{settings.home?.advantagesTitle || 'Keunggulan Kami'}</h2>
+              <p>{settings.home?.advantagesSubtitle || ''}</p>
             </div>
             <div className="advantages__grid">
-              {settings.home.advantages.map((item, idx) => (
+              {(settings?.home?.advantages || []).filter(Boolean).map((item, idx) => (
                 <div key={item.id || idx} className="advantage-card">
-                  <div className="advantage-card__icon">{item.icon}</div>
-                  <h3 className="advantage-card__title">{item.title}</h3>
-                  <p className="advantage-card__desc">{item.desc}</p>
+                  <h3 className="advantage-card__title">{item.title || ''}</h3>
+                  <p className="advantage-card__desc">{item.desc || ''}</p>
                 </div>
               ))}
             </div>
@@ -150,9 +150,7 @@ export default function HomePage() {
               className="marketplace-card marketplace-card--tokopedia"
             >
               <div className="marketplace-card__icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2 2h20v20H2V2zm2 2v16h16V4H4zm3 3h10v2H7V7zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/>
-                </svg>
+                <img src="/tokopedia.svg" alt="Logo Tokopedia" />
               </div>
               <div className="marketplace-card__info">
                 <h3>Tokopedia</h3>
@@ -173,9 +171,7 @@ export default function HomePage() {
               className="marketplace-card marketplace-card--shopee"
             >
               <div className="marketplace-card__icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2 2h20v20H2V2zm2 2v16h16V4H4zm4 4a4 4 0 018 0v1H8V8zm-1 3h10v7H7v-7zm2 2v3h6v-3H9z"/>
-                </svg>
+                <img src="/shopee.svg" alt="Logo Shopee" />
               </div>
               <div className="marketplace-card__info">
                 <h3>Shopee</h3>
@@ -203,7 +199,7 @@ export default function HomePage() {
             </div>
             <div className="brand-partners__grid">
               {brandPartners.map((brand, idx) => {
-                const logo = <img src={brand.logo} alt={brand.name} loading="lazy" />;
+                const logo = <img src={brand.logo || 'https://placehold.co/160x80/E5E7EB/9CA3AF?text=Brand'} alt={brand.name || 'Brand'} loading="lazy" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/160x80/E5E7EB/9CA3AF?text=Brand'; }} />;
                 return brand.website_url ? (
                   <a
                     key={brand.id || idx}

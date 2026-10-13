@@ -16,6 +16,8 @@ Database PostgreSQL dihost di Supabase (8 tabel). Skema lengkap ada di `supabase
 | `brand_partners` | Logo brand/supplier di beranda (hanya yang aktif yang tampil) |
 | `site_settings` | Pengaturan seluruh konten situs / CMS (satu baris, id = 1) |
 | `media_library` | Daftar gambar yang sudah diupload |
+| `whatsapp_orders` | Data transaksi/pesanan dari keranjang WhatsApp |
+| `whatsapp_order_items` | Rincian item produk dalam setiap pesanan WhatsApp |
 
 ---
 
@@ -37,15 +39,24 @@ products
   price, stock
   description, specs (JSONB, default '{}')
   images (TEXT[], default '{}')
+  tokopedia_url, shopee_url
+  tokopedia_enabled, shopee_enabled
   is_featured
-     │
-     │ 1 : banyak
-     ▼
-reviews
-  id (PK)
-  product_id (FK → products.id, ON DELETE CASCADE)
-  name, rating (1–5), comment
-  status ('pending' / 'approved' / 'rejected')
+     │                                     │
+     │ 1 : banyak                          │ 1 : banyak
+     ▼                                     ▼
+reviews                               whatsapp_order_items
+  id (PK)                               id (PK)
+  product_id (FK → products.id)         order_id (FK → whatsapp_orders.id)
+  name, rating, comment                 product_id (FK → products.id)
+  status                                product_name, quantity, unit_price
+                                           ▲
+                                           │ banyak : 1
+                                      whatsapp_orders
+                                        id (PK)
+                                        order_number (UNIQUE)
+                                        customer_name, customer_address
+                                        total, status ('pending'/'confirmed'/'cancelled')
 ```
 
 > Link Tokopedia/Shopee bukan kolom per produk — melainkan **link toko global** yang tersimpan di `site_settings` (Pengaturan → Isi Beranda) dan dipakai di beranda + halaman detail produk.
@@ -77,6 +88,10 @@ Tabel lain (`hero_slides`, `brand_partners`, `banners`, `site_settings`, `media_
 | `description` | TEXT | Deskripsi produk |
 | `specs` | JSONB | Spesifikasi (key-value bebas, default `'{}'`) |
 | `images` | TEXT[] | Array URL foto (default `'{}'`, foto pertama = utama) |
+| `tokopedia_url` | TEXT | Link produk spesifik di Tokopedia (opsional) |
+| `shopee_url` | TEXT | Link produk spesifik di Shopee (opsional) |
+| `tokopedia_enabled` | BOOLEAN | Tampilkan tombol Tokopedia untuk produk ini jika TRUE (default: FALSE) |
+| `shopee_enabled` | BOOLEAN | Tampilkan tombol Shopee untuk produk ini jika TRUE (default: FALSE) |
 | `is_featured` | BOOLEAN | Tampil di Produk Unggulan beranda jika TRUE |
 | `created_at` | TIMESTAMPTZ | Waktu dibuat |
 
@@ -154,6 +169,42 @@ Isi JSON mencakup: `identity` (nama toko, logo), `contact` (WA, telepon, email, 
 | `storage_path` | TEXT | Path di Supabase Storage (kosong jika ditambah dari link) |
 | `created_at` | TIMESTAMPTZ | Waktu dibuat |
 
+### `whatsapp_orders`
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| `id` | BIGINT | Primary key, auto-increment |
+| `order_number` | TEXT | Nomor pesanan unik berformat `WA-YYYYMMDD-XXXXXX` |
+| `customer_name` | TEXT | Nama lengkap pemesan |
+| `customer_address` | TEXT | Alamat pengiriman pemesan |
+| `total` | INTEGER | Total nilai transaksi dalam Rupiah |
+| `status` | TEXT | Status: `'pending'` (menunggu), `'confirmed'` (dikonfirmasi), `'cancelled'` (dibatalkan) |
+| `created_at` | TIMESTAMPTZ | Waktu checkout |
+| `updated_at` | TIMESTAMPTZ | Waktu status diperbarui |
+
+### `whatsapp_order_items`
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| `id` | BIGINT | Primary key, auto-increment |
+| `order_id` | BIGINT | FK ke `whatsapp_orders.id` (ON DELETE CASCADE) |
+| `product_id` | BIGINT | FK ke `products.id` (ON DELETE SET NULL) |
+| `product_name` | TEXT | Salinan nama produk saat transaksi |
+| `quantity` | INTEGER | Jumlah produk yang dipesan |
+| `unit_price` | INTEGER | Harga satuan produk saat transaksi |
+| `created_at` | TIMESTAMPTZ | Waktu dibuat |
+
+---
+
+## Prosedur Tersimpan / Database Functions (RPC)
+
+1. **`create_whatsapp_order(p_customer_name, p_customer_address, p_items)`**
+   - Dijalankan secara aman saat pengunjung checkout di web.
+   - Menyimpan order ke `whatsapp_orders` dan item ke `whatsapp_order_items` dengan status `pending`.
+   - Mengembalikan nomor pesanan unik dan total harga.
+2. **`set_whatsapp_order_status(p_order_id, p_status)`**
+   - Dijalankan oleh admin dari menu `/admin/orders`.
+   - Transisi ke `confirmed`: memvalidasi stok tersedia, lalu mengurangi stok produk di tabel `products`.
+   - Transisi ke `cancelled` atau `pending`: mengembalikan stok produk ke jumlah semula jika pesanan sebelumnya sudah dikonfirmasi.
+
 ---
 
 ## Row Level Security (RLS)
@@ -166,6 +217,8 @@ Semua tabel mengaktifkan RLS. Aturan akses:
 | Baca `hero_slides` / `brand_partners` | Publik, hanya yang `is_active = TRUE` |
 | Baca `reviews` | Publik, hanya yang `status = 'approved'` |
 | Kirim review (`INSERT` ke `reviews`) | Publik ( disiapkan untuk form ulasan fase berikutnya) |
+| Buat pesanan WhatsApp (via RPC `create_whatsapp_order`) | Publik (tamu/customer saat checkout) |
+| Baca/Kelola pesanan WhatsApp (`whatsapp_orders`, `whatsapp_order_items`) | Hanya admin yang sudah login (`authenticated`) |
 | Tambah/Ubah/Hapus (semua tabel) | Hanya admin yang sudah login (`authenticated`) |
 
 ---

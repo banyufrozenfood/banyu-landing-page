@@ -37,7 +37,8 @@ export function nextOrder(items, key = 'order') {
 
 // Ubah input order (string/angka) menjadi integer aman >= min.
 export function normalizeOrderInput(value, { min = 0, fallback = 0 } = {}) {
-  const n = parseInt(value, 10);
+  if (value === '' || value == null) return Math.max(min, fallback);
+  const n = Number(value);
   if (!Number.isFinite(n)) return Math.max(min, fallback);
-  return Math.max(min, n);
+  return Math.max(min, Math.trunc(n));
 }

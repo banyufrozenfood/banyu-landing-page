@@ -13,15 +13,16 @@ Website resmi Banyu, toko frozen food lokal Cimahi. Pengunjung bisa melihat prod
 - **Lokasi** (`/lokasi`) — Google Maps, jam operasional, kontak, tombol WhatsApp/telepon, galeri foto toko
 
 ### Keranjang Belanja
-Pengunjung menambah produk ke keranjang, lalu menekan tombol "Pesan via WhatsApp". Satu pesan otomatis terkirim berisi seluruh item, jumlah, harga total, dan permintaan info ongkir.
+Pengunjung mengisi nama dan alamat pengiriman di drawer keranjang, lalu menekan tombol "Pesan via WhatsApp". Sistem mencatat pesanan ke database (nomor order otomatis) dengan status pending, kemudian membuka WhatsApp dengan pesan yang sudah terformat rapi.
 
 ### Panel Admin (`/admin`)
 - Login dengan email + password (Supabase Auth)
-- Dashboard: total produk & kategori, status website (draft/belum terbit), kartu panduan, aksi cepat
-- Kelola produk: tambah, edit, hapus — foto diisi sebagai URL gambar (pisahkan dengan koma jika lebih dari satu)
+- Dashboard: total produk & kategori, pesanan menunggu konfirmasi, status website (draft/belum terbit), kartu panduan, aksi cepat
+- Kelola produk: tambah, edit, hapus — foto diisi sebagai URL gambar (pisahkan dengan koma jika lebih dari satu), dilengkapi toggle & link Tokopedia / Shopee per produk
 - Kelola kategori (nama + deskripsi), hero carousel, banner, brand partner
-- Media library: upload gambar, tambah dari link, filter kategori, pencarian, salin link gambar
-- Kelola pengaturan situs: kontak & jam buka, sosial media, teks footer, isi beranda (termasuk link Tokopedia/Shopee), SEO — dengan alur Simpan Draft → Pratinjau → Terbitkan
+- Media library: upload gambar, tambah dari link, filter kategori, filter status penggunaan (Digunakan / Belum digunakan + deteksi lokasi pemakaian), pencarian, salin link gambar
+- Pesanan WhatsApp (`/admin/orders`): review pesanan masuk dari keranjang web, konfirmasi pesanan (stok otomatis berkurang di database secara aman), atau batalkan pesanan (stok otomatis dikembalikan)
+- Kelola pengaturan situs: kontak & jam buka, sosial media, teks footer, isi beranda (termasuk toggle independen Tokopedia & Shopee di beranda), SEO — dengan alur Simpan Draft → Pratinjau → Terbitkan
 - Nama toko, logo, dan warna tema saat ini hanya bisa diubah lewat kode (`src/cms/defaults.js`), belum tersedia di panel admin
 
 ---
@@ -90,7 +91,10 @@ Nilai diambil dari Supabase Dashboard → Project Settings → API.
 
 **3. Setup database**
 
-Jalankan seluruh isi `supabase-schema.sql` di Supabase Dashboard → SQL Editor → New query → Run.
+Jalankan isi `supabase-schema.sql` di Supabase Dashboard → SQL Editor → New query → Run.
+Jika sebelumnya database sudah ada dan ingin memperbarui fitur marketplace per produk serta pesanan WhatsApp, jalankan:
+- `supabase-migration-product-marketplace.sql`
+- `supabase-migration-whatsapp-orders.sql`
 
 **4. Buat akun admin**
 

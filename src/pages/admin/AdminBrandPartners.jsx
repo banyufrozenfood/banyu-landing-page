@@ -20,32 +20,39 @@ export default function AdminBrandPartners() {
     is_active: true,
   });
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    fetchPartners();
-  }, []);
+  const [togglingId, setTogglingId] = useState(null);
 
   const fetchPartners = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('brand_partners')
-      .select('*')
-      .order('order', { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from('brand_partners')
+        .select('*')
+        .order('order', { ascending: true });
 
-    if (error) console.error(error);
-    else setPartners(sortByOrder(data || []));
-    setLoading(false);
+      if (error) console.error(error);
+      else setPartners(sortByOrder(data || []));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchPartners();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Nama brand wajib diisi';
-    if (!formData.logo.trim()) newErrors.logo = 'Logo wajib dipilih atau diupload';
-    else if (!isValidUrl(formData.logo)) newErrors.logo = 'Format URL tidak valid';
-    if (formData.website_url.trim() && !isValidUrl(formData.website_url)) {
-      newErrors.website_url = 'Format URL tidak valid';
+    if (!(formData.name || '').trim()) newErrors.name = 'Nama brand wajib diisi';
+    if (!(formData.logo || '').trim()) newErrors.logo = 'Logo wajib dipilih atau diupload';
+    else if (!isValidHttpUrl(formData.logo)) newErrors.logo = 'Gunakan URL http(s) yang valid';
+    if ((formData.website_url || '').trim() && !isValidHttpUrl(formData.website_url)) {
+      newErrors.website_url = 'Gunakan URL http(s) yang valid';
     }
-    if (formData.order < 0 || !Number.isFinite(Number(formData.order))) {
+    if (formData.order === '' || formData.order == null || !Number.isFinite(Number(formData.order)) || Number(formData.order) < 0) {
       newErrors.order = 'Urutan harus angka 0 atau lebih';
     }
 
@@ -53,11 +60,11 @@ export default function AdminBrandPartners() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const isValidUrl = (string) => {
+  const isValidHttpUrl = (string) => {
     try {
-      new URL(string);
-      return true;
-    } catch (_) {
+      const u = new URL((string || '').trim());
+      return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
       return false;
     }
   };
@@ -71,16 +78,29 @@ export default function AdminBrandPartners() {
   };
 
   const handleToggleActive = async (partner) => {
-    const { error } = await supabase
-      .from('brand_partners')
-      .update({ is_active: !partner.is_active })
-      .eq('id', partner.id);
-    if (!error) fetchPartners();
-    else alert('Gagal mengubah status: ' + error.message);
+    if (togglingId) return
+    setTogglingId(partner.id)
+    try {
+      const { error } = await supabase
+        .from('brand_partners')
+        .update({ is_active: !partner.is_active })
+        .eq('id', partner.id);
+      if (!error) await fetchPartners();
+      else alert('Gagal mengubah status: ' + error.message);
+    } finally {
+      setTogglingId(null)
+    }
   };
 
   const handleEdit = (partner) => {
-    setFormData(partner);
+    setFormData({
+      id: partner.id ?? null,
+      name: partner.name || '',
+      logo: partner.logo || '',
+      website_url: partner.website_url || '',
+      order: partner.order ?? 0,
+      is_active: partner.is_active ?? true,
+    });
     setErrors({});
     setShowForm(true);
   };
@@ -105,9 +125,9 @@ export default function AdminBrandPartners() {
     setSaving(true);
 
     const payload = {
-      name: formData.name.trim(),
-      logo: formData.logo.trim(),
-      website_url: formData.website_url.trim() || null,
+      name: (formData.name || '').trim(),
+      logo: (formData.logo || '').trim(),
+      website_url: (formData.website_url || '').trim() || null,
       order: normalizeOrderInput(formData.order),
       is_active: formData.is_active,
     };
@@ -142,7 +162,7 @@ export default function AdminBrandPartners() {
         </div>
         {!showForm && (
           <button className="btn-admin-primary" onClick={handleAdd}>
-            + Tambah Brand Partner
+            +Tambah Brand Partner
           </button>
         )}
       </div>
@@ -188,6 +208,7 @@ export default function AdminBrandPartners() {
             formData={formData}
             setFormData={setFormData}
             errors={errors}
+            setErrors={setErrors}
             saving={saving}
             onSave={handleSave}
             onCancel={() => { setShowForm(false); setErrors({}); }}
@@ -200,6 +221,7 @@ export default function AdminBrandPartners() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onToggleActive={handleToggleActive}
+            onAdd={handleAdd}
           />
         )}
       </div>
@@ -210,7 +232,7 @@ export default function AdminBrandPartners() {
 // ============================================
 // SUB-COMPONENT: Form with Live Preview
 // ============================================
-function BrandPartnerForm({ formData, setFormData, errors, saving, onSave, onCancel, isEdit }) {
+function BrandPartnerForm({ formData, setFormData, errors, setErrors, saving, onSave, onCancel, isEdit }) {
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => { const n = {...prev}; delete n[field]; return n; });
@@ -342,7 +364,7 @@ function BrandPartnerForm({ formData, setFormData, errors, saving, onSave, onCan
 // ============================================
 // SUB-COMPONENT: Table with Logos
 // ============================================
-function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActive }) {
+function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActive, onAdd }) {
   if (loading) return <div className="loading-state">Memuat data brand partner...</div>;
 
   return (
@@ -364,7 +386,7 @@ function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActiv
                 <div className="empty-state">
                   <span className="empty-icon">🏷️</span>
                   <p>Belum ada brand partner</p>
-                  <button className="btn-admin-primary" onClick={() => window.location.href = '#/admin/brand-partners'}>Tambah Brand Partner Pertama</button>
+                  <button className="btn-admin-primary" onClick={onAdd}>Tambah Brand Partner Pertama</button>
                 </div>
               </td>
             </tr>
@@ -372,14 +394,14 @@ function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActiv
             partners.map(partner => (
               <tr key={partner.id}>
                 <td>
-                  <span className="order-badge">{partner.order}</span>
+                  <span className="order-circle">{partner.order}</span>
                 </td>
                 <td>
                   <img
                     src={partner.logo}
                     alt={partner.name}
                     className="partner-thumb"
-                    onError={(e) => { e.target.src = 'https://placehold.co/160x80/E5E7EB/9CA3AF?text=Error'; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/160x80/E5E7EB/9CA3AF?text=Error'; }}
                   />
                 </td>
                 <td>
@@ -399,8 +421,12 @@ function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActiv
                 </td>
                 <td>
                   <div className="action-buttons">
-                    <button className="btn-action edit" onClick={() => onEdit(partner)} title="Edit">✏️</button>
-                    <button className="btn-action delete" onClick={() => onDelete(partner.id)} title="Hapus">🗑️</button>
+                    <button className="btn-action edit" onClick={() => onEdit(partner)} title="Edit">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button className="btn-action delete" onClick={() => onDelete(partner.id)} title="Hapus">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
                   </div>
                 </td>
               </tr>

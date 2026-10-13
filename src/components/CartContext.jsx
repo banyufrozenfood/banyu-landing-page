@@ -7,7 +7,9 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = localStorage.getItem('banyu_cart')
-      return saved ? JSON.parse(saved) : []
+      if (!saved) return []
+      const parsed = JSON.parse(saved)
+      return Array.isArray(parsed) ? parsed.filter((i) => i && typeof i === 'object') : []
     } catch {
       return []
     }
@@ -17,20 +19,28 @@ export function CartProvider({ children }) {
   const toast = useToast()
 
   useEffect(() => {
-    localStorage.setItem('banyu_cart', JSON.stringify(cartItems))
+    try {
+      localStorage.setItem('banyu_cart', JSON.stringify(cartItems))
+    } catch {
+      // Quota penuh / private mode: abaikan agar tidak crash render
+    }
   }, [cartItems])
 
   const addToCart = (product, quantity = 1) => {
+    if (!product || product.id == null) return
+    const qty = Number(quantity)
+    const safeQty = Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1
     setCartItems(prev => {
-      const existing = prev.find(item => item.id === product.id)
+      const list = Array.isArray(prev) ? prev : []
+      const existing = list.find(item => item?.id === product.id)
       if (existing) {
-        return prev.map(item => 
-          item.id === product.id 
-            ? { ...item, quantity: item.quantity + quantity }
+        return list.map(item =>
+          item?.id === product.id
+            ? { ...item, quantity: (Number(item.quantity) || 0) + safeQty }
             : item
         )
       }
-      return [...prev, { ...product, quantity }]
+      return [...list, { ...product, quantity: safeQty }]
     })
     toast.success('Produk ditambahkan ke keranjang!')
   }
@@ -40,9 +50,11 @@ export function CartProvider({ children }) {
   }
 
   const updateQuantity = (productId, delta) => {
-    setCartItems(prev => prev.map(item => {
-      if (item.id === productId) {
-        const newQty = Math.max(1, item.quantity + delta)
+    const d = Number(delta)
+    if (!Number.isFinite(d)) return
+    setCartItems(prev => (Array.isArray(prev) ? prev : []).map(item => {
+      if (item?.id === productId) {
+        const newQty = Math.max(1, (Number(item.quantity) || 1) + d)
         return { ...item, quantity: newQty }
       }
       return item
@@ -53,8 +65,8 @@ export function CartProvider({ children }) {
     setCartItems([])
   }
 
-  const cartTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+  const cartTotal = cartItems.reduce((sum, item) => sum + (Number(item?.price) || 0) * (Number(item?.quantity) || 0), 0)
+  const cartCount = cartItems.reduce((sum, item) => sum + (Number(item?.quantity) || 0), 0)
 
   return (
     <CartContext.Provider value={{
@@ -73,4 +85,8 @@ export function CartProvider({ children }) {
   )
 }
 
-export const useCart = () => useContext(CartContext)
+export const useCart = () => {
+  const ctx = useContext(CartContext)
+  if (!ctx) throw new Error('useCart harus dipakai di dalam CartProvider')
+  return ctx
+}

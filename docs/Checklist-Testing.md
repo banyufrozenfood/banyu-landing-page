@@ -30,7 +30,8 @@ Cara pakai:
 - [ ] Tombol CTA carousel mengarah ke link yang benar
 - [ ] Section keunggulan tampil
 - [ ] Produk unggulan tampil (diambil dari Supabase)
-- [ ] Tombol marketplace tampil hanya jika URL diisi di Settings — tersembunyi jika kosong
+- [ ] Tombol marketplace beranda tampil jika section aktif dan toggle Tokopedia/Shopee aktif + URL diisi; bisa on salah satu, keduanya, atau mati keduanya
+- [ ] Ikon logo resmi Tokopedia dan Shopee muncul jelas di kartu marketplace beranda
 - [ ] Section brand partner tampil (hanya logo yang berstatus Aktif)
 - [ ] Footer tampil: deskripsi, navigasi, kategori (otomatis dari database), kontak, sosmed, copyright
 - [ ] Toggle section di Pengaturan → Isi Beranda menyembunyikan/menampilkan section beranda setelah Terbitkan
@@ -57,21 +58,24 @@ Cara pakai:
 - [ ] Produk tanpa foto tidak crash (tampilkan placeholder)
 - [ ] Tab Spesifikasi berfungsi — tidak crash jika spesifikasi kosong
 - [ ] Tombol "Tambah ke Keranjang" bekerja + toast muncul
-- [ ] Tombol Tokopedia/Shopee tampil jika URL diisi di Pengaturan, tersembunyi jika kosong
+- [ ] Tombol Beli di Tokopedia/Shopee tampil sesuai pengaturan individual di edit produk (hanya muncul jika toggle produk aktif dan link diisi)
 - [ ] Produk terkait tampil di bawah (maks 4, kategori yang sama)
 - [ ] Breadcrumb Home / Produk / nama produk berfungsi
 - [ ] Buka ID produk yang tidak ada → tampil "Produk Tidak Ditemukan", bukan crash
 
 ---
 
-## 6. Keranjang Belanja
+## 6. Keranjang Belanja & Checkout WhatsApp
 - [ ] Klik ikon keranjang → drawer terbuka dari kanan
 - [ ] Item yang ditambahkan tampil dengan nama, jumlah, harga
 - [ ] Tombol (+) dan (−) mengubah jumlah
 - [ ] Tombol hapus (✕) menghapus item
 - [ ] Total harga berubah sesuai isi keranjang
 - [ ] Keranjang tidak kosong setelah refresh halaman (tersimpan di localStorage)
-- [ ] Tombol "Pesan via WhatsApp" membuka chat WA dengan pesan otomatis berisi daftar item + total
+- [ ] Form pemesan: input Nama dan Alamat pengiriman wajib diisi sebelum pesan
+- [ ] Tombol "Pesan via WhatsApp" mencatat pesanan ke tabel `whatsapp_orders` dengan status `pending` dan mengosongkan keranjang
+- [ ] Membuka WhatsApp dengan pesan otomatis berisi detail item, alamat, dan nomor pesanan unik
+- [ ] Keranjang kosong menampilkan pesan "Keranjang Anda kosong"
 - [ ] Keranjang kosong menampilkan pesan "Keranjang Anda kosong"
 
 ---
@@ -92,7 +96,7 @@ Cara pakai:
 - [ ] Login dengan kredensial benar → masuk ke dashboard
 
 ### Dashboard
-- [ ] Angka Total Produk dan Kategori tampil
+- [ ] Angka Total Produk, Kategori, dan Pesanan Menunggu tampil
 - [ ] Status website tampil (Published / Ada draft belum terbit) + tanggal simpan & terbit
 - [ ] Kartu panduan tampil saat pertama kali (bisa ditutup)
 
@@ -100,6 +104,7 @@ Cara pakai:
 - [ ] Daftar produk tampil + pencarian nama berfungsi
 - [ ] Tambah produk baru → produk muncul di daftar dan di website
 - [ ] Slug terisi otomatis dari nama (bisa diubah manual)
+- [ ] Toggle & input URL marketplace Tokopedia dan Shopee per produk berfungsi
 - [ ] Edit produk → perubahan tersimpan
 - [ ] Hapus produk → konfirmasi muncul, produk hilang dari daftar dan website
 
@@ -122,13 +127,21 @@ Cara pakai:
 ### Media Library
 - [ ] Upload gambar (PNG/JPG/WebP/SVG/GIF) dan tambah dari link berfungsi
 - [ ] Filter kategori (Gambar/Logo/Banner/Foto Toko) dan pencarian berfungsi
+- [ ] Filter status penggunaan (Semua / Digunakan / Belum digunakan) berfungsi menyortir foto
+- [ ] Badge status lokasi pemakaian tampil (contoh: "Dipakai: Produk", "Belum digunakan")
 - [ ] Tombol salin link (🔗) menyalin URL gambar
 - [ ] Hapus gambar menampilkan dialog konfirmasi
+
+### Pesanan WhatsApp (`/admin/orders`)
+- [ ] Daftar pesanan yang masuk lewat keranjang muncul dengan status "Menunggu konfirmasi"
+- [ ] Klik "Konfirmasi" → status berubah menjadi "Dikonfirmasi" dan stok produk berkurang otomatis
+- [ ] Klik "Batalkan" → status berubah menjadi "Dibatalkan" dan stok produk yang sempat dikurangi dikembalikan otomatis
+- [ ] Filter status pesanan berfungsi (Menunggu konfirmasi, Dikonfirmasi, Dibatalkan, Semua)
 
 ### Pengaturan
 - [ ] 5 tab tampil: Kontak & Jam Buka, Sosial Media, Navbar & Footer, Isi Beranda, SEO
 - [ ] Ubah teks footer → setelah Terbitkan, teks berubah di website
-- [ ] Kosongkan URL Tokopedia → tombol Tokopedia hilang dari beranda dan halaman detail
+- [ ] Toggle mandiri Tokopedia & Shopee di Isi Beranda berfungsi menyembunyikan/menampilkan kartu marketplace masing-masing
 - [ ] Alur Pratinjau → Simpan Draft → Terbitkan berfungsi; Batalkan Perubahan mengembalikan isian
 - [ ] Isian salah (mis. nomor WA bukan angka) menampilkan pesan error merah
 

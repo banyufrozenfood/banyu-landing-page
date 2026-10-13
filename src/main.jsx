@@ -7,7 +7,10 @@ import { SiteSettingsProvider } from './cms/SiteSettingsContext.jsx'
 import { CartProvider } from './components/CartContext.jsx'
 import './index.css'
 
-createRoot(document.getElementById('root')).render(
+const rootEl = document.getElementById('root')
+if (!rootEl) throw new Error('Elemen #root tidak ditemukan di index.html')
+
+createRoot(rootEl).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>

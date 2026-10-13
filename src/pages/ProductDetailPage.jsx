@@ -3,14 +3,12 @@ import { Link, useParams } from 'react-router-dom'
 import Navbar from '../components/Navbar/Navbar.jsx'
 import Footer from '../components/Footer/Footer.jsx'
 import ProductCard from '../components/ProductCard/ProductCard.jsx'
-import { useSiteSettings } from '../cms/SiteSettingsContext.jsx'
 import { useCart } from '../components/CartContext.jsx'
 import { supabase } from '../lib/supabase.js'
 import './ProductDetailPage.css'
 
 export default function ProductDetailPage() {
   const { id } = useParams()
-  const { settings } = useSiteSettings()
   const { addToCart } = useCart()
   
   const [product, setProduct] = useState(null)
@@ -22,19 +20,33 @@ export default function ProductDetailPage() {
   useEffect(() => {
     async function loadData() {
       setLoading(true)
-      const { data: prodData } = await supabase.from('products').select('*, categories(name)').eq('id', id).single()
-      if (prodData) {
+      try {
+        const { data: prodData, error: prodError } = await supabase.from('products').select('*, categories(name)').eq('id', id).single()
+        if (prodError || !prodData) {
+          setProduct(null)
+          setRelatedProducts([])
+          return
+        }
         setProduct(prodData)
         setSelectedImage(0) // Reset image on product change
-        const { data: relatedData } = await supabase
-          .from('products')
-          .select('*, categories(name)')
-          .eq('category_id', prodData.category_id)
-          .neq('id', prodData.id)
-          .limit(4)
-        setRelatedProducts(relatedData || [])
+        try {
+          const { data: relatedData } = await supabase
+            .from('products')
+            .select('*, categories(name)')
+            .eq('category_id', prodData.category_id)
+            .neq('id', prodData.id)
+            .limit(4)
+          setRelatedProducts(relatedData || [])
+        } catch (e) {
+          console.error('Gagal memuat produk terkait:', e)
+          setRelatedProducts([])
+        }
+      } catch (e) {
+        console.error('Gagal memuat produk:', e)
+        setProduct(null)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
     loadData()
   }, [id])
@@ -64,10 +76,10 @@ export default function ProductDetailPage() {
     )
   }
 
-  const tokopediaUrl = settings.home.marketplace?.tokopediaUrl || ''
-  const shopeeUrl = settings.home.marketplace?.shopeeUrl || ''
-  const hasTokopedia = !!tokopediaUrl && tokopediaUrl !== '#'
-  const hasShopee = !!shopeeUrl && shopeeUrl !== '#'
+  const tokopediaUrl = product.tokopedia_url || ''
+  const shopeeUrl = product.shopee_url || ''
+  const hasTokopedia = product.tokopedia_enabled !== false && !!tokopediaUrl && tokopediaUrl !== '#'
+  const hasShopee = product.shopee_enabled !== false && !!shopeeUrl && shopeeUrl !== '#'
 
   return (
     <div className="product-detail-page">
@@ -90,21 +102,22 @@ export default function ProductDetailPage() {
         <div className="product-gallery">
           <div className="product-gallery__main">
             <img
-              src={(product.images && product.images[selectedImage]) || 'https://placehold.co/600x600/E2E8F0/6B7280?text=No+Image'}
-              alt={`${product.name} - Foto ${selectedImage + 1}`}
+              src={(Array.isArray(product.images) && product.images[selectedImage]) || 'https://placehold.co/600x600/E2E8F0/6B7280?text=No+Image'}
+              alt={`${product.name || 'Produk'} - Foto ${selectedImage + 1}`}
+              onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/600x600/E2E8F0/6B7280?text=No+Image'; }}
             />
             {product.is_featured && (
               <span className="product-gallery__badge">⭐ Unggulan</span>
             )}
           </div>
           <div className="product-gallery__thumbs">
-            {(product.images || []).map((img, idx) => (
+            {(Array.isArray(product.images) ? product.images : []).filter(Boolean).map((img, idx) => (
               <button
                 key={idx}
                 className={`product-gallery__thumb${idx === selectedImage ? ' product-gallery__thumb--active' : ''}`}
                 onClick={() => setSelectedImage(idx)}
               >
-                <img src={img} alt={`${product.name} thumbnail ${idx + 1}`} loading="lazy" />
+                <img src={img} alt={`${product.name || 'Produk'} thumbnail ${idx + 1}`} loading="lazy" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/600x600/E2E8F0/6B7280?text=No+Image'; }} />
               </button>
             ))}
           </div>
@@ -116,16 +129,16 @@ export default function ProductDetailPage() {
           <h1 className="product-info__name">{product.name}</h1>
 
           <div className="product-info__price">
-            Rp {product.price.toLocaleString('id-ID')}
+            Rp {(Number(product.price) || 0).toLocaleString('id-ID')}
           </div>
 
           <div className="product-info__stock">
-            {product.stock > 0 ? (
+            {product.stock != null && Number(product.stock) > 0 ? (
               <span className="product-info__stock--available">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6L9 17l-5-5"/>
                 </svg>
-                Stok tersedia ({product.stock} pcs)
+                Stok tersedia ({Number(product.stock)} pcs)
               </span>
             ) : (
               <span className="product-info__stock--empty">
@@ -199,7 +212,7 @@ export default function ProductDetailPage() {
                       {Object.entries(product.specs).map(([key, value]) => (
                         <tr key={key}>
                           <th>{key.charAt(0).toUpperCase() + key.slice(1).replaceAll('_', ' ')}</th>
-                          <td>{value}</td>
+                          <td>{value != null && typeof value === 'object' ? JSON.stringify(value) : String(value ?? '')}</td>
                         </tr>
                       ))}
                     </tbody>

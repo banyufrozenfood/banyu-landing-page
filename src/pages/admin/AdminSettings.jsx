@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
@@ -18,6 +18,7 @@ const TABS = [
   { id: 'sosial', label: 'Sosial Media' },
   { id: 'menu', label: 'Navbar & Footer' },
   { id: 'beranda', label: 'Isi Beranda' },
+  { id: 'galeri', label: 'Galeri Toko' },
   { id: 'seo', label: 'SEO' },
 ]
 
@@ -42,30 +43,31 @@ function Toggle({ checked, onChange, label }) {
 }
 
 function EditableList({ items, onChange, title, addLabel, makeItem, renderItem, emptyNote }) {
+  const safeItems = Array.isArray(items) ? items : []
   const move = (i, dir) => {
-    const next = [...items]
+    const next = [...safeItems]
     const j = i + dir
     if (j < 0 || j >= next.length) return
     ;[next[i], next[j]] = [next[j], next[i]]
     onChange(next)
   }
-  const update = (i, patch) => onChange(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)))
+  const update = (i, patch) => onChange(safeItems.map((it, idx) => (idx === i ? { ...it, ...patch } : it)))
   return (
     <div className="editable-list">
       <div className="editable-list__header">
         <h4>{title}</h4>
-        <button type="button" className="btn-admin-secondary" onClick={() => onChange([...items, makeItem()])}>
+        <button type="button" className="btn-admin-secondary" onClick={() => onChange([...safeItems, makeItem()])}>
           + {addLabel}
         </button>
       </div>
-      {items.length === 0 && <p className="field-hint">{emptyNote || 'Belum ada item. Klik tombol tambah untuk menambahkan.'}</p>}
-      {items.map((item, i) => (
+      {safeItems.length === 0 && <p className="field-hint">{emptyNote || 'Belum ada item. Klik tombol tambah untuk menambahkan.'}</p>}
+      {safeItems.map((item, i) => (
         <div className="editable-list__row" key={item.id || i}>
           <div className="editable-list__fields">{renderItem(item, (patch) => update(i, patch), i)}</div>
           <div className="editable-list__controls">
             <button type="button" title="Naik" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
-            <button type="button" title="Turun" disabled={i === items.length - 1} onClick={() => move(i, 1)}>↓</button>
-            <button type="button" title="Hapus item" className="danger" onClick={() => onChange(items.filter((_, idx) => idx !== i))}>🗑</button>
+            <button type="button" title="Turun" disabled={i === safeItems.length - 1} onClick={() => move(i, 1)}>↓</button>
+            <button type="button" title="Hapus item" className="danger" onClick={() => onChange(safeItems.filter((_, idx) => idx !== i))}>🗑</button>
           </div>
         </div>
       ))}
@@ -75,20 +77,20 @@ function EditableList({ items, onChange, title, addLabel, makeItem, renderItem, 
 
 function validate(form) {
   const errors = {}
-  const c = form.contact
-  if (!isValidWhatsapp(c.whatsapp)) errors['contact.whatsapp'] = 'Hanya angka 8–15 digit, diawali kode negara. Contoh: 6281234567890.'
+  const c = form.contact || {}
+  if (!isValidWhatsapp(c.whatsapp || '')) errors['contact.whatsapp'] = 'Hanya angka 8–15 digit, diawali kode negara. Contoh: 6281234567890.'
   if (c.email && !isValidEmail(c.email)) errors['contact.email'] = 'Format email belum benar.'
   if (c.mapsUrl && !isValidUrl(c.mapsUrl)) errors['contact.mapsUrl'] = 'Link harus diawali http:// atau https://.'
   if (c.mapsEmbed && !isValidUrl(c.mapsEmbed)) errors['contact.mapsEmbed'] = 'Link harus diawali http:// atau https://.'
-  form.socials.forEach((s, i) => {
+  ;(form.socials || []).forEach((s, i) => {
     if (s.url && !isValidUrl(s.url)) errors[`socials.${i}.url`] = 'Link harus diawali http:// atau https://.'
   })
-  const mp = form.home.marketplace
+  const mp = form.home?.marketplace || {}
   ;['tokopediaUrl', 'shopeeUrl'].forEach((key) => {
     if (mp[key] && mp[key] !== '#' && !isValidUrl(mp[key])) errors[`marketplace.${key}`] = 'Link harus diawali http:// atau https://, atau kosongkan jika belum ada.'
   })
-  if (!form.seo.title.trim()) errors['seo.title'] = 'Judul website wajib diisi.'
-  if (form.seo.ogImage && !isValidUrl(form.seo.ogImage)) errors['seo.ogImage'] = 'Link harus diawali http:// atau https://.'
+  if (!(form.seo?.title || '').trim()) errors['seo.title'] = 'Judul website wajib diisi.'
+  if (form.seo?.ogImage && !isValidUrl(form.seo.ogImage)) errors['seo.ogImage'] = 'Link harus diawali http:// atau https://.'
   return errors
 }
 
@@ -99,28 +101,50 @@ function formatDateTime(value) {
   return d.toLocaleString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+function cloneSettings(value) {
+  try {
+    if (typeof structuredClone === 'function') return structuredClone(value)
+  } catch {
+    // fallback di bawah
+  }
+  return JSON.parse(JSON.stringify(value))
+}
+
 export default function AdminSettings() {
   const cms = useSiteSettings()
   const toast = useToast()
   const [tab, setTab] = useState('kontak')
-  const [form, setForm] = useState(() => structuredClone(cms.draft))
+  const [form, setForm] = useState(() => cloneSettings(cms.draft))
   // baseline = draft terakhir yang sengaja disimpan/diterbitkan.
   // Pratinjau sengaja TIDAK mengubah baseline agar "Batalkan Perubahan" tetap bisa mengembalikan.
-  const [baseline, setBaseline] = useState(() => structuredClone(cms.draft))
+  const [baseline, setBaseline] = useState(() => cloneSettings(cms.draft))
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [confirmPublish, setConfirmPublish] = useState(false)
+  const [bootstrapped, setBootstrapped] = useState(false)
+
+  // Sinkronkan form saat draft async selesai dimuat (sekali saja, sebelum user mengedit).
+  // Mencegah form kosong menimpa draft remote yang baru datang.
+  useEffect(() => {
+    if (!bootstrapped && cms.draft) {
+      const fresh = cloneSettings(cms.draft)
+      setForm(fresh)
+      setBaseline(fresh)
+      setBootstrapped(true)
+    }
+  }, [cms.draft, bootstrapped])
 
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline)
   const err = (key) => errors[key]
 
   const update = (fn) => {
-    const next = structuredClone(form)
+    const next = cloneSettings(form)
     fn(next)
     setForm(next)
   }
 
   const runSave = async (thenPublish) => {
+    if (saving) return false
     const found = validate(form)
     setErrors(found)
     if (Object.keys(found).length > 0) {
@@ -136,7 +160,7 @@ export default function AdminSettings() {
         await cms.saveDraft(form)
         toast.success('Perubahan berhasil disimpan sebagai draft.')
       }
-      setBaseline(structuredClone(form))
+      setBaseline(cloneSettings(form))
       return true
     } catch (e) {
       console.error('Gagal menyimpan pengaturan:', e)
@@ -148,6 +172,7 @@ export default function AdminSettings() {
   }
 
   const handlePreview = async () => {
+    if (saving) return
     const found = validate(form)
     setErrors(found)
     if (Object.keys(found).length > 0) {
@@ -168,18 +193,24 @@ export default function AdminSettings() {
   }
 
   const handleCancel = async () => {
-    const reverted = structuredClone(baseline)
-    setForm(reverted)
-    setErrors({})
-    // Bila Pratinjau sempat menyimpan draft yang berbeda, kembalikan draft ke baseline.
-    if (JSON.stringify(cms.draft) !== JSON.stringify(reverted)) {
-      try {
-        await cms.saveDraft(reverted)
-      } catch (e) {
-        console.error('Gagal mengembalikan draft:', e)
+    if (saving) return
+    setSaving(true)
+    try {
+      const reverted = cloneSettings(baseline)
+      setForm(reverted)
+      setErrors({})
+      // Bila Pratinjau sempat menyimpan draft yang berbeda, kembalikan draft ke baseline.
+      if (JSON.stringify(cms.draft) !== JSON.stringify(reverted)) {
+        try {
+          await cms.saveDraft(reverted)
+        } catch (e) {
+          console.error('Gagal mengembalikan draft:', e)
+        }
       }
+      toast.success('Perubahan dibatalkan, kembali ke draft terakhir yang disimpan.')
+    } finally {
+      setSaving(false)
     }
-    toast.success('Perubahan dibatalkan, kembali ke draft terakhir yang disimpan.')
   }
 
   return (
@@ -187,8 +218,8 @@ export default function AdminSettings() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">Pengaturan Website</h1>
-          <p className="admin-page-subtitle">
-            Ubah isi dan tampilan website tanpa coding. Terakhir disimpan: {formatDateTime(cms.updatedAt)} · Terakhir terbit: {formatDateTime(cms.publishedAt)}
+          <p className="admin-page-subtitle admin-page-subtitle--green">
+            Ubah isi tampilan website tanpa coding . Terakhir disimpan: {formatDateTime(cms.updatedAt)}. Terakhir terbit: {formatDateTime(cms.publishedAt)}
           </p>
         </div>
       </div>
@@ -231,9 +262,6 @@ export default function AdminSettings() {
                 <input value={form.contact.whatsappMessage} onChange={(e) => update((f) => { f.contact.whatsappMessage = e.target.value })} />
               </Field>
               <div className="form-group-row" style={{ display: 'flex', gap: '1.5rem' }}>
-                <Field label="Nomor Telepon">
-                  <input value={form.contact.phone} onChange={(e) => update((f) => { f.contact.phone = e.target.value })} />
-                </Field>
                 <Field label="Email" error={err('contact.email')}>
                   <input value={form.contact.email} onChange={(e) => update((f) => { f.contact.email = e.target.value })} />
                 </Field>
@@ -330,11 +358,13 @@ export default function AdminSettings() {
                 </div>
               </div>
               <div className="form-group-row" style={{ display: 'flex', gap: '1.5rem' }}>
-                <Field label="Link Toko Tokopedia" error={err('marketplace.tokopediaUrl')} hint="Opsional. Kosongkan jika tidak ada, agar tombol Tokopedia otomatis disembunyikan.">
-                  <input value={form.home.marketplace.tokopediaUrl} onChange={(e) => update((f) => { f.home.marketplace.tokopediaUrl = e.target.value })} />
+                <Field label="Tokopedia" error={err('marketplace.tokopediaUrl')} hint="Nyalakan untuk tampil di beranda. Link kosong tetap menyembunyikan kartu.">
+                  <Toggle checked={form.home.marketplace.tokopediaEnabled} onChange={(v) => update((f) => { f.home.marketplace.tokopediaEnabled = v })} label="Tampilkan Tokopedia" />
+                  <input placeholder="https://..." value={form.home.marketplace.tokopediaUrl} onChange={(e) => update((f) => { f.home.marketplace.tokopediaUrl = e.target.value })} />
                 </Field>
-                <Field label="Link Toko Shopee" error={err('marketplace.shopeeUrl')} hint="Opsional. Kosongkan jika tidak ada, agar tombol Shopee otomatis disembunyikan.">
-                  <input value={form.home.marketplace.shopeeUrl} onChange={(e) => update((f) => { f.home.marketplace.shopeeUrl = e.target.value })} />
+                <Field label="Shopee" error={err('marketplace.shopeeUrl')} hint="Nyalakan untuk tampil di beranda. Link kosong tetap menyembunyikan kartu.">
+                  <Toggle checked={form.home.marketplace.shopeeEnabled} onChange={(v) => update((f) => { f.home.marketplace.shopeeEnabled = v })} label="Tampilkan Shopee" />
+                  <input placeholder="https://..." value={form.home.marketplace.shopeeUrl} onChange={(e) => update((f) => { f.home.marketplace.shopeeUrl = e.target.value })} />
                 </Field>
               </div>
               <Field label="Judul Bagian Keunggulan">
@@ -348,12 +378,46 @@ export default function AdminSettings() {
                 addLabel="Tambah Keunggulan"
                 items={form.home.advantages}
                 onChange={(items) => update((f) => { f.home.advantages = items })}
-                makeItem={() => ({ id: uid(), icon: '⭐', title: '', desc: '' })}
+                makeItem={() => ({ id: uid(), title: '', desc: '' })}
                 renderItem={(item, set) => (
                   <>
-                    <input className="input-icon" placeholder="Ikon (emoji)" value={item.icon} onChange={(e) => set({ icon: e.target.value })} />
                     <input placeholder="Judul keunggulan" value={item.title} onChange={(e) => set({ title: e.target.value })} />
                     <textarea rows={2} placeholder="Penjelasan singkat" value={item.desc} onChange={(e) => set({ desc: e.target.value })} />
+                  </>
+                )}
+              />
+            </>
+          )}
+
+          {tab === 'galeri' && (
+            <>
+              <div className="settings-note">
+                Kelola foto yang tampil di halaman Lokasi. Gunakan foto toko asli agar pengunjung mudah mengenali lokasi.
+              </div>
+              <div className="form-group">
+                <Toggle
+                  checked={form.locationGallery?.visible ?? true}
+                  onChange={(v) => update((f) => { f.locationGallery = { ...(f.locationGallery || {}), visible: v } })}
+                  label="Tampilkan Galeri Toko di halaman Lokasi"
+                />
+              </div>
+              <Field label="Judul Galeri">
+                <input value={form.locationGallery?.title || ''} onChange={(e) => update((f) => { f.locationGallery = { ...(f.locationGallery || {}), title: e.target.value } })} />
+              </Field>
+              <Field label="Deskripsi Galeri">
+                <input value={form.locationGallery?.subtitle || ''} onChange={(e) => update((f) => { f.locationGallery = { ...(f.locationGallery || {}), subtitle: e.target.value } })} />
+              </Field>
+              <EditableList
+                title="Foto Galeri"
+                addLabel="Tambah Foto"
+                items={form.locationGallery?.items || []}
+                onChange={(items) => update((f) => { f.locationGallery = { ...(f.locationGallery || {}), items } })}
+                makeItem={() => ({ id: uid(), image: '', label: '' })}
+                emptyNote="Belum ada foto. Tambahkan foto toko untuk ditampilkan di halaman Lokasi."
+                renderItem={(item, set) => (
+                  <>
+                    <ImagePicker value={item.image} category="toko" cropAspect={3 / 2} onChange={(image) => set({ image })} />
+                    <input placeholder="Label foto, contoh: Area freezer" value={item.label} onChange={(e) => set({ label: e.target.value })} />
                   </>
                 )}
               />
@@ -375,16 +439,16 @@ export default function AdminSettings() {
           )}
 
           <div className="form-actions settings-actions">
-            <button type="button" className="btn-admin-primary" disabled={!dirty || saving} onClick={() => runSave(false)}>
+            <button type="button" className="btn-admin-primary btn-save-draft" disabled={!dirty || saving} onClick={() => runSave(false)}>
               {saving ? 'Menyimpan...' : 'Simpan Draft'}
             </button>
-            <button type="button" className="btn-admin-secondary" disabled={saving} onClick={handlePreview}>
+            <button type="button" className="btn-admin-secondary btn-preview" disabled={saving} onClick={handlePreview}>
               Pratinjau
             </button>
             <button type="button" className="btn-admin-primary btn-publish" disabled={saving} onClick={() => setConfirmPublish(true)}>
               Terbitkan
             </button>
-            <button type="button" className="btn-admin-secondary" disabled={!dirty || saving} onClick={handleCancel}>
+            <button type="button" className="btn-admin-secondary btn-cancel" disabled={!dirty || saving} onClick={handleCancel}>
               Batalkan Perubahan
             </button>
           </div>

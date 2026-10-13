@@ -14,9 +14,10 @@ Panduan ini untuk owner/admin toko. Tidak perlu paham coding.
 7. [Kelola Banner](#7-kelola-banner)
 8. [Kelola Brand Partner](#8-kelola-brand-partner)
 9. [Media Library](#9-media-library)
-10. [Pengaturan Situs](#10-pengaturan-situs)
-11. [Cara Keluar](#11-cara-keluar)
-12. [Masalah Umum](#12-masalah-umum)
+10. [Pesanan WhatsApp](#10-pesanan-whatsapp)
+11. [Pengaturan Situs](#11-pengaturan-situs)
+12. [Cara Keluar](#12-cara-keluar)
+13. [Masalah Umum](#13-masalah-umum)
 
 ---
 
@@ -34,7 +35,7 @@ Panduan ini untuk owner/admin toko. Tidak perlu paham coding.
 
 Setelah masuk, ada dua bagian utama:
 
-- **Sidebar kiri** — daftar menu: Dashboard, Pengaturan Website, Media Library, Produk, Kategori, Banners, Slide Beranda, Brand Partner
+- **Sidebar kiri** — daftar menu: Ringkasan, Pengaturan Website, Media Library, Pesanan WhatsApp, Produk, Kategori, Slide Beranda, Brand Partner
 - **Area kanan** — konten halaman yang sedang dibuka. Di atasnya ada header dengan tombol **Lihat Website** (membuka website di tab baru) dan label Admin.
 
 Di layar kecil (HP/tablet), sidebar tersembunyi — buka lewat tombol hamburger (☰) di header.
@@ -47,8 +48,8 @@ Halaman pembuka berisi:
 
 - **Kartu panduan** — penjelasan singkat cara mengelola website (muncul saat pertama kali, bisa ditutup).
 - **Status Website** — apakah ada draft yang belum diterbitkan, kapan terakhir disimpan dan diterbitkan, serta mode penyimpanan (Online/Supabase atau browser saja). Ada tombol **Edit Website** dan **Lihat Pratinjau**.
-- **Statistik** — Total Produk dan Kategori.
-- **Aksi Cepat** — jalan pintas ke menu yang sering dipakai (Edit Website, Kelola Media, Kelola Produk, Slide Beranda, Brand Partner, Lihat Website).
+- **Statistik** — Total Produk, Kategori, dan **Pesanan Menunggu**.
+- **Aksi Cepat** — jalan pintas ke menu yang sering dipakai (Edit Website, Kelola Media, Kelola Produk, Slide Beranda, Brand Partner, Pesanan WhatsApp, Lihat Website).
 
 ---
 
@@ -67,10 +68,11 @@ Menu **Produk** → daftar semua produk dalam tabel (foto, nama, kategori, harga
    - **Stok** (wajib) — jumlah stok saat ini (isi `0` jika habis; produk bertanda "Habis" dan tombol + terkunci)
    - **Deskripsi** — penjelasan produk
    - **URL Gambar** — tempel link gambar langsung. Jika lebih dari satu, pisahkan dengan koma (contoh: `https://.../img1.jpg, https://.../img2.jpg`). Foto pertama menjadi foto utama. Tips: upload dulu ke **Media Library**, lalu salin linknya ke sini.
+   - **Marketplace Produk** — centang **Tampilkan Tokopedia** dan/atau **Tampilkan Shopee** jika produk tersedia di marketplace tersebut, lalu masukkan link produknya. Bisa salah satu, keduanya, atau tidak keduanya.
    - **Jadikan Produk Unggulan** — centang jika ingin produk tampil di section Produk Unggulan beranda
 3. Klik **Simpan**.
 
-> Tombol Tokopedia/Shopee di halaman detail produk memakai **link toko global** dari Pengaturan → Isi Beranda, bukan per produk. Jadi tidak ada kolom marketplace di form produk.
+> Link marketplace di halaman detail produk kini diatur secara individual per produk lewat form ini. Tombol hanya tampil di web jika dicentang aktif dan link diisi.
 
 ### Edit produk
 Klik ikon pensil (✏️) di baris produk yang ingin diubah → ubah isian → klik **Simpan**.
@@ -173,7 +175,9 @@ Menu **Media Library** → galeri gambar dalam bentuk kartu (nama file, kategori
 Tempel link gambar (`https://...`) di kolom yang tersedia → klik **Tambah dari Link**.
 
 ### Cari & filter
-Gunakan tombol filter kategori (Semua/Gambar/Logo/Banner/Foto Toko) dan kolom **Cari gambar** berdasarkan nama file.
+- Gunakan tombol filter kategori (Semua/Gambar/Logo/Banner/Foto Toko) dan kolom **Cari gambar** berdasarkan nama file.
+- **Filter Status Penggunaan**: pilih **Semua status**, **Digunakan**, atau **Belum digunakan**.
+- Setiap gambar menampilkan badge indikator pemakaian, misalnya `Dipakai: Produk`, `Dipakai: Slide beranda`, `Dipakai: Brand partner`, atau `Belum digunakan`. Memudahkan membersihkan gambar yang tidak lagi dipakai.
 
 ### Salin & hapus gambar
 - Klik ikon **🔗** pada kartu gambar untuk menyalin link gambar.
@@ -183,7 +187,19 @@ Gunakan tombol filter kategori (Semua/Gambar/Logo/Banner/Foto Toko) dan kolom **
 
 ---
 
-## 10. Pengaturan Situs
+## 10. Pesanan WhatsApp
+
+Menu **Pesanan WhatsApp** (`/admin/orders`) mengelola pesanan yang masuk saat pengunjung checkout lewat keranjang website.
+
+### Alur kerja pesanan & stok:
+1. **Pelanggan checkout**: Mengisi nama dan alamat di keranjang belanja web, lalu klik pesan via WhatsApp. Data pesanan otomatis tercatat dengan status **Menunggu konfirmasi** (stok produk belum berkurang).
+2. **Review oleh admin**: Buka menu Pesanan WhatsApp, cek rincian produk, pemesan, alamat, dan total belanja.
+3. **Konfirmasi pesanan**: Saat customer sudah membayar/konfirmasi di chat WA, klik tombol **Konfirmasi**. Sistem akan secara otomatis **mengurangi stok** produk di database. Jika ada produk yang stoknya habis/kurang, sistem memberi peringatan dan menolak perubahan.
+4. **Batalkan pesanan**: Jika customer membatalkan atau tidak membayar, klik **Batalkan**. Jika pesanan sebelumnya sudah sempat dikonfirmasi, sistem secara otomatis **mengembalikan stok** produk ke jumlah semula.
+
+---
+
+## 11. Pengaturan Situs
 
 Semua konten situs yang bisa diubah tanpa sentuh kode.
 
@@ -194,7 +210,7 @@ Menu **Pengaturan Website** → 5 tab:
 | Kontak & Jam Buka | Nomor WhatsApp, pesan otomatis WA, telepon, email, alamat singkat (footer), alamat lengkap (halaman Lokasi), link & peta tertanam Google Maps, daftar jam operasional (tambah/geser/hapus baris) |
 | Sosial Media | Daftar akun (nama, ikon, link) — tambah/geser/hapus; link yang dikosongkan menyembunyikan ikon di footer |
 | Navbar & Footer | Menu navigasi sudah tetap (Home, Produk, Lokasi) — tidak perlu diatur. Di sini hanya ubah deskripsi footer dan catatan kecil footer |
-| Isi Beranda | Nyalakan/matikan section beranda (Keunggulan, Produk Unggulan, Marketplace, Brand Partner); link toko Tokopedia & Shopee; judul, kalimat pendukung, dan daftar keunggulan |
+| Isi Beranda | Nyalakan/matikan section beranda (Keunggulan, Produk Unggulan, Marketplace, Brand Partner); toggle mandiri Tokopedia & Shopee (bisa on salah satu, dua-duanya, atau nonaktif); link toko Tokopedia & Shopee; judul, kalimat pendukung, dan daftar keunggulan |
 | SEO | Judul website (tab browser & hasil Google), deskripsi website, gambar untuk bagikan link (og image) |
 
 Di bagian atas halaman terlihat kapan terakhir disimpan dan diterbitkan, plus peringatan jika ada draft yang belum diterbitkan.

@@ -7,6 +7,7 @@ const LS_MEDIA = 'banyu_cms_media_v1'
 export const STORAGE_MODE = { SUPABASE: 'supabase', LOCAL: 'local' }
 
 function deepMerge(base, override) {
+  if (override === null || override === undefined) return base
   if (Array.isArray(base) || Array.isArray(override)) return override ?? base
   if (base && typeof base === 'object' && override && typeof override === 'object') {
     const out = { ...base }
@@ -35,7 +36,11 @@ function readLocal(key, fallback) {
 }
 
 function writeLocal(key, value) {
-  localStorage.setItem(key, JSON.stringify(value))
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch (e) {
+    console.error('Gagal menyimpan ke localStorage:', e)
+  }
 }
 
 async function probeSupabase() {
@@ -133,6 +138,7 @@ export async function addMediaItem(mode, item) {
 }
 
 export async function removeMediaItem(mode, item) {
+  if (!item?.id) return
   if (mode === STORAGE_MODE.SUPABASE) {
     const { error } = await supabase.from('media_library').delete().eq('id', item.id)
     if (error) throw error
@@ -145,6 +151,7 @@ export async function removeMediaItem(mode, item) {
 }
 
 export async function uploadMediaFile(mode, file, category) {
+  if (!file?.name) throw new Error('File tidak valid')
   if (mode === STORAGE_MODE.SUPABASE) {
     const ext = file.name.split('.').pop()
     const path = `${category}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
@@ -161,7 +168,15 @@ export async function uploadMediaFile(mode, file, category) {
       })
       return item
     }
-    // bucket missing: fall back to local data-url below
+    // Upload online gagal (mis. bucket 'media' belum ada): jangan diam-diam
+    // menulis data-URL raksasa ke localStorage. Hanya fallback untuk file kecil.
+    const MAX_FALLBACK_BYTES = 400 * 1024
+    if ((file.size || 0) > MAX_FALLBACK_BYTES) {
+      throw new Error(
+        `Upload online gagal (${error?.message || 'storage error'}). Buat bucket 'media' di Supabase Storage atau pakai file < 400 KB.`
+      )
+    }
+    console.warn('Upload Supabase gagal, fallback ke penyimpanan lokal:', error?.message)
   }
   const dataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader()

@@ -1,29 +1,35 @@
 .settings-notice {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1e40af;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
   border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.875rem;
   margin-bottom: 1rem;
 }
 
 .settings-notice code {
-  background: #dbeafe;
+  background: #DBEAFE;
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
 }
 
 .settings-notice--draft {
-  background: #fffbeb;
-  border-color: #fde68a;
-  color: #92400e;
+  background: #FEF9C3;
+  border: none;
+  color: #854D0E;
+}
+
+.admin-page-subtitle--green {
+  color: #166534;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
 .settings-note {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-left: 4px solid #16a34a;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-left: 4px solid #16A34A;
   color: #166534;
   border-radius: 8px;
   padding: 0.75rem 1rem;
@@ -33,37 +39,50 @@
 }
 
 .settings-note a {
-  color: #15803d;
+  color: #15803D;
   font-weight: 700;
   text-decoration: underline;
 }
 
 .settings-note--flow {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  border-left-color: #2563eb;
-  color: #1e40af;
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+  border-left-color: #2563EB;
+  color: #1E40AF;
 }
 
 .settings-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-bottom: 1.75rem;
+  max-width: none;
+  width: 100%;
 }
 
 .settings-tabs button {
-  padding: 0.5rem 0.9rem;
-  border-radius: 9999px;
-  background: #f3f4f6;
-  color: #374151;
-  font-size: 0.85rem;
-  font-weight: 600;
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 8px 10px;
+  text-align: center;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  color: #6E7683;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .settings-tabs button.active {
-  background: #0099ff;
-  color: #fff;
+  background: #38BDF8;
+  color: #FFFFFF;
+  font-weight: 700;
 }
 
 .settings-card {
@@ -71,26 +90,27 @@
 }
 
 .field-hint {
-  color: #6b7280;
+  color: #6B7280;
   font-size: 0.78rem;
   margin: 0.35rem 0 0 0;
 }
 
 .field-error {
-  color: #dc2626;
+  color: #DC2626;
   font-size: 0.78rem;
   margin: 0.35rem 0 0 0;
 }
 
-.toggle {
+.admin-form label.toggle {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
   user-select: none;
+  margin-bottom: 0;
 }
 
-.toggle input {
+.admin-form .toggle input {
   display: none;
 }
 
@@ -98,14 +118,14 @@
   width: 40px;
   height: 22px;
   border-radius: 9999px;
-  background: #d1d5db;
+  background: #D1D5DB;
   position: relative;
   transition: background 0.2s ease;
   flex-shrink: 0;
 }
 
 .toggle input:checked + .toggle__track {
-  background: #0099ff;
+  background: #00A3FF;
 }
 
 .toggle__thumb {
@@ -115,7 +135,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: #FFFFFF;
   transition: left 0.2s ease;
 }
 
@@ -137,11 +157,11 @@
 }
 
 .editable-list {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E5E7EB;
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1.25rem;
-  background: #fafafa;
+  background: #FAFAFA;
 }
 
 .editable-list__header {
@@ -161,8 +181,8 @@
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
   border-radius: 8px;
   padding: 0.75rem;
   margin-bottom: 0.6rem;
@@ -180,7 +200,7 @@
 .editable-list__fields select {
   width: 100%;
   padding: 0.55rem 0.7rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #D1D5DB;
   border-radius: 6px;
   font-size: 0.85rem;
   font-family: inherit;
@@ -201,8 +221,10 @@
   width: 30px;
   height: 30px;
   border-radius: 6px;
-  background: #f3f4f6;
+  background: #F3F4F6;
   font-size: 0.8rem;
+  border: 1px solid #E5E7EB;
+  cursor: pointer;
 }
 
 .editable-list__controls button:disabled {
@@ -211,7 +233,7 @@
 }
 
 .editable-list__controls button.danger:hover {
-  background: #fee2e2;
+  background: #FEE2E2;
 }
 
 .color-grid {
@@ -230,9 +252,9 @@
   width: 48px;
   height: 40px;
   padding: 2px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #D1D5DB;
   border-radius: 6px;
-  background: #fff;
+  background: #FFFFFF;
   cursor: pointer;
 }
 
@@ -241,15 +263,45 @@
 }
 
 .settings-actions {
+  display: flex;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
+.btn-save-draft {
+  background: #38BDF8 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+}
+
+.btn-preview {
+  background: #EAB308 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+}
+
+.btn-preview:hover {
+  background: #CA8A04 !important;
+}
+
 .btn-publish {
-  background: #16a34a;
+  background: #16A34A !important;
+  color: #FFFFFF !important;
+  border: none !important;
 }
 
 .btn-publish:hover:not(:disabled) {
-  background: #15803d;
+  background: #15803D !important;
+}
+
+.btn-cancel {
+  background: #DC2626 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: #B91C1C !important;
 }
 
 @media (max-width: 768px) {

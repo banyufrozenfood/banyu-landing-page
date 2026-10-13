@@ -11,24 +11,40 @@ export default function AdminCategories() {
   const [formData, setFormData] = useState({ id: null, name: '', description: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
   const fetchCategories = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('id', { ascending: true });
-    
-    if (error) console.error(error);
-    else setCategories(data || []);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (error) console.error(error);
+      else setCategories(data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleDelete = async (id) => {
-    if (window.confirm('Yakin ingin menghapus kategori ini? (Produk yang terhubung mungkin kehilangan kategori)')) {
+    let usedCount = 0;
+    try {
+      const { count } = await supabase.from('products').select('*', { count: 'exact', head: true }).eq('category_id', id);
+      usedCount = count || 0;
+    } catch {
+      usedCount = 0;
+    }
+    const msg = usedCount > 0
+      ? `Kategori ini dipakai ${usedCount} produk. Yakin hapus? (Produk terkait akan kehilangan kategori)`
+      : 'Yakin ingin menghapus kategori ini? (Produk yang terhubung mungkin kehilangan kategori)';
+    if (window.confirm(msg)) {
       const { error } = await supabase.from('categories').delete().eq('id', id);
       if (!error) {
         fetchCategories();
@@ -39,7 +55,7 @@ export default function AdminCategories() {
   };
 
   const handleEdit = (cat) => {
-    setFormData(cat);
+    setFormData({ id: cat.id ?? null, name: cat.name || '', description: cat.description || '' });
     setShowForm(true);
   };
 
@@ -50,11 +66,23 @@ export default function AdminCategories() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    const name = (formData.name || '').trim();
+    if (!name) {
+      alert('Nama kategori wajib diisi.');
+      return;
+    }
+    const duplicate = categories.some(
+      (c) => c.id !== formData.id && (c.name || '').trim().toLowerCase() === name.toLowerCase()
+    );
+    if (duplicate) {
+      alert('Nama kategori sudah ada.');
+      return;
+    }
     setSaving(true);
 
     const payload = {
-      name: formData.name,
-      description: formData.description
+      name,
+      description: (formData.description || '').trim()
     };
 
     let error;
@@ -86,7 +114,7 @@ export default function AdminCategories() {
         </div>
         {!showForm && (
           <button className="btn-admin-primary" onClick={handleAdd}>
-            + Tambah Kategori
+            +Tambah Kategori
           </button>
         )}
       </div>
@@ -148,8 +176,12 @@ export default function AdminCategories() {
                       <td>{cat.description || '-'}</td>
                       <td>
                         <div className="action-buttons">
-                          <button className="btn-action edit" onClick={() => handleEdit(cat)}>✏️</button>
-                          <button className="btn-action delete" onClick={() => handleDelete(cat.id)}>🗑️</button>
+                          <button className="btn-action edit" onClick={() => handleEdit(cat)} title="Edit">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                          <button className="btn-action delete" onClick={() => handleDelete(cat.id)} title="Hapus">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                          </button>
                         </div>
                       </td>
                     </tr>

@@ -182,7 +182,7 @@ Artinya: "Halaman 1 ambil produk ke 1–6, halaman 2 ambil ke 7–12." (`slice` 
 
 **Hal penting untuk dijelaskan ke guru:**
 
-1. **Link Tokopedia/Shopee bersifat global** — diambil dari Pengaturan (`settings.home.marketplace`), bukan per produk. Jadi semua produk mengarah ke *toko* yang sama.
+1. **Link Tokopedia/Shopee kini individual per produk** — diatur langsung dari form Edit Produk di panel admin (lengkap dengan toggle aktif/nonaktif). Jika diaktifkan dan link diisi, tombol langsung mengarah ke halaman spesifik produk tersebut di Tokopedia/Shopee.
 2. **Aman dari data kosong** — produk tanpa foto menampilkan gambar pengganti ("No Image"), spesifikasi kosong menampilkan tulisan "Belum ada spesifikasi", ID yang tidak ada menampilkan halaman "Produk Tidak Ditemukan". Website tidak crash.
 3. **Stok 0** menampilkan "Stok habis" dan tombol `+` di kartu ikut terkunci.
 
@@ -190,21 +190,25 @@ Artinya: "Halaman 1 ambil produk ke 1–6, halaman 2 ambil ke 7–12." (`slice` 
 
 ## 7. Fitur 4 — Keranjang & Checkout WhatsApp
 
-**Tujuan:** Pengunjung bisa memesan **banyak produk sekaligus dalam satu pesan**, tanpa sistem pembayaran yang rumit.
+**Tujuan:** Pengunjung bisa memesan **banyak produk sekaligus dalam satu pesan**, dan data pesanannya otomatis tercatat di sistem toko.
 
-**Alur pengguna:** Klik `+` di kartu / "Tambah ke Keranjang" di detail → angka badge di navbar bertambah + notifikasi muncul → klik ikon keranjang → drawer terbuka dari kanan → atur jumlah (+/−) atau hapus → klik "Pesan via WhatsApp" → WhatsApp terbuka dengan pesan sudah jadi → kirim.
+**Alur pengguna:** Klik `+` di kartu / "Tambah ke Keranjang" di detail → angka badge di navbar bertambah + notifikasi muncul → klik ikon keranjang → drawer terbuka dari kanan → atur jumlah (+/−) atau hapus → **isi nama pemesan & alamat pengiriman lengkap** → klik "Pesan via WhatsApp" → data pesanan tercatat ke tabel `whatsapp_orders` dengan status *menunggu konfirmasi* → WhatsApp terbuka dengan pesan rapi berisi rincian pesanan dan nomor order → keranjang belanja dikosongkan.
 
 **Isi pesan otomatisnya** (hafalkan bentuknya):
 
 ```
-Halo Banyu Frozen Food, saya ingin pesan produk berikut dari website:
+Halo Banyu, saya mau pesan produk dari website:
 
-1. Nugget Ayam - 2x (Rp 50.000)
-2. Sosis Sapi - 1x (Rp 25.000)
+📋 *DETAIL PESANAN*
+• Nugget Ayam (2x) — Rp 50.000
+• Sosis Sapi (1x) — Rp 25.000
+Total Produk: Rp 75.000
 
-Total: Rp 75.000
+📍 INFORMASI PENGIRIMAN
+• Nama: Budi
+• Alamat Lengkap: Jl. Sukajadi No. 12, Cimahi
 
-Tolong infokan ongkos kirim ke alamat saya. Terima kasih.
+Nomor pesanan website: WA-20261011-A1B2C3
 ```
 
 **File yang bertanggung jawab:**
@@ -212,7 +216,7 @@ Tolong infokan ongkos kirim ke alamat saya. Terima kasih.
 | File | Fungsi sederhana |
 |---|---|
 | `src/components/CartContext.jsx` | **Otak keranjang.** Menyimpan daftar belanja, fungsi tambah/hapus/ubah jumlah, menghitung total & jumlah item, dan menyimpan ke `localStorage` supaya tidak hilang saat refresh. |
-| `src/components/ui/CartDrawer.jsx` | **Laci keranjang yang geser dari kanan.** Menampilkan isi keranjang dan tombol "Pesan via WhatsApp" yang menyusun pesan otomatis. |
+| `src/components/ui/CartDrawer.jsx` | **Laci keranjang yang geser dari kanan.** Menampilkan form pemesan (nama & alamat), memanggil fungsi pencatatan pesanan di Supabase, dan menyusun link WhatsApp otomatis. |
 
 **Bagian kode penting 1 — tambah ke keranjang (`CartContext.jsx`):**
 
@@ -291,12 +295,13 @@ Artinya: "Susun teks pesanan, ubah jadi format link (`encodeURIComponent`), temp
 |---|---|
 | `src/pages/admin/AdminLoginPage.jsx` | **Form login.** Email + password dicek ke Supabase. Kalau salah, muncul pesan ramah. Kalau sudah login, langsung dilempar ke dashboard. |
 | `src/components/AdminLayout/AdminLayout.jsx` | **Penjaga + kerangka panel.** Mengecek login, menampilkan sidebar 8 menu, tombol Logout, dan tombol "Lihat Website". |
-| `src/pages/admin/AdminDashboard.jsx` | **Ringkasan:** kartu panduan pertama kali, status website (sudah terbit/belum), total produk & kategori, jalan pintas. |
-| `src/pages/admin/AdminProducts.jsx` | **CRUD produk:** tabel + pencarian, form (nama, slug otomatis, kategori, harga, stok, deskripsi, URL gambar koma-pisah, centang unggulan). |
+| `src/pages/admin/AdminDashboard.jsx` | **Ringkasan:** kartu panduan pertama kali, status website (sudah terbit/belum), total produk, kategori, jumlah **pesanan menunggu**, jalan pintas. |
+| `src/pages/admin/AdminOrders.jsx` | **Pesanan WhatsApp & Stok:** daftar order masuk dari web. Konfirmasi pesanan otomatis memotong stok produk secara aman di database; batalkan pesanan otomatis mengembalikan stok. |
+| `src/pages/admin/AdminProducts.jsx` | **CRUD produk:** tabel + pencarian, form (nama, slug otomatis, kategori, harga, stok, deskripsi, URL gambar koma-pisah, centang unggulan, serta opsi toggle & link marketplace Tokopedia & Shopee per produk). |
 | `src/pages/admin/AdminCategories.jsx` | **CRUD kategori:** hanya nama + deskripsi. Kategori baru otomatis muncul di filter katalog dan footer. |
 | `src/pages/admin/AdminHeroSlides.jsx` | **CRUD slide beranda:** judul, gambar, teks & link tombol, urutan angka, toggle Aktif/Nonaktif. Ada panduan visual + pratinjau gambar langsung + validasi form. |
-| `src/pages/admin/AdminBanners.jsx` | **CRUD banner** (judul, gambar, urutan). Jujur ke guru: datanya tersimpan tapi **belum ditampilkan** di halaman publik. |
 | `src/pages/admin/AdminBrandPartners.jsx` | **CRUD logo partner:** nama, logo (pilih via ImagePicker), link website opsional, urutan, toggle aktif. Hanya yang Aktif tampil di beranda. |
+| `src/pages/admin/AdminMedia.jsx` | **Media Library:** upload gambar, tambah dari link, filter kategori, serta **filter status foto (digunakan vs belum digunakan)** lengkap dengan badge tempat foto tersebut dipakai. |
 | `src/components/ui/ImagePicker.jsx` | **Jendela pilih gambar** 3 tab: dari Media Library, upload baru, atau tempel link. Dipakai di form brand partner & SEO. |
 
 **Bagian kode penting — penjaga halaman admin (`AdminLayout.jsx`):**

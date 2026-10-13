@@ -43,6 +43,17 @@ export const DEFAULT_SETTINGS = {
       'Toko frozen food berkualitas untuk keluarga Indonesia. Produk beku pilihan dengan bahan terbaik, diproses higienis.',
     creditNote: 'Project RPL — SMK Negeri 1 Cimahi',
   },
+  locationGallery: {
+    visible: true,
+    title: 'Galeri Toko Kami',
+    subtitle: 'Lihat suasana toko Banyu Frozen Food',
+    items: [
+      { id: 'g1', image: 'https://placehold.co/600x400/0099FF/white?text=Tampak+Depan+Toko', label: 'Tampak depan toko Banyu' },
+      { id: 'g2', image: 'https://placehold.co/600x400/66CCFF/white?text=Interior+Toko', label: 'Interior toko Banyu' },
+      { id: 'g3', image: 'https://placehold.co/600x400/0077CC/white?text=Rak+Produk', label: 'Rak produk frozen food' },
+      { id: 'g4', image: 'https://placehold.co/600x400/0099FF/FFFFFF?text=Area+Freezer', label: 'Area freezer toko' },
+    ],
+  },
   home: {
     sections: {
       advantages: true,
@@ -51,6 +62,8 @@ export const DEFAULT_SETTINGS = {
       brandPartners: true,
     },
     marketplace: {
+      tokopediaEnabled: true,
+      shopeeEnabled: true,
       tokopediaUrl: '',
       shopeeUrl: '',
     },

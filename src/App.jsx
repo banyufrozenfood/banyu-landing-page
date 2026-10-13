@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, Component } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import ScrollToTop from './components/ui/ScrollToTop.jsx'
 import CartDrawer from './components/ui/CartDrawer.jsx'
@@ -13,11 +13,11 @@ const AdminLayout = lazy(() => import('./components/AdminLayout/AdminLayout.jsx'
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx'))
 const AdminProducts = lazy(() => import('./pages/admin/AdminProducts.jsx'))
 const AdminCategories = lazy(() => import('./pages/admin/AdminCategories.jsx'))
-const AdminBanners = lazy(() => import('./pages/admin/AdminBanners.jsx'))
 const AdminHeroSlides = lazy(() => import('./pages/admin/AdminHeroSlides.jsx'))
 const AdminBrandPartners = lazy(() => import('./pages/admin/AdminBrandPartners.jsx'))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings.jsx'))
 const AdminMedia = lazy(() => import('./pages/admin/AdminMedia.jsx'))
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders.jsx'))
 
 function RouteFallback() {
   return (
@@ -25,6 +25,33 @@ function RouteFallback() {
       Memuat...
     </div>
   )
+}
+
+class RouteErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(err) {
+    console.error('Route gagal dimuat:', err)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ textAlign: 'center', padding: '100px 20px', minHeight: '60vh' }}>
+          <h2>Gagal memuat halaman</h2>
+          <p style={{ marginBottom: '2rem' }}>Terjadi gangguan jaringan. Silakan muat ulang.</p>
+          <button onClick={() => window.location.reload()} style={{ padding: '10px 20px' }}>
+            Muat Ulang
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 function NotFound() {
@@ -45,6 +72,7 @@ function App() {
     <>
       <ScrollToTop />
       <CartDrawer />
+      <RouteErrorBoundary>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -60,10 +88,10 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
-            <Route path="/admin/banners" element={<AdminBanners />} />
             <Route path="/admin/hero-slides" element={<AdminHeroSlides />} />
             <Route path="/admin/brand-partners" element={<AdminBrandPartners />} />
             <Route path="/admin/media" element={<AdminMedia />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
 
@@ -71,6 +99,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      </RouteErrorBoundary>
     </>
   )
 }

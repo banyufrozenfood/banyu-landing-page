@@ -30,16 +30,17 @@ const defaultSlides = [
 ]
 
 export default function HeroCarousel({ slides = defaultSlides }) {
+  const safeSlides = Array.isArray(slides) && slides.length > 0 ? slides.filter(Boolean) : defaultSlides
   const [current, setCurrent] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
 
   const nextSlide = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % slides.length)
-  }, [slides.length])
+    setCurrent((prev) => (prev + 1) % safeSlides.length)
+  }, [safeSlides.length])
 
   const prevSlide = useCallback(() => {
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length)
-  }, [slides.length])
+    setCurrent((prev) => (prev - 1 + safeSlides.length) % safeSlides.length)
+  }, [safeSlides.length])
 
   const goToSlide = (index) => {
     setCurrent(index)
@@ -71,26 +72,35 @@ export default function HeroCarousel({ slides = defaultSlides }) {
   return (
     <section className="hero">
       <div className="hero__carousel">
-        {slides.map((slide, index) => (
+        {safeSlides.map((slide, index) => (
           <div
-            key={slide.id}
+            key={slide?.id ?? index}
             className={`hero__slide${index === current ? ' hero__slide--active' : ''}`}
           >
             <div className="hero__slide-bg">
-              <img src={slide.image} alt={slide.title} loading={index === 0 ? 'eager' : 'lazy'} />
+              <img src={slide?.image} alt={slide?.title || 'Slide'} loading={index === 0 ? 'eager' : 'lazy'} onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x600/E5E7EB/9CA3AF?text=Slide'; }} />
               <div className="hero__slide-overlay" />
             </div>
             <div className="hero__slide-content container">
-              <span className="hero__label">{slide.subtitle}</span>
-              <h1 className="hero__title">{slide.title}</h1>
-              <p className="hero__desc">{slide.description}</p>
-              {slide.cta && slide.cta.link && (
+              <span className="hero__label">{slide?.subtitle || ''}</span>
+              <h1 className="hero__title">{slide?.title || ''}</h1>
+              <p className="hero__desc">{slide?.description || ''}</p>
+              {slide?.cta?.link && (
+                slide.cta.link.startsWith('http') ? (
+                  <a href={slide.cta.link} target="_blank" rel="noopener noreferrer" className="btn btn-accent hero__cta">
+                    {slide.cta.text || 'Lihat'}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </a>
+                ) : (
                 <Link to={slide.cta.link} className="btn btn-accent hero__cta">
-                  {slide.cta.text}
+                  {slide.cta.text || 'Lihat'}
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </Link>
+                )
               )}
             </div>
           </div>
@@ -108,7 +118,7 @@ export default function HeroCarousel({ slides = defaultSlides }) {
         </button>
 
         <div className="hero__dots">
-          {slides.map((_, index) => (
+          {safeSlides.map((_, index) => (
             <button
               key={index}
               className={`hero__dot${index === current ? ' hero__dot--active' : ''}`}

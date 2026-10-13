@@ -44,18 +44,20 @@ Website Banyu Frozen Food memiliki beberapa kelompok pengguna dengan kebutuhan d
 
 ### 3.1 Masuk Scope ✅
 - Website katalog (Home, Produk, Detail Produk, Lokasi)
-- Keranjang belanja + checkout via satu pesan WhatsApp
-- Integrasi CTA ke Tokopedia, Shopee, dan WhatsApp
-- Panel admin: kelola produk & kategori (foto, nama, detail, harga, stok)
-- Media library dan pengaturan situs (alur draft → pratinjau → terbit)
+- Keranjang belanja + form pemesan + checkout tercatat otomatis via database dan terhubung ke WhatsApp
+- Integrasi marketplace fleksibel (toggle independen Tokopedia & Shopee di beranda serta per produk)
+- Panel admin: kelola produk & kategori (foto, nama, detail, harga, stok, toggle marketplace)
+- Manajemen Pesanan WhatsApp (`/admin/orders`) dengan sistem otomatis pengurangan/pengembalian stok produk
+- Media library dengan penelusuran status pemakaian gambar (digunakan vs belum digunakan)
+- Pengaturan situs (alur draft → pratinjau → terbit)
 - Google Maps terintegrasi di halaman Lokasi
 - Desain responsif (desktop, tablet, mobile)
 
 ### 3.2 Di Luar Scope ❌
-- Payment gateway
+- Payment gateway pihak ketiga
 - Halaman "Tentang" (dihapus dari scope)
 - Sistem login/akun untuk customer
-- Real-time sync stok dengan marketplace
+- Real-time sync API marketplace pihak ketiga (Shopee Open API / Tokopedia Developer)
 - Moderasi ulasan pelanggan (tabel database disiapkan, UI belum dibangun)
 
 ---
@@ -69,7 +71,7 @@ Website Banyu Frozen Food memiliki beberapa kelompok pengguna dengan kebutuhan d
 | F-02 | Hero Carousel | Looping produk unggulan otomatis + navigasi manual | Must Have |
 | F-03 | Section Keunggulan | 4–5 keunggulan toko dengan icon | Must Have |
 | F-04 | Produk Unggulan | Grid 4 produk + link "Lihat Semua" | Must Have |
-| F-05 | Integrasi Marketplace | Kartu navigasi Tokopedia & Shopee (tampil hanya jika URL diisi di Pengaturan) | Must Have |
+| F-05 | Integrasi Marketplace | Kartu navigasi Tokopedia & Shopee (dapat dinyalakan salah satu, keduanya, atau dinonaktifkan di Pengaturan) | Must Have |
 | F-06 | Brand Partner | Logo brand/supplier yang bekerja sama | Should Have |
 | F-07 | Footer | Info toko, kontak, sosmed, kategori otomatis, copyright | Must Have |
 
@@ -86,7 +88,7 @@ Website Banyu Frozen Food memiliki beberapa kelompok pengguna dengan kebutuhan d
 |---|---|---|---|
 | F-12 | Galeri Foto | Foto utama + thumbnail | Must Have |
 | F-13 | Info Produk | Nama, kategori, harga, stok, deskripsi & spesifikasi (tab) | Must Have |
-| F-14 | CTA Multi-channel | Tombol Tambah ke Keranjang + Beli di Tokopedia / Shopee (link global dari Pengaturan) | Must Have |
+| F-14 | CTA Multi-channel | Tombol Tambah ke Keranjang + Beli di Tokopedia / Shopee (diatur per produk, tampil jika aktif & URL terisi) | Must Have |
 | F-15 | Ulasan Pelanggan | Rating & review — belum tampil di UI, tabel `reviews` disiapkan untuk fase berikutnya | Should Have |
 | F-16 | Produk Terkait | Rekomendasi produk sejenis | Could Have |
 
@@ -100,17 +102,18 @@ Website Banyu Frozen Food memiliki beberapa kelompok pengguna dengan kebutuhan d
 | ID | Fitur | Deskripsi | Prioritas |
 |---|---|---|---|
 | F-19 | Login Admin | Autentikasi untuk akses panel | Must Have |
-| F-20 | CRUD Produk | Tambah/edit/hapus produk (foto, nama, deskripsi, harga, stok, kategori) | Must Have |
+| F-20 | CRUD Produk | Tambah/edit/hapus produk (foto, nama, deskripsi, harga, stok, kategori, toggle & link marketplace Tokopedia/Shopee per produk) | Must Have |
 | F-21 | CRUD Kategori | Tambah/edit/hapus kategori (nama, deskripsi) | Must Have |
 | F-22 | Kelola Slide Beranda | Atur judul, subjudul, deskripsi, gambar, teks & link tombol, urutan angka, status aktif | Should Have |
 | F-23 | Moderasi Review | Approve/reject review customer — belum diimplementasi | Could Have |
-| F-24 | Dashboard Ringkas | Total produk & kategori, status website draft/terbit, kartu panduan, aksi cepat | Could Have |
+| F-24 | Dashboard Ringkas | Total produk, kategori, pesanan menunggu, status website draft/terbit, kartu panduan, aksi cepat | Could Have |
+| F-29 | Pesanan WhatsApp & Stok | Halaman kelola pesanan masuk (`/admin/orders`): konfirmasi untuk memotong stok produk secara atomik di database, batalkan untuk mengembalikan stok | Must Have |
 
 ### 4.6 Keranjang & Pengaturan Situs
 | ID | Fitur | Deskripsi | Prioritas |
 |---|---|---|---|
-| F-25 | Keranjang & Checkout WA | Tambah/ubah/hapus item (tersimpan di localStorage), total otomatis, checkout satu pesan WhatsApp berisi daftar item + total + permintaan info ongkir | Must Have |
-| F-26 | Media Library | Upload gambar, tambah dari link, filter kategori, pencarian, salin link, hapus dengan konfirmasi | Must Have |
+| F-25 | Keranjang & Checkout WA | Tambah/ubah/hapus item (localStorage), input nama & alamat pengiriman, tercatat ke database (`whatsapp_orders`), pesan otomatis WA berisi item, total, alamat, dan nomor pesanan | Must Have |
+| F-26 | Media Library | Upload gambar, tambah dari link, filter kategori, filter status penggunaan (digunakan vs belum digunakan) + indikator pemakaian, pencarian, salin link, hapus | Must Have |
 | F-27 | Pengaturan Website | 5 tab (Kontak & Jam Buka, Sosial Media, Navbar & Footer, Isi Beranda, SEO) + alur Simpan Draft / Pratinjau / Terbitkan | Must Have |
 | F-28 | Kelola Banner | CRUD banner (judul, subjudul, gambar, urutan angka) — data tersimpan, belum ditampilkan di halaman publik | Could Have |
 

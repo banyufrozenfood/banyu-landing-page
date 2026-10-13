@@ -40,13 +40,13 @@ export default function Navbar() {
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
-  const menu = settings.navbar.menu.filter((m) => m.visible)
+  const menu = (settings?.navbar?.menu || []).filter((m) => m?.visible && m?.link && m?.label)
 
   return (
     <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
       <div className="navbar__inner container">
         <Link to="/" className="navbar__logo">
-          <img src={settings.identity.logoUrl} alt={settings.identity.businessName} />
+          <img src={settings?.identity?.logoUrl} alt={settings?.identity?.businessName || 'Banyu'} onError={(e) => { e.target.onerror = null; e.target.style.opacity = '0.4'; }} />
         </Link>
 
         <ul className={`navbar__menu${isOpen ? ' navbar__menu--open' : ''}`}>
