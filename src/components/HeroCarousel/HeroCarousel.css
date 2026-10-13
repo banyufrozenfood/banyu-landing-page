@@ -238,7 +238,7 @@
     align-items: center;
     text-align: center;
     justify-content: flex-end;
-    padding-bottom: 5rem;
+    padding: 0 1.25rem 5rem;
   }
 
   .hero__title {
