@@ -1,32 +1,35 @@
 .admin-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.15rem;
+  min-width: 0;
 }
 
 .admin-page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.25rem;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
 }
 
 .admin-page-title {
-  color: #00A3FF;
-  font-size: 1.75rem;
-  font-weight: 700;
+  color: var(--admin-text, #0F172A);
+  font-size: clamp(1.45rem, 2vw, 1.85rem);
+  font-weight: 800;
   margin: 0;
   letter-spacing: -0.01em;
 }
 
 .admin-page-subtitle {
-  color: #1F2937;
-  font-size: 0.95rem;
+  color: var(--admin-muted, #64748B);
+  font-size: 0.88rem;
   margin: 0.35rem 0 0 0;
 }
 
 .btn-admin-primary, .btn-admin-secondary {
-  padding: 0.6rem 1.25rem;
+  min-height: 44px;
+  padding: 0.6rem 1.1rem;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.9rem;
@@ -40,12 +43,12 @@
 }
 
 .btn-admin-primary {
-  background-color: #38BDF8;
+  background-color: var(--admin-primary, #0099FF);
   color: #FFFFFF;
 }
 
 .btn-admin-primary:hover:not(:disabled) {
-  background-color: #0284C7;
+  background-color: var(--admin-primary-dark, #0077CC);
 }
 
 .btn-admin-primary:disabled {
@@ -65,10 +68,10 @@
 }
 
 .admin-card {
-  background: #FFFFFF;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-  border: none;
+  background: var(--admin-surface, #FFFFFF);
+  border-radius: var(--admin-radius, 14px);
+  box-shadow: var(--admin-shadow, 0 8px 24px rgba(15, 23, 42, 0.06));
+  border: 1px solid var(--admin-border, #E2E8F0);
   overflow: hidden;
 }
 
@@ -167,8 +170,8 @@
   background: #FFFFFF;
   border: 1px solid #D1D5DB;
   border-radius: 6px;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -224,7 +227,7 @@
 
 /* Form Styles */
 .admin-form-container {
-  padding: 2rem;
+  padding: clamp(1.15rem, 3vw, 2rem);
   background: #FFFFFF;
 }
 
@@ -253,7 +256,7 @@
   width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid #D1D5DB;
-  border-radius: 6px;
+  border-radius: 9px;
   font-size: 0.875rem;
   box-sizing: border-box;
   font-family: inherit;
@@ -277,6 +280,15 @@
   border-top: 1px solid #E5E7EB;
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(0, 153, 255, 0.35);
+  outline-offset: 2px;
+}
+
 @media (max-width: 768px) {
   .admin-page-header {
     flex-direction: column;
@@ -287,6 +299,8 @@
     width: 100%;
     text-align: center;
   }
+
+  .admin-page-header { align-items: stretch; }
   
   .form-group-row {
     flex-direction: column;

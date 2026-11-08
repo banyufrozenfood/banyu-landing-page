@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../../lib/supabase.js'
+import { NAV_MENU } from '../../cms/defaults.js'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
+import { trackChannelClick } from '../../lib/analytics.js'
 import './Footer.css'
 
 const socialIcons = {
@@ -36,27 +36,9 @@ export default function Footer() {
   const contact = settings?.contact || {}
   const socials = settings?.socials || []
   const footer = settings?.footer || {}
-  const navbar = settings?.navbar || {}
-  const [categories, setCategories] = useState([])
 
-  useEffect(() => {
-    let active = true
-    async function loadCategories() {
-      try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('id, name')
-          .order('name', { ascending: true })
-        if (active && !error && data && data.length > 0) setCategories(data)
-      } catch (e) {
-        console.error('Gagal memuat kategori footer:', e)
-      }
-    }
-    loadCategories()
-    return () => { active = false }
-  }, [])
-
-  const navLinks = (navbar.menu || []).filter((m) => m?.visible !== false && m?.label && m?.link)
+  const waNumber = (contact.whatsapp || '').replace(/\D/g, '')
+  const waUrl = waNumber ? `https://wa.me/${waNumber}` : null
 
   return (
     <footer className="footer">
@@ -64,12 +46,17 @@ export default function Footer() {
         <div className="footer__main">
           <div className="footer__brand">
             <Link to="/">
-              <img src={identity.logoWhiteUrl || identity.logoUrl} alt={identity.businessName || 'Banyu'} className="footer__logo" onError={(e) => { e.target.onerror = null; e.target.style.opacity = '0.4'; }} />
+              <img
+                src={identity.logoWhiteUrl || identity.logoUrl}
+                alt={identity.businessName || 'Banyu'}
+                className="footer__logo"
+                onError={(e) => { e.target.onerror = null; e.target.style.opacity = '0.4' }}
+              />
             </Link>
             <p className="footer__desc">{footer.description || ''}</p>
             <div className="footer__social">
               {(socials || []).filter((s) => s?.url).map((s) => (
-                <a key={s.id} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.label}>
+                <a key={s.id || s.label} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.label}>
                   {socialIcons[s.icon] || socialIcons.other}
                 </a>
               ))}
@@ -79,17 +66,8 @@ export default function Footer() {
           <div className="footer__links">
             <h4>Navigasi</h4>
             <ul>
-              {navLinks.map((l) => (
+              {NAV_MENU.map((l) => (
                 <li key={l.id}><Link to={l.link}>{l.label}</Link></li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="footer__links">
-            <h4>Kategori</h4>
-            <ul>
-              {(categories || []).filter((c) => c?.id != null).map((c) => (
-                <li key={c.id}><Link to={`/produk?category=${c.id}`}>{c.name || '-'}</Link></li>
               ))}
             </ul>
           </div>
@@ -103,12 +81,22 @@ export default function Footer() {
                 </svg>
                 {contact.address || contact.addressFull || '-'}
               </li>
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                {contact.email || '-'}
-              </li>
+              {contact.email && (
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/>
+                  </svg>
+                  {contact.email}
+                </li>
+              )}
+              {waUrl && (
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                   <a href={waUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackChannelClick('whatsapp', window.location.pathname)}>Chat WhatsApp</a>
+                </li>
+              )}
             </ul>
           </div>
         </div>

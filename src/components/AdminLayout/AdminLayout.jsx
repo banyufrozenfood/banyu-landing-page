@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { useEffect, useState } from 'react';
 import './AdminLayout.css';
+import '../../pages/admin/AdminShared.css';
 
 export default function AdminLayout() {
   const location = useLocation();
@@ -67,6 +68,19 @@ export default function AdminLayout() {
     setIsSidebarOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsSidebarOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  useEffect(() => {
+    document.body.classList.toggle('admin-drawer-open', isSidebarOpen)
+    return () => document.body.classList.remove('admin-drawer-open')
+  }, [isSidebarOpen])
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/admin');
@@ -81,15 +95,23 @@ export default function AdminLayout() {
     return <div className="admin-loading">Memuat...</div>;
   }
 
-  const menuItems = [
-    { path: '/admin/dashboard', label: 'Ringkasan' },
-    { path: '/admin/settings', label: 'Pengaturan Website' },
-    { path: '/admin/media', label: 'Media Library' },
-    { path: '/admin/orders', label: 'Pesanan WhatsApp' },
-    { path: '/admin/products', label: 'Produk' },
-    { path: '/admin/categories', label: 'Kategori' },
-    { path: '/admin/hero-slides', label: 'Slide Beranda' },
-    { path: '/admin/brand-partners', label: 'Brand Partner' },
+  const menuGroups = [
+    {
+      label: 'Workspace',
+      items: [
+        { path: '/admin/dashboard', label: 'Ringkasan', icon: '⌂' },
+        { path: '/admin/analytics', label: 'Analytics', icon: '◔' },
+      ],
+    },
+    {
+      label: 'Konten Website',
+      items: [
+        { path: '/admin/settings', label: 'Pengaturan Website', icon: '⚙' },
+        { path: '/admin/media', label: 'Media Library', icon: '▧' },
+        { path: '/admin/hero-slides', label: 'Slide Beranda', icon: '▤' },
+        { path: '/admin/brand-partners', label: 'Brand Partner', icon: '✦' },
+      ],
+    },
   ];
 
   return (
@@ -100,23 +122,30 @@ export default function AdminLayout() {
       )}
 
       {/* Sidebar */}
-      <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      <aside id="admin-navigation" className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar__header">
           <div className="admin-sidebar__brand">
             <span className="admin-sidebar__logo">BANYU</span>
-            <div className="admin-sidebar__divider" />
+            <span className="admin-sidebar__workspace">Admin Panel</span>
           </div>
           <button aria-label="Tutup navigasi" className="btn-close-sidebar" onClick={() => setIsSidebarOpen(false)}>×</button>
         </div>
         <nav className="admin-sidebar__nav">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`admin-nav-item ${location.pathname === item.path ? 'active' : ''}`}
-            >
-              {item.label}
-            </Link>
+          {menuGroups.map((group) => (
+            <div className="admin-nav-group" key={group.label}>
+              <span className="admin-nav-group__label">{group.label}</span>
+              {group.items.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`admin-nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                  aria-current={location.pathname === item.path ? 'page' : undefined}
+                >
+                  <span className="admin-nav-item__icon" aria-hidden="true">{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="admin-sidebar__footer">
@@ -130,12 +159,12 @@ export default function AdminLayout() {
       <main className="admin-main">
         <header className="admin-header">
           <div className="admin-header__left">
-            <button className="btn-menu-toggle" onClick={toggleSidebar}>
+            <button aria-expanded={isSidebarOpen} aria-controls="admin-navigation" className="btn-menu-toggle" onClick={toggleSidebar}>
               <span aria-hidden="true">☰</span><span className="sr-only">Buka navigasi</span>
             </button>
             <div className="admin-header__title">
               <span>ADMIN</span>
-              <h3>Content Desk</h3>
+              <h3>Admin Panel</h3>
             </div>
           </div>
           <div className="admin-header__user">

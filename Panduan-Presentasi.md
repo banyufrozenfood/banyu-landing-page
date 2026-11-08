@@ -1,4 +1,4 @@
-# Panduan Presentasi — Website Banyu Frozen Food
+ Panduan Presentasi — Website Banyu Frozen Food
 
 > File ini dibuat khusus untuk latihan presentasi. Bahasanya dibuat sesederhana mungkin.
 > Cara pakai: baca Bagian 1–3 dulu sampai paham, lalu hafalkan jawaban singkat di Bagian 7.

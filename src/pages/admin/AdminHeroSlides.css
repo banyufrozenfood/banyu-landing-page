@@ -483,3 +483,18 @@
   }
 }
 
+/* Shared friendly admin treatment */
+.admin-guide-card { border-radius: var(--admin-radius, 14px); box-shadow: var(--admin-shadow, 0 8px 24px rgba(15, 23, 42, 0.06)); }
+.reference-card, .form-panel { min-width: 0; }
+.hero-slides-table, .hero-slides-table table { max-width: 100%; }
+.hero-slides-table td, .hero-slides-table th { overflow-wrap: anywhere; }
+.status-toggle { min-height: 44px; }
+.hero-form-layout { gap: 1.25rem; }
+
+@media (max-width: 760px) {
+  .admin-guide-card { padding: 1rem; }
+  .preview-content, .live-preview-hero__content { max-width: 80%; padding-left: 1rem; padding-right: 1rem; }
+  .preview-title { font-size: 1.35rem; }
+  .lp-title { font-size: 1.1rem; }
+}
+

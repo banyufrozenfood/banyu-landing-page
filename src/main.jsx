@@ -4,20 +4,17 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { ToastProvider } from './components/ui/Toast.jsx'
 import { SiteSettingsProvider } from './cms/SiteSettingsContext.jsx'
-import { CartProvider } from './components/CartContext.jsx'
 import './index.css'
 
 const rootEl = document.getElementById('root')
-if (!rootEl) throw new Error('Elemen #root tidak ditemukan di index.html')
+if (!rootEl) throw new Error('Elemen #root tidak ditemukan')
 
 createRoot(rootEl).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>
         <SiteSettingsProvider>
-          <CartProvider>
-            <App />
-          </CartProvider>
+          <App />
         </SiteSettingsProvider>
       </ToastProvider>
     </BrowserRouter>

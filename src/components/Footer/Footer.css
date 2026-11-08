@@ -1,14 +1,14 @@
 .footer {
   background: #0f172a; /* Slightly darker slate for better contrast */
   color: #CBD5E1;
-  margin-top: 6rem; /* Increased distance between main content and footer */
+  margin-top: 0;
   border-top: 4px solid var(--primary); /* Nice accent on top */
   padding-top: 4rem; /* Internal padding */
 }
 
 .footer__main {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  grid-template-columns: 2fr 1fr 1.5fr;
   gap: 3rem;
   padding-bottom: 4rem;
 }
@@ -119,6 +119,15 @@
   color: var(--primary);
   width: 18px;
   height: 18px;
+}
+
+.footer__contact a {
+  color: #CBD5E1;
+  transition: color 0.2s ease;
+}
+
+.footer__contact a:hover {
+  color: white;
 }
 
 .footer__bottom {

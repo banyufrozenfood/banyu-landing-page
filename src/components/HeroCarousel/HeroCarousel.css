@@ -25,6 +25,7 @@
 .hero__slide-bg {
   position: absolute;
   inset: 0;
+  background: linear-gradient(135deg, #0B3B66 0%, #0077CC 60%, #0099FF 100%);
 }
 
 .hero__slide-bg img {

@@ -3,15 +3,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #C3ECFF;
-  padding: 1rem;
+  background: #F6F9FC;
+  padding: 1.25rem;
 }
 
 .admin-login-card {
   background: white;
   padding: 2.5rem 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
   width: 100%;
   max-width: 400px;
 }
@@ -25,6 +26,16 @@
   font-size: 1.5rem;
   color: #1a1c23;
   margin: 0 0 0.5rem 0;
+}
+
+.admin-login-header::before {
+  content: 'BANYU';
+  display: block;
+  color: #0F172A;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  margin-bottom: 1.5rem;
 }
 
 .admin-login-header p {
@@ -49,7 +60,7 @@
   width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 9px;
   font-size: 1rem;
   transition: border-color 0.2s;
   box-sizing: border-box;
@@ -63,11 +74,12 @@
 
 .btn-admin-login {
   width: 100%;
+  min-height: 48px;
   padding: 0.875rem;
   background-color: #0099FF;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 9px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;

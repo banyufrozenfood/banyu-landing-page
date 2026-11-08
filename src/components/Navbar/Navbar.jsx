@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import { NAV_MENU } from '../../cms/defaults.js'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
-import { useCart } from '../CartContext.jsx'
+import { trackChannelClick } from '../../lib/analytics.js'
 import './Navbar.css'
 
 export default function Navbar() {
@@ -9,7 +10,6 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
   const { settings } = useSiteSettings()
-  const { cartCount, setIsCartOpen } = useCart()
 
   useEffect(() => {
     let timeoutId;
@@ -40,10 +40,10 @@ export default function Navbar() {
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
-  const menu = (settings?.navbar?.menu || []).filter((m) => m?.visible && m?.link && m?.label)
-  const ctaLabel = settings?.navbar?.ctaLabel || 'WhatsApp'
+  const menu = NAV_MENU
+  const ctaLabel = settings?.navbar?.ctaLabel || 'Pesan Sekarang'
   const waNumber = (settings?.contact?.whatsapp || '').replace(/\D/g, '')
-  const waMessage = settings?.contact?.whatsappMessage || 'Halo Banyu, saya ingin bertanya tentang produk'
+  const waMessage = settings?.contact?.whatsappMessage || 'Halo Banyu Frozen Food, saya mau tanya stok dan cara pesan.'
   const waUrl = waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}` : null
 
   return (
@@ -56,28 +56,25 @@ export default function Navbar() {
         <ul className={`navbar__menu${isOpen ? ' navbar__menu--open' : ''}`}>
           {menu.map((item) => (
             <li key={item.id}>
-              <NavLink
-                to={item.link}
-                end={item.link === '/'}
-                className={({ isActive }) => isActive ? 'navbar__link navbar__link--active' : 'navbar__link'}
-              >
-                {item.label}
-              </NavLink>
+              {item.link.includes('#') ? (
+                <Link to={item.link} className="navbar__link" onClick={() => setIsOpen(false)}>
+                  {item.label}
+                </Link>
+              ) : (
+                <NavLink
+                  to={item.link}
+                  end={item.link === '/'}
+                  className={({ isActive }) => isActive ? 'navbar__link navbar__link--active' : 'navbar__link'}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.label}
+                </NavLink>
+              )}
             </li>
           ))}
-          <li className="navbar__cart-item">
-            <button className="navbar__cart-btn" onClick={() => setIsCartOpen(true)} aria-label="Buka keranjang">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="9" cy="21" r="1"></circle>
-                <circle cx="20" cy="21" r="1"></circle>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-              </svg>
-              {cartCount > 0 && <span className="navbar__cart-badge">{cartCount}</span>}
-            </button>
-          </li>
           {waUrl && (
             <li className="navbar__cta-item">
-              <a className="btn btn-primary navbar__cta" href={waUrl} target="_blank" rel="noopener noreferrer">
+              <a className="btn btn-primary navbar__cta" href={waUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackChannelClick('whatsapp', window.location.pathname)}>
                 {ctaLabel}
               </a>
             </li>

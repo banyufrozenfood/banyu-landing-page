@@ -1,31 +1,32 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import './HeroCarousel.css'
+import { trackChannelClick } from '../../lib/analytics.js'
 
 const defaultSlides = [
   {
     id: 1,
-    title: 'Frozen Food Berkualitas',
-    subtitle: 'Untuk Keluarga Indonesia',
-    description: 'Produk beku pilihan dengan bahan terbaik, diproses higienis dan dikemas vakum untuk menjaga kesegaran.',
-    image: 'https://placehold.co/1200x600/0099FF/white?text=Banyu+Frozen+Food',
-    cta: { text: 'Lihat Produk', link: '/produk' },
+    title: 'Stok Makanan Praktis',
+    subtitle: 'Banyu Frozen Food • Cigugur Tengah',
+    description: 'Sosis, nugget, kornet, camilan Korea, sampai abon khas Cianjur. Harga Rp10.000–Rp49.000 per item.',
+    image: '',
+    cta: { text: 'Cara Pesan', link: '/#cara-pesan' },
   },
   {
     id: 2,
-    title: 'Praktis & Lezat',
-    subtitle: 'Siap Saji dalam Hitungan Menit',
-    description: 'Nugget, sosis, dimsum, bakso — tinggal goreng atau kukus. Cocok untuk bekal sekolah dan menu harian.',
-    image: 'https://placehold.co/1200x600/66CCFF/003366?text=Praktis+%26+Lezat',
-    cta: { text: 'Pesan Sekarang', link: '/produk' },
+    title: 'Pesan Antar GoFood & GrabMart',
+    subtitle: 'Cari Banyu Frozen Food',
+    description: 'GoFood area Bandung dan GrabMart dengan nama Banyu Frozen Food - Cigugur Tengah.',
+    image: '',
+    cta: { text: 'Cara Pesan', link: '/#cara-pesan' },
   },
   {
     id: 3,
-    title: 'Pesan Mudah',
-    subtitle: 'Via Tokopedia, Shopee & WhatsApp',
-    description: 'Pilih channel favorit kamu untuk memesan. Pengiriman cepat ke seluruh Indonesia.',
-    image: 'https://placehold.co/1200x600/0077CC/white?text=Pesan+Mudah',
-    cta: { text: 'Hubungi Kami', link: '/lokasi' },
+    title: 'Oleh-oleh Khas Cianjur',
+    subtitle: 'Abon & Gepuk Karwati',
+    description: 'Abon sapi, abon pedas, dan gepuk kering — cocok untuk oleh-oleh atau stok lauk praktis.',
+    image: '',
+    cta: { text: 'Cara Pesan', link: '/#cara-pesan' },
   },
 ]
 
@@ -69,6 +70,13 @@ export default function HeroCarousel({ slides = defaultSlides }) {
     setIsAutoPlaying(false)
   }
 
+  const getChannelFromLink = (link) => {
+    if (/wa\.me|whatsapp/i.test(link)) return 'whatsapp'
+    if (/gofood/i.test(link)) return 'gofood'
+    if (/grabmart|food\.grab/i.test(link)) return 'grabmart'
+    return null
+  }
+
   return (
     <section className="hero">
       <div className="hero__carousel">
@@ -78,7 +86,9 @@ export default function HeroCarousel({ slides = defaultSlides }) {
             className={`hero__slide${index === current ? ' hero__slide--active' : ''}`}
           >
             <div className="hero__slide-bg">
-              <img src={slide?.image} alt={slide?.title || 'Slide'} loading={index === 0 ? 'eager' : 'lazy'} onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x600/E5E7EB/9CA3AF?text=Slide'; }} />
+              {slide?.image && (
+                <img src={slide.image} alt={slide?.title || 'Slide'} loading={index === 0 ? 'eager' : 'lazy'} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+              )}
               <div className="hero__slide-overlay" />
             </div>
             <div className="hero__slide-content container">
@@ -87,7 +97,7 @@ export default function HeroCarousel({ slides = defaultSlides }) {
               <p className="hero__desc">{slide?.description || ''}</p>
               {slide?.cta?.link && (
                 slide.cta.link.startsWith('http') ? (
-                  <a href={slide.cta.link} target="_blank" rel="noopener noreferrer" className="btn btn-accent hero__cta">
+                  <a href={slide.cta.link} target="_blank" rel="noopener noreferrer" className="btn btn-accent hero__cta" onClick={() => { const channel = getChannelFromLink(slide.cta.link); if (channel) trackChannelClick(channel, window.location.pathname) }}>
                     {slide.cta.text || 'Lihat'}
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 12h14M12 5l7 7-7 7"/>

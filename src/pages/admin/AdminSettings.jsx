@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import ImagePicker from '../../components/ui/ImagePicker.jsx'
@@ -8,6 +7,7 @@ import {
   isValidWhatsapp,
   isValidUrl,
 } from '../../cms/validate.js'
+import { validateMarketplaceCards } from '../../cms/homeContent.js'
 import './AdminShared.css'
 import './AdminSettings.css'
 
@@ -86,8 +86,11 @@ function validate(form) {
     if (s.url && !isValidUrl(s.url)) errors[`socials.${i}.url`] = 'Link harus diawali http:// atau https://.'
   })
   const mp = form.home?.marketplace || {}
-  ;['tokopediaUrl', 'shopeeUrl'].forEach((key) => {
+  ;['gofoodUrl', 'grabmartUrl'].forEach((key) => {
     if (mp[key] && mp[key] !== '#' && !isValidUrl(mp[key])) errors[`marketplace.${key}`] = 'Link harus diawali http:// atau https://, atau kosongkan jika belum ada.'
+  })
+  validateMarketplaceCards(mp.cards || []).forEach((key) => {
+    errors[key] = 'Link harus diawali http:// atau https://, atau kartu bisa dimatikan.'
   })
   if (!(form.seo?.title || '').trim()) errors['seo.title'] = 'Judul website wajib diisi.'
   if (form.seo?.ogImage && !isValidUrl(form.seo.ogImage)) errors['seo.ogImage'] = 'Link harus diawali http:// atau https://.'
@@ -255,7 +258,7 @@ export default function AdminSettings() {
         <div className="admin-form-container admin-form">
           {tab === 'kontak' && (
             <>
-              <Field label="Nomor WhatsApp" error={err('contact.whatsapp')} hint="Format internasional tanpa + atau spasi. Contoh: 6281234567890.">
+              <Field label="Nomor WhatsApp" error={err('contact.whatsapp')} hint="Ganti dengan nomor WhatsApp toko. Format internasional tanpa + atau spasi. Contoh: 6281234567890.">
                 <input value={form.contact.whatsapp} onChange={(e) => update((f) => { f.contact.whatsapp = e.target.value })} />
               </Field>
               <Field label="Pesan Otomatis WhatsApp" hint="Teks yang sudah terisi otomatis saat pengunjung klik tombol WhatsApp.">
@@ -278,7 +281,7 @@ export default function AdminSettings() {
               <Field label="Link Peta Tertanam" error={err('contact.mapsEmbed')} hint="Dari Google Maps: Bagikan > Sematkan peta > salin link di bagian src.">
                 <input value={form.contact.mapsEmbed} onChange={(e) => update((f) => { f.contact.mapsEmbed = e.target.value })} />
               </Field>
-              <EditableList
+               <EditableList
                 title="Jam Operasional"
                 addLabel="Tambah Baris Jam"
                 items={form.contact.hours}
@@ -321,15 +324,8 @@ export default function AdminSettings() {
           {tab === 'menu' && (
             <>
               <div className="settings-note">
-                <strong>Menu navigasi sudah tetap</strong> (Home, Produk, Lokasi). Menu ini muncul di bagian atas
-                website (navbar) dan <em>otomatis</em> juga di footer bagian "Navigasi" — tidak perlu diatur di sini.
-                Tombol di ujung navbar sekarang adalah <strong>Keranjang</strong> untuk pemesanan via WhatsApp.
-              </div>
-
-              <div className="settings-note">
-                <strong>Daftar "Kategori" di footer terisi otomatis</strong> dari data Kategori Anda.
-                Untuk menambah atau mengubahnya, buka menu{' '}
-                <Link to="/admin/categories">Kategori</Link> — tidak perlu diatur manual di sini.
+                <strong>Menu navigasi sudah tetap</strong> (Beranda, Tentang, Cara Pesan, Lokasi). Menu ini muncul di
+                bagian atas website (navbar) dan <em>otomatis</em> juga di footer bagian "Navigasi" — tidak perlu diatur di sini.
               </div>
 
               <Field label="Deskripsi di Footer" hint="Kalimat pendek tentang bisnis Anda di bagian bawah website.">
@@ -344,34 +340,108 @@ export default function AdminSettings() {
           {tab === 'beranda' && (
             <>
               <div className="settings-note">
-                Nyalakan/matikan bagian yang ingin ditampilkan di beranda. Kamu juga bisa mengubah judul, kalimat
-                pendukung, dan daftar keunggulan di bawah. Perubahan baru terlihat pengunjung setelah di-<strong>Terbitkan</strong>
+                Nyalakan/matikan bagian yang ingin ditampilkan di beranda. Kamu juga bisa mengubah teks Tentang Toko,
+                daftar keunggulan, dan tautan GoFood/GrabMart. Perubahan baru terlihat pengunjung setelah di-<strong>Terbitkan</strong>
                 (atau cek dulu lewat <strong>Pratinjau</strong>).
               </div>
               <div className="form-group">
                 <label>Bagian yang Ditampilkan di Beranda</label>
                 <div className="toggle-group">
                   <Toggle checked={form.home.sections.advantages} onChange={(v) => update((f) => { f.home.sections.advantages = v })} label="Keunggulan Toko" />
-                  <Toggle checked={form.home.sections.featured} onChange={(v) => update((f) => { f.home.sections.featured = v })} label="Produk Unggulan" />
-                  <Toggle checked={form.home.sections.marketplace} onChange={(v) => update((f) => { f.home.sections.marketplace = v })} label="Marketplace" />
+                  <Toggle checked={form.home.sections.about} onChange={(v) => update((f) => { f.home.sections.about = v })} label="Tentang Toko" />
+                  <Toggle checked={form.home.sections.marketplace} onChange={(v) => update((f) => { f.home.sections.marketplace = v })} label="Kanal Pemesanan" />
                   <Toggle checked={form.home.sections.brandPartners} onChange={(v) => update((f) => { f.home.sections.brandPartners = v })} label="Brand Partner" />
+                  <Toggle checked={form.home.sections.location} onChange={(v) => update((f) => { f.home.sections.location = v })} label="Lokasi di Beranda" />
                 </div>
               </div>
-              <div className="form-group-row" style={{ display: 'flex', gap: '1.5rem' }}>
-                <Field label="Tokopedia" error={err('marketplace.tokopediaUrl')} hint="Nyalakan untuk tampil di beranda. Link kosong tetap menyembunyikan kartu.">
-                  <Toggle checked={form.home.marketplace.tokopediaEnabled} onChange={(v) => update((f) => { f.home.marketplace.tokopediaEnabled = v })} label="Tampilkan Tokopedia" />
-                  <input placeholder="https://..." value={form.home.marketplace.tokopediaUrl} onChange={(e) => update((f) => { f.home.marketplace.tokopediaUrl = e.target.value })} />
-                </Field>
-                <Field label="Shopee" error={err('marketplace.shopeeUrl')} hint="Nyalakan untuk tampil di beranda. Link kosong tetap menyembunyikan kartu.">
-                  <Toggle checked={form.home.marketplace.shopeeEnabled} onChange={(v) => update((f) => { f.home.marketplace.shopeeEnabled = v })} label="Tampilkan Shopee" />
-                  <input placeholder="https://..." value={form.home.marketplace.shopeeUrl} onChange={(e) => update((f) => { f.home.marketplace.shopeeUrl = e.target.value })} />
-                </Field>
-              </div>
+
+              <div className="form-separator">TENTANG TOKO</div>
+              <Field label="Judul Tentang Toko">
+                <input value={form.home.about?.title || ''} onChange={(e) => update((f) => { f.home.about = { ...(f.home.about || {}), title: e.target.value } })} />
+              </Field>
+              <Field label="Kalimat Pembuka">
+                <textarea rows={2} value={form.home.about?.subtitle || ''} onChange={(e) => update((f) => { f.home.about = { ...(f.home.about || {}), subtitle: e.target.value } })} />
+              </Field>
+              <Field label="Deskripsi Toko" hint="Ceritakan produk, harga, dan target pembeli.">
+                <textarea rows={5} value={form.home.about?.text || ''} onChange={(e) => update((f) => { f.home.about = { ...(f.home.about || {}), text: e.target.value } })} />
+              </Field>
+              <EditableList
+                title="Sorotan Toko"
+                addLabel="Tambah Sorotan"
+                items={form.home.about?.highlights || []}
+                onChange={(items) => update((f) => { f.home.about = { ...(f.home.about || {}), highlights: items } })}
+                makeItem={() => ({ id: uid(), label: '', value: '' })}
+                renderItem={(item, set) => (
+                  <>
+                    <input placeholder="Label (contoh: Harga)" value={item.label} onChange={(e) => set({ label: e.target.value })} />
+                    <input placeholder="Isi (contoh: Rp10.000 – Rp49.000)" value={item.value} onChange={(e) => set({ value: e.target.value })} />
+                  </>
+               )}
+              />
+              <EditableList
+                title="Tag Kategori Tentang Toko"
+                addLabel="Tambah Tag"
+                items={form.home.about?.tags || []}
+                onChange={(items) => update((f) => { f.home.about = { ...(f.home.about || {}), tags: items } })}
+                makeItem={() => ({ id: uid(), label: '' })}
+                emptyNote="Belum ada tag. Tag kosong tidak ditampilkan di website."
+                renderItem={(item, set) => (
+                  <input placeholder="Contoh: Frozen food" value={item.label || ''} onChange={(e) => set({ label: e.target.value })} />
+                )}
+              />
+
+              <div className="form-separator">KANAL PEMESANAN</div>
+              <Field label="Judul Bagian Kanal">
+                <input value={form.home.marketplaceTitle || ''} onChange={(e) => update((f) => { f.home.marketplaceTitle = e.target.value })} />
+              </Field>
+              <Field label="Kalimat Pendukung Bagian Kanal">
+                <input value={form.home.marketplaceSubtitle || ''} onChange={(e) => update((f) => { f.home.marketplaceSubtitle = e.target.value })} />
+              </Field>
+              <EditableList
+                title="Kartu Kanal Pemesanan"
+                addLabel="Tambah Kartu"
+                items={form.home.marketplace?.cards || []}
+                onChange={(items) => update((f) => { f.home.marketplace = { ...(f.home.marketplace || {}), cards: items } })}
+                makeItem={() => ({ id: uid(), channel: 'custom', label: '', icon: '↗', description: '', url: '', enabled: true })}
+                emptyNote="Belum ada kartu. Tambahkan kartu untuk menampilkannya di beranda."
+                renderItem={(item, set, i) => (
+                  <>
+                    <Toggle checked={item.enabled} onChange={(enabled) => set({ enabled })} label="Tampilkan" />
+                    <input placeholder="Nama kanal" value={item.label || ''} onChange={(e) => set({ label: e.target.value })} />
+                    <select value={item.channel || 'custom'} onChange={(e) => set({ channel: e.target.value })}>
+                      <option value="gofood">GoFood</option>
+                      <option value="grabmart">GrabMart</option>
+                      <option value="whatsapp">WhatsApp</option>
+                      <option value="custom">Kanal lain</option>
+                    </select>
+                    <input placeholder="Icon / emoji" value={item.icon || ''} onChange={(e) => set({ icon: e.target.value })} />
+                    <textarea rows={2} placeholder="Deskripsi kartu" value={item.description || ''} onChange={(e) => set({ description: e.target.value })} />
+                    <input placeholder={item.channel === 'whatsapp' ? 'Otomatis dari tab Kontak' : 'https://...'} value={item.url || ''} disabled={item.channel === 'whatsapp'} onChange={(e) => set({ url: e.target.value })} />
+                    {err(`marketplace.cards.${i}.url`) && <p className="field-error">{err(`marketplace.cards.${i}.url`)}</p>}
+                  </>
+                )}
+              />
+              <Field label="Catatan Sosial Media">
+                <input value={form.home.marketplace?.socialNote || ''} onChange={(e) => update((f) => { f.home.marketplace = { ...(f.home.marketplace || {}), socialNote: e.target.value } })} />
+              </Field>
+              <Field label="Catatan Stok dan Ketersediaan">
+                <textarea rows={3} value={form.home.marketplace?.availabilityNote || ''} onChange={(e) => update((f) => { f.home.marketplace = { ...(f.home.marketplace || {}), availabilityNote: e.target.value } })} />
+              </Field>
+
+              <div className="form-separator">BRAND PARTNER</div>
+              <Field label="Judul Bagian Brand">
+                <input value={form.home.brandPartnersTitle || ''} onChange={(e) => update((f) => { f.home.brandPartnersTitle = e.target.value })} />
+              </Field>
+              <Field label="Kalimat Pendukung Bagian Brand">
+                <input value={form.home.brandPartnersSubtitle || ''} onChange={(e) => update((f) => { f.home.brandPartnersSubtitle = e.target.value })} />
+              </Field>
+
+              <div className="form-separator">KEUNGGULAN</div>
               <Field label="Judul Bagian Keunggulan">
-                <input value={form.home.advantagesTitle} onChange={(e) => update((f) => { f.home.advantagesTitle = e.target.value })} />
+                <input value={form.home.advantagesTitle || ''} onChange={(e) => update((f) => { f.home.advantagesTitle = e.target.value })} />
               </Field>
               <Field label="Kalimat Pendukung Bagian Keunggulan">
-                <input value={form.home.advantagesSubtitle} onChange={(e) => update((f) => { f.home.advantagesSubtitle = e.target.value })} />
+                <input value={form.home.advantagesSubtitle || ''} onChange={(e) => update((f) => { f.home.advantagesSubtitle = e.target.value })} />
               </Field>
               <EditableList
                 title="Daftar Keunggulan"
@@ -384,6 +454,30 @@ export default function AdminSettings() {
                     <input placeholder="Judul keunggulan" value={item.title} onChange={(e) => set({ title: e.target.value })} />
                     <textarea rows={2} placeholder="Penjelasan singkat" value={item.desc} onChange={(e) => set({ desc: e.target.value })} />
                   </>
+                )}
+              />
+
+              <div className="form-separator">LOKASI BERANDA</div>
+              <Field label="Label Lokasi">
+                <input value={form.home.location?.eyebrow || ''} onChange={(e) => update((f) => { f.home.location = { ...(f.home.location || {}), eyebrow: e.target.value } })} />
+              </Field>
+              <Field label="Judul Lokasi">
+                <input value={form.home.location?.title || ''} onChange={(e) => update((f) => { f.home.location = { ...(f.home.location || {}), title: e.target.value } })} />
+              </Field>
+              <Field label="Judul Area Layanan">
+                <input value={form.home.location?.serviceAreaTitle || ''} onChange={(e) => update((f) => { f.home.location = { ...(f.home.location || {}), serviceAreaTitle: e.target.value } })} />
+              </Field>
+              <Field label="Deskripsi Area Layanan">
+                <textarea rows={2} value={form.home.location?.serviceAreaDescription || ''} onChange={(e) => update((f) => { f.home.location = { ...(f.home.location || {}), serviceAreaDescription: e.target.value } })} />
+              </Field>
+              <EditableList
+                title="Daftar Area Layanan"
+                addLabel="Tambah Area"
+                items={form.home.location?.serviceAreas || []}
+                onChange={(items) => update((f) => { f.home.location = { ...(f.home.location || {}), serviceAreas: items } })}
+                makeItem={() => ({ id: uid(), text: '' })}
+                renderItem={(item, set) => (
+                  <input placeholder="Contoh: Cimahi dan sekitarnya" value={item.text || ''} onChange={(e) => set({ text: e.target.value })} />
                 )}
               />
             </>

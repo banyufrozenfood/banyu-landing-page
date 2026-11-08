@@ -9,7 +9,12 @@ lerna-debug.log*
 
 node_modules
 dist
+
+# Env files — jangan pernah commit nilai asli
 .env
+.env.*
+!.env.example
+
 dist-ssr
 *.local
 

@@ -226,3 +226,22 @@
 .media-empty-state .btn-admin-primary {
   margin-top: 1rem;
 }
+
+/* Shared friendly admin treatment */
+.media-toolbar, .media-filters { padding-left: 1.25rem; padding-right: 1.25rem; }
+.media-upload select, .media-add-url input, .media-usage-filter { min-height: 44px; border-radius: 9px; }
+.media-chips button { min-height: 44px; }
+.media-card { border-radius: var(--admin-radius, 14px); border-color: var(--admin-border, #e2e8f0); box-shadow: var(--admin-shadow, 0 8px 24px rgba(15, 23, 42, 0.06)); }
+.media-card__actions button { min-height: 44px; border-radius: 8px; }
+.media-card__name { overflow-wrap: anywhere; white-space: normal; }
+
+@media (max-width: 600px) {
+  .media-toolbar, .media-filters, .media-grid { padding-left: 1rem; padding-right: 1rem; }
+  .media-upload, .media-add-url { width: 100%; min-width: 0; }
+  .media-upload > *, .media-add-url > * { flex: 1; }
+  .media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+}
+
+@media (max-width: 420px) {
+  .media-grid { grid-template-columns: 1fr; }
+}

@@ -57,7 +57,7 @@ export default function AdminHeroSlides() {
     if (!(formData.cta_text || '').trim()) newErrors.cta_text = 'Teks tombol wajib diisi';
     if (!(formData.cta_link || '').trim()) newErrors.cta_link = 'Link tujuan wajib diisi';
     else if (!isValidHttpUrl(formData.cta_link) && !(formData.cta_link || '').startsWith('/')) {
-      newErrors.cta_link = 'Gunakan URL lengkap https://... atau path relatif (contoh: /produk)';
+      newErrors.cta_link = 'Gunakan URL lengkap https://... atau path relatif (contoh: /#cara-pesan)';
     }
     if (formData.order === '' || formData.order == null || !Number.isFinite(Number(formData.order)) || Number(formData.order) < 0) {
       newErrors.order = 'Urutan harus angka 0 atau lebih';
@@ -107,8 +107,8 @@ export default function AdminHeroSlides() {
       subtitle: '',
       description: '',
       image: '',
-      cta_text: 'Lihat Produk',
-      cta_link: '/produk',
+      cta_text: 'Cara Pesan',
+      cta_link: '/#cara-pesan',
       order: nextOrder(slides),
       is_active: true,
     });
@@ -430,12 +430,12 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
                 required
                 value={formData.cta_link}
                 onChange={(e) => handleChange('cta_link', e.target.value)}
-                placeholder="/produk atau https://tokopedia.com/toko-anda"
+                placeholder="/#cara-pesan atau https://wa.me/628xxxx"
               />
               {errors.cta_link && <span className="error-text">{errors.cta_link}</span>}
               <span className="help-text">
-                <strong>Path internal:</strong> <code>/produk</code>, <code>/lokasi</code>, <code>/produk/123</code><br />
-                <strong>URL eksternal:</strong> <code>https://tokopedia.com/...</code>, <code>https://wa.me/628xxxx</code>
+                <strong>Path internal:</strong> <code>/#cara-pesan</code>, <code>/#lokasi</code><br />
+                <strong>URL eksternal:</strong> <code>https://wa.me/628xxxx</code>, <code>https://gofood.co.id/...</code>
               </span>
             </div>
 
@@ -476,10 +476,10 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
             <h4>💡 Contoh Slide yang Baik</h4>
             <div className="example-slide">
               <div className="example-content">
-                <span className="example-subtitle">Subtitle: Promo Akhir Tahun</span>
-                <h2 className="example-title">Diskon Hingga 50%</h2>
-                <p className="example-desc">Semua produk frozen food favorit. Berlaku hingga 31 Desember.</p>
-                <button className="example-btn">Beli Sekarang</button>
+                <span className="example-subtitle">Subtitle: Banyu Frozen Food • Cigugur Tengah</span>
+                <h2 className="example-title">Stok Makanan Praktis</h2>
+                <p className="example-desc">Sosis, nugget, kornet, dan camilan Korea. Harga Rp10.000–Rp49.000.</p>
+                <button className="example-btn">Cara Pesan</button>
               </div>
             </div>
             <p className="example-caption">Gambar: Produk tersusun rapi + ruang kosong untuk teks</p>

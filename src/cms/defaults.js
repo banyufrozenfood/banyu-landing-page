@@ -1,6 +1,13 @@
 import logoLight from '../assets/banyu-logo.svg'
 import logoWhite from '../assets/banyu-logo-white.svg'
 
+export const NAV_MENU = [
+  { id: 'm1', label: 'Beranda', link: '/' },
+  { id: 'm2', label: 'Tentang', link: '/#tentang' },
+  { id: 'm3', label: 'Cara Pesan', link: '/#cara-pesan' },
+  { id: 'm4', label: 'Lokasi', link: '/#lokasi' },
+]
+
 export const DEFAULT_SETTINGS = {
   identity: {
     businessName: 'Banyu Frozen Food',
@@ -10,15 +17,15 @@ export const DEFAULT_SETTINGS = {
   },
   contact: {
     whatsapp: '6281234567890',
-    whatsappMessage: 'Halo Banyu, saya ingin bertanya tentang produk',
-    phone: '(022) 123-4567',
-    email: 'banyu.frozenfood@gmail.com',
-    address: 'Jl. Raya Cimahi No. 123, Cimahi, Jawa Barat',
+    whatsappMessage: 'Halo Banyu Frozen Food, saya mau tanya stok dan cara pesan.',
+    phone: '',
+    email: '',
+    address: 'Cigugur Tengah, Cimahi Tengah, Kota Cimahi',
     addressFull:
-      'Jl. Raya Cimahi No. 123, Kelurahan Cimahi Tengah, Kecamatan Cimahi Tengah, Kota Cimahi, Jawa Barat 40511',
-    mapsUrl: 'https://www.google.com/maps/place/Cimahi,+Kota+Cimahi,+Jawa+Barat/',
+      'Kawasan Cigugur Tengah, Kecamatan Cimahi Tengah, Kota Cimahi, Jawa Barat — berbatasan dengan Kota Bandung.',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Banyu+Frozen+Food+Cigugur+Tengah+Cimahi',
     mapsEmbed:
-      'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31700.45!2d107.5302!3d-6.8841!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e68e4b6a1b2c8e1%3A0x301576d14feb970!2sCimahi%2C+Kota+Cimahi%2C+Jawa+Barat!5e0!3m2!1sen!2sid!4v1695000000000',
+      'https://maps.google.com/maps?q=Banyu%20Frozen%20Food%20Cigugur%20Tengah%20Cimahi&t=&z=15&ie=UTF8&iwloc=&output=embed',
     hours: [
       { id: 'h1', day: 'Senin — Jumat', time: '08.00 — 20.00 WIB' },
       { id: 'h2', day: 'Sabtu', time: '08.00 — 21.00 WIB' },
@@ -26,21 +33,16 @@ export const DEFAULT_SETTINGS = {
     ],
   },
   socials: [
-    { id: 's1', label: 'Instagram', icon: 'instagram', url: 'https://instagram.com' },
-    { id: 's2', label: 'TikTok', icon: 'tiktok', url: 'https://tiktok.com' },
-    { id: 's3', label: 'Facebook', icon: 'facebook', url: 'https://facebook.com' },
+    { id: 's1', label: 'Instagram', icon: 'instagram', url: 'https://instagram.com/banyufrozenfood_03' },
+    { id: 's2', label: 'TikTok', icon: 'tiktok', url: 'https://tiktok.com/@banyu_frozen' },
   ],
   navbar: {
-    ctaLabel: 'WhatsApp',
-    menu: [
-      { id: 'm1', label: 'Home', link: '/', visible: true },
-      { id: 'm2', label: 'Produk', link: '/produk', visible: true },
-      { id: 'm3', label: 'Lokasi', link: '/lokasi', visible: true },
-    ],
+    ctaLabel: 'Pesan Sekarang',
+    menu: NAV_MENU,
   },
   footer: {
     description:
-      'Toko frozen food berkualitas untuk keluarga Indonesia. Produk beku pilihan dengan bahan terbaik, diproses higienis.',
+      'Toko frozen food UMKM di Cigugur Tengah, Cimahi. Menyediakan makanan instan, frozen food, sosis, camilan Korea, dan oleh-oleh khas Cianjur. Pesan via GoFood, GrabMart, atau WhatsApp.',
     creditNote: 'Project RPL — SMK Negeri 1 Cimahi',
   },
   locationGallery: {
@@ -57,24 +59,70 @@ export const DEFAULT_SETTINGS = {
   home: {
     sections: {
       advantages: true,
-      featured: true,
+      about: true,
       marketplace: true,
       brandPartners: true,
+      location: true,
     },
+    about: {
+      title: 'Toko Frozen Food Praktis di Cigugur Tengah',
+      subtitle:
+        'Banyu Frozen Food adalah toko frozen food skala UMKM di kawasan Cigugur Tengah, Cimahi Tengah — berbatasan dengan Kota Bandung.',
+      text:
+        'Kami menjual ulang produk dari berbagai merek, bukan memproduksi sendiri. Isinya campuran produk beku dan kering siap santap: makanan instan, frozen food, aneka sosis bakar, produk Cedea dan So Good, saus, camilan Korea seperti Tapokki dan Rabokki, serta oleh-oleh khas Cianjur seperti abon sapi, abon pedas, dan gepuk kering Karwati. Harga per item berkisar Rp10.000–Rp49.000. Cocok untuk rumah tangga, anak kos, pekerja, dan pembeli oleh-oleh.',
+      highlights: [
+        { id: 'h1', label: 'Lokasi', value: 'Cigugur Tengah, Cimahi' },
+        { id: 'h2', label: 'Harga', value: 'Rp10.000 – Rp49.000' },
+        { id: 'h3', label: 'Pemesanan', value: 'GoFood, GrabMart, WhatsApp' },
+        { id: 'h4', label: 'Oleh-oleh', value: 'Abon & gepuk khas Cianjur' },
+      ],
+      tags: [
+        { id: 't1', label: 'Frozen food' },
+        { id: 't2', label: 'Makanan instan' },
+        { id: 't3', label: 'Sosis & bakso' },
+        { id: 't4', label: 'Camilan Korea' },
+        { id: 't5', label: 'Oleh-oleh Cianjur' },
+      ],
+    },
+    marketplaceTitle: 'Pesan Lewat Kanal Favorit',
+    marketplaceSubtitle:
+      'Tidak perlu katalog di website. Cari Banyu Frozen Food di aplikasi pesan antar, atau langsung chat WhatsApp.',
     marketplace: {
-      tokopediaEnabled: true,
-      shopeeEnabled: true,
-      tokopediaUrl: '',
-      shopeeUrl: '',
+      gofoodEnabled: true,
+      grabmartEnabled: true,
+      gofoodUrl: 'https://gofood.co.id/bandung',
+      grabmartUrl: 'https://food.grab.com/id/en/',
+      cards: [
+        { id: 'c1', channel: 'gofood', label: 'GoFood', icon: '🛵', description: 'Cari Banyu Frozen Food di GoFood area Bandung. Pesan makanan favoritmu langsung dari aplikasi.', url: 'https://gofood.co.id/bandung', enabled: true },
+        { id: 'c2', channel: 'grabmart', label: 'GrabMart', icon: '🛒', description: 'Cari “Banyu Frozen Food - Cigugur Tengah” di kategori Meat & Frozen. Cek promo diskon ongkir di aplikasi.', url: 'https://food.grab.com/id/en/', enabled: true },
+        { id: 'c3', channel: 'whatsapp', label: 'WhatsApp', icon: '💬', description: 'Tanya stok terbaru, harga, atau pesan langsung. Cocok untuk konfirmasi item yang sedang kosong.', url: '', enabled: true },
+      ],
+      socialNote: 'Update stok & promo juga dibagikan di:',
+      availabilityNote: 'Stok dan ketersediaan produk bisa berubah. Beberapa item bisa habis terjual atau toko tutup sementara di aplikasi — konfirmasi lewat WhatsApp.',
     },
-    advantagesTitle: 'Kenapa Pilih Banyu?',
-    advantagesSubtitle: 'Kami berkomitmen memberikan produk frozen food terbaik untuk keluarga Anda',
+    location: {
+      eyebrow: 'Lokasi Toko',
+      title: 'Mampir ke Cigugur Tengah',
+      serviceAreaTitle: 'Area Layanan',
+      serviceAreaDescription: 'Melayani Cimahi, Bandung, dan sekitarnya melalui aplikasi pesan antar dan WhatsApp.',
+      serviceAreas: [
+        { id: 'sa1', text: 'GoFood — area Bandung' },
+        { id: 'sa2', text: 'GrabMart — Banyu Frozen Food - Cigugur Tengah' },
+        { id: 'sa3', text: 'WhatsApp — tanya stok & pesan langsung' },
+      ],
+    },
+    brandPartnersTitle: 'Brand yang Kami Jual',
+    brandPartnersSubtitle:
+      'Berbagai merek frozen food dan makanan praktis, seperti Cedea, So Good, Kanzler, Pronas, dan Karwati.',
+    advantagesTitle: 'Kenapa Belanja di Banyu?',
+    advantagesSubtitle:
+      'Toko frozen food UMKM di Cigugur Tengah yang siap bantu stok makanan praktis harian.',
     advantages: [
-      { id: 'a1', icon: '❄️', title: 'Beku Segar', desc: 'Diproses dan dikemas vakum segera untuk menjaga kesegaran dan nutrisi produk.' },
-      { id: 'a2', icon: '✅', title: 'Halal & Higienis', desc: 'Semua produk terjamin halal dan diproses dalam lingkungan yang higienis.' },
-      { id: 'a3', icon: '🚚', title: 'Pengiriman Cepat', desc: 'Dikirim dengan packaging khusus frozen agar tetap beku sampai tujuan.' },
-      { id: 'a4', icon: '💰', title: 'Harga Terjangkau', desc: 'Produk berkualitas dengan harga yang ramah di kantong keluarga Indonesia.' },
-      { id: 'a5', icon: '⭐', title: 'Terpercaya', desc: 'Dipercaya ratusan pelanggan dengan rating rata-rata 4.5+ di marketplace.' },
+      { id: 'a1', icon: '❄️', title: 'Stok Lengkap', desc: 'Makanan instan, frozen food, sosis bakar, camilan Korea, sampai saus.' },
+      { id: 'a2', icon: '💰', title: 'Harga Terjangkau', desc: 'Harga per item berkisar Rp10.000 sampai Rp49.000.' },
+      { id: 'a3', icon: '🛵', title: 'Pesan Antar', desc: 'Tersedia di GoFood area Bandung dan GrabMart Banyu Frozen Food - Cigugur Tengah.' },
+      { id: 'a4', icon: '🎁', title: 'Oleh-oleh Cianjur', desc: 'Abon sapi, abon pedas, dan gepuk kering merek Karwati.' },
+      { id: 'a5', icon: '🏠', title: 'Cocok untuk Harian', desc: 'Praktis untuk rumah tangga, anak kos, dan pekerja yang butuh stok makanan.' },
     ],
   },
   appearance: {
@@ -87,9 +135,9 @@ export const DEFAULT_SETTINGS = {
     radius: 'md',
   },
   seo: {
-    title: 'Banyu Frozen Food — Katalog Produk Frozen Food Berkualitas',
+    title: 'Banyu Frozen Food — Frozen Food Praktis di Cigugur Tengah, Cimahi',
     description:
-      'Banyu Frozen Food — Toko frozen food berkualitas untuk keluarga Indonesia. Lihat katalog produk kami dan pesan via Tokopedia, Shopee, atau WhatsApp.',
+      'Toko frozen food UMKM di Cigugur Tengah, Cimahi. Sosis, nugget, kornet, camilan Korea, dan oleh-oleh khas Cianjur. Pesan via GoFood, GrabMart, atau WhatsApp.',
     ogImage: '',
   },
 }

@@ -44,8 +44,14 @@ function writeLocal(key, value) {
 }
 
 async function probeSupabase() {
-  const { error } = await supabase.from('site_settings').select('id').limit(1)
-  return !error
+  const probe = supabase
+    .from('site_settings')
+    .select('id')
+    .limit(1)
+    .then(({ error }) => !error)
+    .catch(() => false)
+  const timeout = new Promise((resolve) => setTimeout(() => resolve(false), 4000))
+  return Promise.race([probe, timeout])
 }
 
 export async function loadSettingsDoc() {

@@ -179,6 +179,19 @@
   color: #ef4444;
 }
 
+/* Shared friendly admin treatment */
+.admin-guide-card { border-radius: var(--admin-radius, 14px); box-shadow: var(--admin-shadow, 0 8px 24px rgba(15, 23, 42, 0.06)); }
+.brand-partners-table, .brand-partners-table table { max-width: 100%; }
+.brand-partners-table td, .brand-partners-table th { overflow-wrap: anywhere; }
+.partner-website { overflow-wrap: anywhere; }
+.brand-partner-form-layout { gap: 1.25rem; }
+
+@media (max-width: 760px) {
+  .admin-guide-card { padding: 1rem; }
+  .preview-brand-section { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+  .preview-notes { gap: 0.6rem; padding: 0.75rem; }
+}
+
 /* Toggle Switch */
 .toggle-switch {
   display: flex;

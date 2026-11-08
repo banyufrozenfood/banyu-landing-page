@@ -59,12 +59,10 @@ export default function AdminMedia() {
       addSettingsReferences(cms.draft)
       addSettingsReferences(cms.published, 'Pengaturan website terbit')
       try {
-        const [products, slides, partners] = await Promise.all([
-          supabase.from('products').select('images'),
+        const [slides, partners] = await Promise.all([
           supabase.from('hero_slides').select('image'),
           supabase.from('brand_partners').select('logo'),
         ])
-        ;(products.data || []).forEach((product) => (product.images || []).forEach((url) => addReference(next, url, 'Produk')))
         ;(slides.data || []).forEach((slide) => addReference(next, slide.image, 'Slide beranda'))
         ;(partners.data || []).forEach((partner) => addReference(next, partner.logo, 'Brand partner'))
       } catch (error) {

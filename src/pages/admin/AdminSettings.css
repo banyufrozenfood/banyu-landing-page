@@ -313,3 +313,26 @@
     flex-direction: row;
   }
 }
+
+/* Shared friendly admin treatment */
+.settings-notice,
+.settings-note { border-radius: 11px; }
+.settings-tabs { overflow-x: auto; padding-bottom: 0.2rem; scrollbar-width: thin; }
+.settings-tabs button { flex: 0 0 auto; min-height: 44px; padding: 0.65rem 0.9rem; border-radius: 9px; }
+.settings-tabs button.active { background: var(--admin-primary, #0099ff); border-color: var(--admin-primary, #0099ff); }
+.settings-card { margin-bottom: 1.25rem; }
+.editable-list { border-color: var(--admin-border, #e2e8f0); border-radius: 11px; background: #f8fafc; }
+.editable-list__row { border-color: var(--admin-border, #e2e8f0); border-radius: 10px; }
+.editable-list__controls button { width: 44px; height: 44px; border-radius: 8px; }
+.editable-list__fields input,
+.editable-list__fields textarea,
+.editable-list__fields select { min-height: 44px; border-radius: 8px; }
+.toggle__track { width: 44px; height: 24px; }
+.toggle__thumb { width: 18px; height: 18px; }
+.toggle input:checked + .toggle__track .toggle__thumb { left: 23px; }
+.settings-actions { align-items: center; }
+
+@media (max-width: 760px) {
+  .settings-tabs { margin-right: -0.25rem; }
+  .settings-actions > * { flex: 1 1 100%; }
+}

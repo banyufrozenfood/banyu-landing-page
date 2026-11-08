@@ -1,23 +1,18 @@
 import { lazy, Suspense, Component } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import ScrollToTop from './components/ui/ScrollToTop.jsx'
-import CartDrawer from './components/ui/CartDrawer.jsx'
+import AnalyticsTracker from './components/AnalyticsTracker/AnalyticsTracker.jsx'
 
 const HomePage = lazy(() => import('./pages/HomePage.jsx'))
-const ProductsPage = lazy(() => import('./pages/ProductsPage.jsx'))
-const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage.jsx'))
-const LocationPage = lazy(() => import('./pages/LocationPage.jsx'))
 
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage.jsx'))
 const AdminLayout = lazy(() => import('./components/AdminLayout/AdminLayout.jsx'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx'))
-const AdminProducts = lazy(() => import('./pages/admin/AdminProducts.jsx'))
-const AdminCategories = lazy(() => import('./pages/admin/AdminCategories.jsx'))
 const AdminHeroSlides = lazy(() => import('./pages/admin/AdminHeroSlides.jsx'))
 const AdminBrandPartners = lazy(() => import('./pages/admin/AdminBrandPartners.jsx'))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings.jsx'))
 const AdminMedia = lazy(() => import('./pages/admin/AdminMedia.jsx'))
-const AdminOrders = lazy(() => import('./pages/admin/AdminOrders.jsx'))
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics.jsx'))
 
 function RouteFallback() {
   return (
@@ -71,14 +66,11 @@ function App() {
   return (
     <>
       <ScrollToTop />
-      <CartDrawer />
+      <AnalyticsTracker />
       <RouteErrorBoundary>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/produk" element={<ProductsPage />} />
-          <Route path="/produk/:id" element={<ProductDetailPage />} />
-          <Route path="/lokasi" element={<LocationPage />} />
 
           {/* Admin Public Route */}
           <Route path="/admin" element={<AdminLoginPage />} />
@@ -86,12 +78,10 @@ function App() {
           {/* Admin Protected Routes */}
           <Route element={<AdminLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/products" element={<AdminProducts />} />
-            <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/hero-slides" element={<AdminHeroSlides />} />
             <Route path="/admin/brand-partners" element={<AdminBrandPartners />} />
             <Route path="/admin/media" element={<AdminMedia />} />
-            <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
 

@@ -1,9 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useCart } from '../CartContext.jsx'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import { supabase } from '../../lib/supabase.js'
 import { useToast } from './Toast.jsx'
 import './CartDrawer.css'
+
+const formatRupiah = (value) => (Number(value) || 0).toLocaleString('id-ID')
+
+function buildOrderMessage({ businessName, items, total, customerName, customerAddress, orderNumber }) {
+  const lines = items.map((item) => {
+    const quantity = Math.max(1, Math.floor(Number(item.quantity) || 1))
+    const subtotal = (Number(item.price) || 0) * quantity
+    return `• ${item.name || 'Produk'} (${quantity}x) — Rp ${formatRupiah(subtotal)}`
+  }).join('\n')
+
+  const orderLine = orderNumber ? `Nomor pesanan website: *${orderNumber}*\n\n` : ''
+
+  return `Halo ${businessName}, saya mau pesan produk dari website:
+
+📋 *DETAIL PESANAN*
+${lines}
+Total Produk: Rp ${formatRupiah(total)}
+
+📍 INFORMASI PENGIRIMAN
+• Nama: ${customerName}
+• Alamat Lengkap: ${customerAddress}
+
+${orderLine}Mohon infokan total + ongkir dan pilihan pembayarannya ya min. Terima kasih!`
+}
 
 export default function CartDrawer() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal, isCartOpen, setIsCartOpen } = useCart()
@@ -12,6 +36,7 @@ export default function CartDrawer() {
   const [customerName, setCustomerName] = useState('')
   const [customerAddress, setCustomerAddress] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const submittingRef = useRef(false)
   const safeItems = Array.isArray(cartItems) ? cartItems.filter(Boolean) : []
 
   useEffect(() => {
@@ -28,62 +53,72 @@ export default function CartDrawer() {
   if (!isCartOpen) return null
 
   const handleCheckoutWA = async () => {
-    if (safeItems.length === 0) return
-    if (customerName.trim().length < 2) {
+    if (submittingRef.current || safeItems.length === 0) return
+
+    const name = customerName.replace(/\s+/g, ' ').trim()
+    const address = customerAddress.replace(/\s+/g, ' ').trim()
+    if (name.length < 2) {
       toast.error('Isi nama pemesan terlebih dahulu.')
       return
     }
-    if (customerAddress.trim().length < 8) {
+    if (address.length < 8) {
       toast.error('Isi alamat pengiriman terlebih dahulu.')
       return
     }
 
-    const lines = safeItems.map((item) =>
-      `• ${item.name || 'Produk'} (${item.quantity || 1}x) — Rp ${((Number(item.price) || 0) * (Number(item.quantity) || 0)).toLocaleString('id-ID')}`
-    ).join('\n')
-
-    const businessName = settings?.identity?.businessName || 'Banyu'
-    const message =
-`Halo ${businessName}, saya mau pesan produk dari website:
-
-📋 *DETAIL PESANAN*
-${lines}
-Total Produk: Rp ${cartTotal.toLocaleString('id-ID')}
-
-📍 INFORMASI PENGIRIMAN
-• Nama:
-• Alamat Lengkap:
-• Patokan / Kecamatan:
-
-Mohon infokan total + ongkir dan pilihan pembayarannya ya min. Terima kasih!`
-
     const rawWhatsapp = settings?.contact?.whatsapp || ''
-    if (!rawWhatsapp) {
-      toast.error('Nomor WhatsApp toko belum diatur.')
+    let waNumber = rawWhatsapp.replace(/\D/g, '')
+    if (waNumber.startsWith('0')) waNumber = `62${waNumber.slice(1)}`
+    if (!/^\d{8,15}$/.test(waNumber)) {
+      toast.error('Nomor WhatsApp toko belum diatur atau tidak valid.')
       return
     }
-    const waUrl = `https://wa.me/${rawWhatsapp}?text=${encodeURIComponent(message)}`
-    const whatsappWindow = window.open('', '_blank')
+
+    const businessName = settings?.identity?.businessName || 'Banyu'
+    submittingRef.current = true
     setSubmitting(true)
+    let whatsappWindow = null
+
     try {
+      whatsappWindow = window.open('', '_blank')
       const { data, error } = await supabase.rpc('create_whatsapp_order', {
-        p_customer_name: customerName.trim(),
-        p_customer_address: customerAddress.trim(),
+        p_customer_name: name,
+        p_customer_address: address,
         p_items: safeItems.map((item) => ({ id: item.id, quantity: item.quantity })),
       })
       if (error) throw error
-      const orderNo = data?.order_number || data?.[0]?.order_number || ''
-      whatsappWindow?.location.replace(`${waUrl}${orderNo ? `%0A%0ANomor pesanan website: *${orderNo}*` : ''}`)
+
+      const payload = Array.isArray(data) ? data[0] : data
+      const orderNo = payload?.order_number || ''
+      const serverTotal = Number(payload?.total)
+      const message = buildOrderMessage({
+        businessName,
+        items: safeItems,
+        total: Number.isFinite(serverTotal) ? serverTotal : cartTotal,
+        customerName: name,
+        customerAddress: address,
+        orderNumber: orderNo,
+      })
+      const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`
+
+      if (whatsappWindow && !whatsappWindow.closed) {
+        whatsappWindow.location.replace(waUrl)
+      } else {
+        // Popup diblokir browser: buka WhatsApp di tab yang sama.
+        window.location.assign(waUrl)
+      }
+
       clearCart()
       setCustomerName('')
       setCustomerAddress('')
       setIsCartOpen(false)
       toast.success('Pesanan dicatat. Lanjutkan pesan di WhatsApp.')
     } catch (error) {
-      whatsappWindow?.close()
+      if (whatsappWindow && !whatsappWindow.closed) whatsappWindow.close()
       console.error('Gagal mencatat pesanan WhatsApp:', error)
       toast.error('Pesanan belum tercatat. Coba lagi atau hubungi toko langsung.')
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }
@@ -125,8 +160,23 @@ Mohon infokan total + ongkir dan pilihan pembayarannya ya min. Terima kasih!`
               <strong>Rp {(Number(cartTotal) || 0).toLocaleString('id-ID')}</strong>
             </div>
             <div className="cart-checkout-fields">
-              <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Nama pemesan *" autoComplete="name" />
-              <textarea value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Alamat pengiriman lengkap *" rows="2" autoComplete="street-address" />
+              <input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Nama pemesan *"
+                aria-label="Nama pemesan"
+                autoComplete="name"
+                maxLength={80}
+              />
+              <textarea
+                value={customerAddress}
+                onChange={(e) => setCustomerAddress(e.target.value)}
+                placeholder="Alamat pengiriman lengkap *"
+                aria-label="Alamat pengiriman lengkap"
+                rows="2"
+                autoComplete="street-address"
+                maxLength={500}
+              />
             </div>
             <button className="btn btn-whatsapp cart-checkout-btn" onClick={handleCheckoutWA} disabled={submitting}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

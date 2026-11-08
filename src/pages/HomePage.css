@@ -9,12 +9,12 @@
 .advantages__grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .advantage-card {
   text-align: center;
-  padding: 2.5rem 1.5rem;
+  padding: 2rem 1.25rem;
   background: var(--bg-white);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-light);
@@ -45,10 +45,22 @@
   opacity: 1;
 }
 
+.advantage-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 1rem;
+  border-radius: 16px;
+  background: var(--primary-light);
+  font-size: 1.6rem;
+}
+
 .advantage-card__title {
-  font-size: 1.125rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
   color: var(--primary-dark);
 }
 
@@ -85,57 +97,139 @@
   }
 
   .advantage-card {
-    padding: 2rem 1.25rem;
+    padding: 1.75rem 1.25rem;
   }
 }
 
 /* ========================
-   Produk Unggulan Section
+   Tentang Toko Section
 ======================== */
-.featured-products {
-  padding: 5rem 0;
+.about-store {
+  padding: 6rem 0;
+  background: var(--bg-white);
 }
 
-.featured-products__grid {
+.about-store__grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 4rem;
+  align-items: center;
 }
 
-.featured-products__cta {
-  text-align: center;
-  margin-top: 2.5rem;
+.about-store__eyebrow,
+.home-location__eyebrow {
+  display: inline-block;
+  margin-bottom: 0.85rem;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.about-store__title {
+  font-size: 2.15rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.about-store__lead {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 0.9rem;
+}
+
+.about-store__text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.85;
+}
+
+.about-store__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.about-store__tag {
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.about-store__facts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.about-fact {
+  padding: 1.4rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  background: linear-gradient(145deg, var(--bg-white), var(--bg-light));
+  box-shadow: var(--shadow-sm);
+}
+
+.about-fact__label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--text-light);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.about-fact__value {
+  color: var(--primary-dark);
+  font-size: 1rem;
+  line-height: 1.45;
 }
 
 @media (max-width: 1024px) {
-  .featured-products {
-    padding: 3.5rem 0;
+  .about-store {
+    padding: 4.5rem 0;
   }
 
-  .featured-products__grid {
-    grid-template-columns: repeat(3, 1fr);
+  .about-store__grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
   }
 }
 
 @media (max-width: 768px) {
-  .featured-products {
-    padding: 3rem 0;
+  .about-store {
+    padding: 3.5rem 0;
   }
 
-  .featured-products__grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+  .about-store__title {
+    font-size: 1.65rem;
+  }
+
+  .about-store__facts {
+    gap: 0.75rem;
+  }
+
+  .about-fact {
+    padding: 1.1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .featured-products__grid {
-    grid-template-columns: repeat(2, 1fr);
+  .about-store__facts {
+    grid-template-columns: 1fr;
   }
 }
 
 /* ========================
-   Marketplace Section
+   Kanal Pemesanan Section
 ======================== */
 .marketplace {
   padding: 6rem 0;
@@ -144,15 +238,15 @@
 
 .marketplace__grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
 }
 
 .marketplace-card {
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 2.5rem;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.75rem;
   background: var(--bg-white);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-light);
@@ -188,51 +282,56 @@
   transform-origin: left;
 }
 
-.marketplace-card--tokopedia:hover {
-  border-color: #42b549;
+.marketplace-card--gofood:hover {
+  border-color: #E23744;
 }
-.marketplace-card--tokopedia:hover::before {
-  background: rgba(66, 181, 73, 0.05);
+.marketplace-card--gofood:hover::before {
+  background: rgba(226, 55, 68, 0.05);
 }
 
-.marketplace-card--shopee:hover {
-  border-color: #EE4D2D;
+.marketplace-card--grabmart:hover {
+  border-color: #00B14F;
 }
-.marketplace-card--shopee:hover::before {
-  background: rgba(238, 77, 45, 0.05);
+.marketplace-card--grabmart:hover::before {
+  background: rgba(0, 177, 79, 0.05);
+}
+
+.marketplace-card--whatsapp:hover {
+  border-color: #25D366;
+}
+.marketplace-card--whatsapp:hover::before {
+  background: rgba(37, 211, 102, 0.05);
 }
 
 .marketplace-card__icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 24px;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  font-size: 1.8rem;
   transition: transform 0.4s ease;
 }
 
-.marketplace-card__icon img {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
+.marketplace-card--gofood .marketplace-card__icon {
+  background: #FFF0F1;
+  box-shadow: 0 4px 10px rgba(226, 55, 68, 0.12);
+}
+
+.marketplace-card--grabmart .marketplace-card__icon {
+  background: #EAF9F0;
+  box-shadow: 0 4px 10px rgba(0, 177, 79, 0.12);
+}
+
+.marketplace-card--whatsapp .marketplace-card__icon {
+  background: #EAFBF1;
+  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.12);
 }
 
 .marketplace-card:hover .marketplace-card__icon {
-  transform: scale(1.1) rotate(-5deg);
-}
-
-.marketplace-card--tokopedia .marketplace-card__icon {
-  background: linear-gradient(135deg, #E8F5E9, #c8e6c9);
-  color: #42b549;
-  box-shadow: 0 4px 10px rgba(66, 181, 73, 0.2);
-}
-
-.marketplace-card--shopee .marketplace-card__icon {
-  background: linear-gradient(135deg, #FFF3EE, #ffe0d2);
-  color: #EE4D2D;
-  box-shadow: 0 4px 10px rgba(238, 77, 45, 0.2);
+  transform: scale(1.08) rotate(-4deg);
 }
 
 .marketplace-card__info {
@@ -240,23 +339,23 @@
 }
 
 .marketplace-card__info h3 {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 800;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.45rem;
 }
 
 .marketplace-card__info p {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .marketplace-card__arrow {
   color: var(--text-light);
   flex-shrink: 0;
   transition: transform 0.4s ease, color 0.4s ease;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,14 +364,56 @@
 }
 
 .marketplace-card:hover .marketplace-card__arrow {
-  transform: translateX(8px);
+  transform: translateX(5px);
   background: var(--primary);
   color: white;
+}
+
+.marketplace__socials {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 2.5rem;
+}
+
+.marketplace__socials p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.marketplace__social-link {
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  color: var(--primary-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.marketplace__social-link:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.marketplace__note {
+  max-width: 720px;
+  margin: 1.5rem auto 0;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  line-height: 1.7;
 }
 
 @media (max-width: 1024px) {
   .marketplace {
     padding: 4.5rem 0;
+  }
+
+  .marketplace__grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -281,32 +422,15 @@
     padding: 3.5rem 0;
   }
 
-  .marketplace__grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
   .marketplace-card {
-    padding: 2rem 1.5rem;
+    padding: 1.4rem;
   }
 
   .marketplace-card__icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-  }
-
-  .marketplace-card__icon img {
-    width: 42px;
-    height: 42px;
-  }
-
-  .marketplace-card__info h3 {
-    font-size: 1.25rem;
-  }
-  
-  .marketplace-card__info p {
-    font-size: 0.938rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    font-size: 1.5rem;
   }
 }
 
@@ -375,6 +499,23 @@
   transform: scale(1.05);
 }
 
+.brand-partners__fallback {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.brand-partners__fallback span {
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--bg-light);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 @media (max-width: 1024px) {
   .brand-partners {
     padding: 4.5rem 0;
@@ -394,7 +535,7 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 1.25rem;
   }
-  
+
   .brand-partner-card {
     min-height: 80px;
     padding: 1rem;
@@ -408,5 +549,157 @@
 
   .brand-partner-card img {
     max-height: 40px;
+  }
+}
+
+/* ========================
+   Lokasi Section
+======================== */
+.home-location {
+  padding: 6rem 0;
+  background: linear-gradient(135deg, #0B3B66 0%, #0077CC 60%, #0099FF 100%);
+  color: var(--text-white);
+}
+
+.home-location__grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+.home-location__eyebrow {
+  color: var(--accent);
+}
+
+.home-location h2 {
+  color: var(--text-white);
+  font-size: 2.15rem;
+  font-weight: 800;
+  margin-bottom: 0.9rem;
+}
+
+.home-location__content > p {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.8;
+}
+
+.home-location__hours {
+  margin: 1.75rem 0;
+}
+
+.home-location__hours h3 {
+  color: var(--text-white);
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 0.6rem;
+}
+
+.home-location__hours-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+}
+
+.home-location__hours-row strong {
+  color: var(--text-white);
+  font-weight: 700;
+  text-align: right;
+}
+
+.home-location__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.home-location__secondary {
+  background: transparent;
+  color: var(--text-white);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  box-shadow: none;
+}
+
+.home-location__secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--text-white);
+}
+
+.home-location__aside {
+  padding: 2rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.home-location__aside h3 {
+  color: var(--text-white);
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 0.65rem;
+}
+
+.home-location__aside p {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.home-location__aside ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 1.25rem;
+}
+
+.home-location__aside li {
+  position: relative;
+  padding-left: 1.35rem;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.home-location__aside li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.home-location__wa {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .home-location {
+    padding: 4.5rem 0;
+  }
+
+  .home-location__grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-location {
+    padding: 3.5rem 0;
+  }
+
+  .home-location h2 {
+    font-size: 1.65rem;
+  }
+
+  .home-location__aside {
+    padding: 1.5rem;
   }
 }
