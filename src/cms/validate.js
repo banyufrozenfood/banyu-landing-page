@@ -1,4 +1,4 @@
-export function isValidEmail(value) {
+﻿export function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((value || '').trim())
 }
 
@@ -15,18 +15,6 @@ export function isValidUrl(value) {
   } catch {
     return false
   }
-}
-
-export function isValidInternalLink(value) {
-  return /^\/[a-zA-Z0-9/?=&#_-]*$/.test((value || '').trim())
-}
-
-export function isValidHexColor(value) {
-  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test((value || '').trim())
-}
-
-export function isValidPrice(value) {
-  return Number.isFinite(Number(value)) && Number(value) >= 0
 }
 
 export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/gif']

@@ -1,33 +1,21 @@
+import { useState } from 'react'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import { useMediaLibrary } from '../../cms/useMedia.js'
-import { getHomeLocation } from '../../cms/homeContent.js'
+import { getHomeLocation, getStorePhotos } from '../../cms/homeContent.js'
 import { trackChannelClick } from '../../lib/analytics.js'
+import { ClockIcon, MailIcon, MapPinIcon, WhatsAppIcon } from '../ui/Icons.jsx'
+import Lightbox from '../ui/Lightbox.jsx'
 import './LocationSection.css'
-import '../../pages/LocationPage.css'
-
-const defaultStorePhotos = [
-  { src: 'https://placehold.co/600x400/0099FF/white?text=Tampak+Depan+Toko', alt: 'Tampak depan toko Banyu' },
-  { src: 'https://placehold.co/600x400/66CCFF/white?text=Interior+Toko', alt: 'Interior toko Banyu' },
-  { src: 'https://placehold.co/600x400/0077CC/white?text=Rak+Produk', alt: 'Rak produk frozen food' },
-  { src: 'https://placehold.co/600x400/0099FF/FFFFFF?text=Area+Freezer', alt: 'Area freezer toko' },
-]
 
 export default function LocationSection() {
   const { settings } = useSiteSettings()
   const { items: mediaItems } = useMediaLibrary()
+  const [lightboxIndex, setLightboxIndex] = useState(null)
   const storeInfo = settings?.contact || {}
   const gallery = settings?.locationGallery || {}
   const location = getHomeLocation(settings?.home || {})
 
-  const configuredPhotos = Array.isArray(gallery?.items)
-    ? gallery.items.filter((item) => item?.image).map((item) => ({ src: item.image, alt: item.label || 'Galeri toko' }))
-    : []
-  const mediaPhotos = (Array.isArray(mediaItems) ? mediaItems : [])
-    .filter((item) => item?.category === 'toko' && item?.url)
-    .map((item) => ({ src: item.url, alt: item.name || 'Foto toko' }))
-  const storePhotos = configuredPhotos.length > 0
-    ? configuredPhotos
-    : mediaPhotos.length > 0 ? mediaPhotos : defaultStorePhotos
+  const storePhotos = getStorePhotos(settings, mediaItems).filter(Boolean)
 
   const waNumber = (storeInfo.whatsapp || '').replace(/\D/g, '')
   const waUrl = waNumber
@@ -76,7 +64,7 @@ export default function LocationSection() {
 
             <div className="location-info">
               <div className="location-info__card">
-                <div className="location-info__icon" aria-hidden="true">⌖</div>
+                <div className="location-info__icon"><MapPinIcon /></div>
                 <div>
                   <h3>Alamat</h3>
                   <p>{storeInfo.addressFull || storeInfo.address || '-'}</p>
@@ -84,7 +72,7 @@ export default function LocationSection() {
               </div>
 
               <div className="location-info__card">
-                <div className="location-info__icon" aria-hidden="true">◷</div>
+                <div className="location-info__icon"><ClockIcon /></div>
                 <div>
                   <h3>Jam Operasional</h3>
                   <div className="location-hours">
@@ -100,7 +88,7 @@ export default function LocationSection() {
 
               {storeInfo.email && (
                 <div className="location-info__card">
-                  <div className="location-info__icon" aria-hidden="true">✉</div>
+                  <div className="location-info__icon"><MailIcon /></div>
                   <div>
                     <h3>Email</h3>
                     <p>{storeInfo.email}</p>
@@ -118,6 +106,7 @@ export default function LocationSection() {
 
               {waUrl && (
                 <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp location-cta__btn" onClick={() => trackChannelClick('whatsapp', window.location.pathname)}>
+                  <WhatsAppIcon />
                   Hubungi via WhatsApp
                 </a>
               )}
@@ -135,15 +124,30 @@ export default function LocationSection() {
               <p>{gallery?.subtitle || 'Lihat suasana toko Banyu Frozen Food'}</p>
             </div>
             <div className="store-gallery__grid">
-              {storePhotos.filter(Boolean).map((photo, index) => (
-                <div key={photo.src || index} className="store-gallery__item">
-                  <img src={photo.src} alt={photo.alt || 'Foto toko'} loading="lazy" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = 'https://placehold.co/600x400/E5E7EB/9CA3AF?text=Foto' }} />
-                  <div className="store-gallery__overlay"><span>{photo.alt || 'Foto toko'}</span></div>
-                </div>
+              {storePhotos.map((photo, index) => (
+                <button
+                  key={photo.src || index}
+                  type="button"
+                  className="store-gallery__item"
+                  aria-label={`Perbesar foto: ${photo.alt || 'Foto toko'}`}
+                  onClick={() => setLightboxIndex(index)}
+                >
+                  <img src={photo.src} alt={photo.alt || 'Foto toko'} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = 'https://placehold.co/600x400/E5E7EB/9CA3AF?text=Foto' }} />
+                  <span className="store-gallery__overlay" aria-hidden="true"><span>{photo.alt || 'Foto toko'}</span></span>
+                </button>
               ))}
             </div>
           </div>
         </div>
+      )}
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          photos={storePhotos}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
       )}
     </section>
   )

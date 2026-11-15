@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { NAV_MENU } from '../../cms/defaults.js'
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx'
 import { trackChannelClick } from '../../lib/analytics.js'
+import { MailIcon, MapPinIcon } from '../ui/Icons.jsx'
 import './Footer.css'
 
 const socialIcons = {
@@ -45,7 +46,7 @@ export default function Footer() {
       <div className="container">
         <div className="footer__main">
           <div className="footer__brand">
-            <Link to="/">
+            <Link to="/" aria-label="Kembali ke beranda">
               <img
                 src={identity.logoWhiteUrl || identity.logoUrl}
                 alt={identity.businessName || 'Banyu'}
@@ -76,16 +77,12 @@ export default function Footer() {
             <h4>Hubungi Kami</h4>
             <ul>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-                </svg>
+                <MapPinIcon size={18} />
                 {contact.address || contact.addressFull || '-'}
               </li>
               {contact.email && (
                 <li>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/>
-                  </svg>
+                  <MailIcon size={18} />
                   {contact.email}
                 </li>
               )}
@@ -105,7 +102,7 @@ export default function Footer() {
       <div className="footer__bottom">
         <div className="container footer__bottom-inner">
           <p>&copy; {new Date().getFullYear()} {identity.businessName || 'Banyu'}. All rights reserved.</p>
-          <p>{footer.creditNote || ''}</p>
+          {footer.creditNote && <p>{footer.creditNote}</p>}
         </div>
       </div>
     </footer>

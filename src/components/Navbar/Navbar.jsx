@@ -40,6 +40,13 @@ export default function Navbar() {
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
+  useEffect(() => {
+    if (!isOpen) return undefined
+    const onKey = (event) => { if (event.key === 'Escape') setIsOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen])
+
   const menu = NAV_MENU
   const ctaLabel = settings?.navbar?.ctaLabel || 'Pesan Sekarang'
   const waNumber = (settings?.contact?.whatsapp || '').replace(/\D/g, '')
@@ -53,7 +60,7 @@ export default function Navbar() {
           <img src={settings?.identity?.logoUrl} alt={settings?.identity?.businessName || 'Banyu'} onError={(e) => { e.target.onerror = null; e.target.style.opacity = '0.4'; }} />
         </Link>
 
-        <ul className={`navbar__menu${isOpen ? ' navbar__menu--open' : ''}`}>
+        <ul id="navbar-menu" className={`navbar__menu${isOpen ? ' navbar__menu--open' : ''}`}>
           {menu.map((item) => (
             <li key={item.id}>
               {item.link.includes('#') ? (
@@ -84,7 +91,9 @@ export default function Navbar() {
         <button
           className={`navbar__hamburger${isOpen ? ' navbar__hamburger--active' : ''}`}
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
+          aria-label={isOpen ? 'Tutup menu' : 'Buka menu'}
+          aria-expanded={isOpen}
+          aria-controls="navbar-menu"
         >
           <span></span>
           <span></span>

@@ -265,8 +265,8 @@ export default function AdminMedia() {
                   </span>
                 </div>
                 <div className="media-card__actions">
-                  <button type="button" title="Salin link" onClick={() => handleCopy(m)}>🔗</button>
-                  <button type="button" title="Hapus" className="danger" onClick={() => setToDelete(m)}>🗑</button>
+                  <button type="button" aria-label="Salin link gambar" title="Salin link" onClick={() => handleCopy(m)}>🔗</button>
+                  <button type="button" aria-label="Hapus gambar" title="Hapus" className="danger" onClick={() => setToDelete(m)}>🗑</button>
                 </div>
               </div>
             ))}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase.js';
+import { supabase, supabaseEnvMissing } from '../../lib/supabase.js';
 import './AdminLoginPage.css';
 
 function friendlyLoginError(message) {
@@ -19,7 +19,8 @@ export default function AdminLoginPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect if already logged in
+    if (supabaseEnvMissing) return undefined
+    // Alihkan jika pengguna sudah punya sesi aktif.
     let mounted = true
     const checkSession = async () => {
       try {
@@ -37,6 +38,10 @@ export default function AdminLoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (supabaseEnvMissing) {
+      setError('Konfigurasi server belum lengkap. Hubungi pengelola website.');
+      return;
+    }
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmedEmail)) {
       setError('Masukkan email yang valid.');
@@ -74,11 +79,18 @@ export default function AdminLoginPage() {
     <div className="admin-login-page">
       <div className="admin-login-card">
         <div className="admin-login-header">
-          <h2>Admin Login</h2>
+          <h2>Masuk Panel Admin</h2>
           <p>Banyu Frozen Food</p>
         </div>
-        
-        {error && <div className="admin-alert admin-alert-error">{error}</div>}
+
+        {supabaseEnvMissing && (
+          <div className="admin-alert admin-alert-error" role="alert">
+            Konfigurasi Supabase belum diisi. Panel admin tidak dapat digunakan sampai
+            VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY tersedia.
+          </div>
+        )}
+
+        {error && <div className="admin-alert admin-alert-error" role="alert">{error}</div>}
 
         <form onSubmit={handleLogin} className="admin-login-form">
           <div className="form-group">
@@ -104,7 +116,7 @@ export default function AdminLoginPage() {
             />
           </div>
           <button type="submit" className="btn-admin-login" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Sedang masuk...' : 'Masuk'}
           </button>
         </form>
         <div className="admin-login-footer">

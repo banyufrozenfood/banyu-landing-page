@@ -1,6 +1,9 @@
 -- ==============================================
 -- Migration: WhatsApp Orders & Automatic Stock Management
 -- Jalankan di: Supabase Dashboard -> SQL Editor -> Run
+-- Prasyarat: supabase-migration-admin-rls.sql (membuat public.is_admin()).
+-- Catatan: fitur cart sudah dihapus dari aplikasi. File ini dipertahankan
+-- untuk database legacy; function-nya sudah dikunci agar tidak jadi celah.
 -- ==============================================
 
 CREATE TABLE IF NOT EXISTS whatsapp_orders (
@@ -27,11 +30,13 @@ CREATE TABLE IF NOT EXISTS whatsapp_order_items (
 ALTER TABLE whatsapp_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_order_items ENABLE ROW LEVEL SECURITY;
 
--- Policy: Admin full access
+-- Policy: hanya admin terdaftar (lihat supabase-migration-admin-rls.sql)
+DROP POLICY IF EXISTS "Admin full access whatsapp_orders" ON whatsapp_orders;
 CREATE POLICY "Admin full access whatsapp_orders" ON whatsapp_orders
-  FOR ALL USING (auth.role() = 'authenticated');
+  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS "Admin full access whatsapp_order_items" ON whatsapp_order_items;
 CREATE POLICY "Admin full access whatsapp_order_items" ON whatsapp_order_items
-  FOR ALL USING (auth.role() = 'authenticated');
+  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- Function to create order from public cart (SECURITY DEFINER to allow guest checkout to record order safely)
 CREATE OR REPLACE FUNCTION create_whatsapp_order(
@@ -42,6 +47,7 @@ CREATE OR REPLACE FUNCTION create_whatsapp_order(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_order_id BIGINT;
@@ -55,12 +61,28 @@ BEGIN
     RAISE EXCEPTION 'Nama pemesan minimal 2 karakter';
   END IF;
 
+  IF length(trim(p_customer_name)) > 120 THEN
+    RAISE EXCEPTION 'Nama pemesan maksimal 120 karakter';
+  END IF;
+
   IF p_customer_address IS NULL OR length(trim(p_customer_address)) < 5 THEN
     RAISE EXCEPTION 'Alamat pengiriman minimal 5 karakter';
   END IF;
 
+  IF length(trim(p_customer_address)) > 500 THEN
+    RAISE EXCEPTION 'Alamat pengiriman maksimal 500 karakter';
+  END IF;
+
+  IF p_items IS NULL OR jsonb_typeof(p_items) <> 'array' THEN
+    RAISE EXCEPTION 'Daftar item tidak valid';
+  END IF;
+
   IF jsonb_array_length(p_items) = 0 THEN
     RAISE EXCEPTION 'Keranjang kosong';
+  END IF;
+
+  IF jsonb_array_length(p_items) > 50 THEN
+    RAISE EXCEPTION 'Maksimal 50 jenis item per pesanan';
   END IF;
 
   v_order_no := 'WA-' || to_char(NOW(), 'YYYYMMDD') || '-' || upper(substr(md5(random()::text), 1, 6));
@@ -71,7 +93,7 @@ BEGIN
 
   FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
   LOOP
-    v_qty := GREATEST(1, (v_item->>'quantity')::INTEGER);
+    v_qty := LEAST(1000, GREATEST(1, (v_item->>'quantity')::INTEGER));
     SELECT id, name, price, stock INTO v_prod FROM products WHERE id = (v_item->>'id')::BIGINT;
     
     IF NOT FOUND THEN
@@ -90,6 +112,13 @@ BEGIN
 END;
 $$;
 
+-- Fitur checkout sudah dihapus dari aplikasi. Kunci RPC publik ini supaya
+-- tidak bisa dipanggil dari luar. Jika nanti checkout diaktifkan lagi,
+-- buka akses secara sadar: GRANT EXECUTE ON FUNCTION
+-- create_whatsapp_order(TEXT, TEXT, JSONB) TO anon, authenticated;
+REVOKE ALL ON FUNCTION create_whatsapp_order(TEXT, TEXT, JSONB) FROM PUBLIC;
+REVOKE ALL ON FUNCTION create_whatsapp_order(TEXT, TEXT, JSONB) FROM anon, authenticated;
+
 -- Function to set order status & deduct or restore stock
 CREATE OR REPLACE FUNCTION set_whatsapp_order_status(
   p_order_id BIGINT,
@@ -98,12 +127,17 @@ CREATE OR REPLACE FUNCTION set_whatsapp_order_status(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_order RECORD;
   v_item RECORD;
   v_current_stock INTEGER;
 BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Akses ditolak: hanya admin terdaftar';
+  END IF;
+
   SELECT * INTO v_order FROM whatsapp_orders WHERE id = p_order_id FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Pesanan tidak ditemukan';
@@ -146,3 +180,8 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'status', p_status);
 END;
 $$;
+
+-- Hanya user login yang boleh mencoba; pemeriksaan is_admin() di dalam
+-- function tetap menjadi penentu akhir.
+REVOKE ALL ON FUNCTION set_whatsapp_order_status(BIGINT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION set_whatsapp_order_status(BIGINT, TEXT) TO authenticated;

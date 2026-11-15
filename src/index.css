@@ -101,6 +101,61 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0 1.5rem;
 }
 
+/* Hanya untuk pembaca layar: tetap terbaca tetapi tidak memakan ruang visual. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Tautan lompat ke konten: muncul saat difokus lewat keyboard. */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  z-index: 1000;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: var(--primary);
+  color: var(--text-white);
+  font-weight: 700;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus-visible {
+  transform: translate(-50%, 0);
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Penanda fokus yang konsisten untuk pengguna keyboard. */
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 0 1rem;
@@ -116,7 +171,8 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1rem;
   font-weight: 600;
   border-radius: var(--radius-lg);
-  transition: all var(--transition);
+  transition: background-color 0.25s ease, color 0.25s ease,
+    box-shadow 0.25s ease, transform 0.25s ease;
   min-height: 48px;
   min-width: 48px;
   box-shadow: var(--shadow-sm);
@@ -133,8 +189,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--primary-light), var(--primary));
-  color: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-dark));
+  color: var(--text-white);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
 
@@ -156,7 +213,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-accent:hover {
-  background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+  background: linear-gradient(135deg, var(--accent-dark), var(--accent-dark));
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
@@ -168,7 +225,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-whatsapp:hover {
   background: #1DA851;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
@@ -178,9 +235,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .section-title h2 {
-  font-size: 2rem;
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
   font-weight: 800;
   margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
 }
 
 .section-title p {
@@ -191,10 +249,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 768px) {
-  .section-title h2 {
-    font-size: 1.5rem;
-  }
-
   .section-title p {
     font-size: 0.938rem;
   }

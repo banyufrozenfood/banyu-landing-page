@@ -26,6 +26,21 @@ const DEFAULT_CARDS = [
   },
 ]
 
+// Logo resmi kanal pemesanan. Taruh file di public/logos/<channel>.svg sesuai
+// nama channel yang dipakai CMS. Selama file belum ada, kartu otomatis kembali
+// memakai emoji dari field `icon` supaya tampilan tidak rusak.
+const CHANNEL_LOGOS = {
+  gofood: '/logos/gofood.svg',
+  grabmart: '/logos/grabmart.svg',
+  whatsapp: '/logos/whatsapp.svg',
+  shopee: '/logos/shopee.svg',
+  tokopedia: '/logos/tokopedia.svg',
+}
+
+export function getChannelLogo(channel) {
+  return CHANNEL_LOGOS[channel] || ''
+}
+
 const DEFAULT_LOCATION = {
   eyebrow: 'Lokasi Toko',
   title: 'Mampir ke Cigugur Tengah',
@@ -36,6 +51,90 @@ const DEFAULT_LOCATION = {
     'GrabMart — Banyu Frozen Food - Cigugur Tengah',
     'WhatsApp — tanya stok & pesan langsung',
   ],
+}
+
+const DEFAULT_CTA = { text: 'Cara Pesan', link: '/#cara-pesan' }
+
+export const DEFAULT_CTA_TEXT = DEFAULT_CTA.text
+export const DEFAULT_CTA_LINK = DEFAULT_CTA.link
+
+// Slide lama di database masih menyimpan tautan ke halaman yang sudah dihapus.
+// Arahkan ulang agar pengunjung tidak mendarat di 404.
+const LEGACY_CTA_LINKS = {
+  '/lokasi': '/#lokasi',
+}
+
+export function normalizeCtaLink(link) {
+  const clean = typeof link === 'string' ? link.trim() : ''
+  if (!clean) return DEFAULT_CTA_LINK
+  if (clean === '/produk' || clean.startsWith('/produk/') || clean.startsWith('/produk?')) {
+    return DEFAULT_CTA_LINK
+  }
+  return LEGACY_CTA_LINKS[clean] || clean
+}
+
+export function normalizeHeroSlide(slide) {
+  return {
+    ...slide,
+    cta: {
+      text: slide?.cta?.text || DEFAULT_CTA_TEXT,
+      link: normalizeCtaLink(slide?.cta?.link),
+    },
+  }
+}
+
+// Dipakai HeroCarousel dan HomePage saat Supabase belum mengembalikan slide.
+export const DEFAULT_HERO_SLIDES = [
+  {
+    id: 'default-1',
+    title: 'Stok Makanan Praktis',
+    subtitle: 'Banyu Frozen Food • Cigugur Tengah',
+    description: 'Sosis, nugget, kornet, camilan Korea, sampai abon khas Cianjur. Harga Rp10.000–Rp49.000 per item.',
+    image: '',
+    cta: { ...DEFAULT_CTA },
+  },
+  {
+    id: 'default-2',
+    title: 'Pesan Antar GoFood & GrabMart',
+    subtitle: 'Cari Banyu Frozen Food',
+    description: 'GoFood area Bandung dan GrabMart dengan nama Banyu Frozen Food - Cigugur Tengah.',
+    image: '',
+    cta: { ...DEFAULT_CTA },
+  },
+  {
+    id: 'default-3',
+    title: 'Oleh-oleh Khas Cianjur',
+    subtitle: 'Abon & Gepuk Karwati',
+    description: 'Abon sapi, abon pedas, dan gepuk kering — cocok untuk oleh-oleh atau stok lauk praktis.',
+    image: '',
+    cta: { ...DEFAULT_CTA },
+  },
+]
+
+// Dipakai galeri toko saat belum ada foto yang diunggah lewat panel admin.
+export const DEFAULT_STORE_PHOTOS = [
+  { src: 'https://placehold.co/600x400/0099FF/white?text=Tampak+Depan+Toko', alt: 'Tampak depan toko Banyu' },
+  { src: 'https://placehold.co/600x400/66CCFF/white?text=Interior+Toko', alt: 'Interior toko Banyu' },
+  { src: 'https://placehold.co/600x400/0077CC/white?text=Rak+Produk', alt: 'Rak produk frozen food' },
+  { src: 'https://placehold.co/600x400/0099FF/FFFFFF?text=Area+Freezer', alt: 'Area freezer toko' },
+]
+
+// Urutan prioritas foto galeri: pengaturan Location Gallery di CMS, lalu media
+// library kategori "toko", terakhir placeholder bawaan. Dipakai galeri di
+// beranda sekaligus memudahkan pengujian.
+export function getStorePhotos(settings = {}, mediaItems = []) {
+  const gallery = settings?.locationGallery || {}
+  const configured = Array.isArray(gallery.items)
+    ? gallery.items
+      .filter((item) => item?.image)
+      .map((item) => ({ src: item.image, alt: item.label || 'Galeri toko' }))
+    : []
+  if (configured.length > 0) return configured
+
+  const fromMedia = (Array.isArray(mediaItems) ? mediaItems : [])
+    .filter((item) => item?.category === 'toko' && item?.url)
+    .map((item) => ({ src: item.url, alt: item.name || 'Foto toko' }))
+  return fromMedia.length > 0 ? fromMedia : DEFAULT_STORE_PHOTOS
 }
 
 function nonEmpty(value) {
@@ -60,6 +159,7 @@ export function getMarketplaceCards(home = {}) {
       .map((card) => ({
         ...card,
         label: card.label.trim(),
+        logo: getChannelLogo(card.channel),
         url: ['gofood', 'grabmart'].includes(card.channel) && marketplace[`${card.channel}Url`] && card.url === DEFAULT_CARDS.find((item) => item.channel === card.channel)?.url
           ? marketplace[`${card.channel}Url`]
           : card.url,
@@ -69,7 +169,7 @@ export function getMarketplaceCards(home = {}) {
   const marketplace = home.marketplace || {}
   return DEFAULT_CARDS
     .filter((card) => card.channel === 'whatsapp' || marketplace[`${card.channel}Enabled`] !== false)
-    .map((card) => ({ ...card, url: marketplace[`${card.channel}Url`] || card.url }))
+    .map((card) => ({ ...card, logo: getChannelLogo(card.channel), url: marketplace[`${card.channel}Url`] || card.url }))
 }
 
 export function getHomeLocation(home = {}) {
@@ -93,4 +193,4 @@ export function validateMarketplaceCards(cards = []) {
   })
 }
 
-export { DEFAULT_CARDS, DEFAULT_LOCATION, DEFAULT_TAGS }
+export { DEFAULT_CARDS, DEFAULT_LOCATION, DEFAULT_TAGS, CHANNEL_LOGOS }

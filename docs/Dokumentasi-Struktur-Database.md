@@ -218,11 +218,25 @@ Semua tabel mengaktifkan RLS. Aturan akses:
 | Baca `reviews` | Publik, hanya yang `status = 'approved'` |
 | Kirim review (`INSERT` ke `reviews`) | Publik ( disiapkan untuk form ulasan fase berikutnya) |
 | Buat pesanan WhatsApp (via RPC `create_whatsapp_order`) | Publik (tamu/customer saat checkout) |
-| Baca/Kelola pesanan WhatsApp (`whatsapp_orders`, `whatsapp_order_items`) | Hanya admin yang sudah login (`authenticated`) |
-| Tambah/Ubah/Hapus (semua tabel) | Hanya admin yang sudah login (`authenticated`) |
+| Baca/Kelola pesanan WhatsApp (`whatsapp_orders`, `whatsapp_order_items`) | Hanya admin terdaftar di `admin_users` |
+| Tambah/Ubah/Hapus (semua tabel) | Hanya admin terdaftar di `admin_users` |
+
+### Cara menentukan admin
+
+Admin bukan sekadar "user yang login". Email harus terdaftar di tabel `admin_users`:
+
+```sql
+INSERT INTO public.admin_users (email) VALUES ('emailkamu@contoh.com');
+```
+
+Policy memakai fungsi `public.is_admin()` yang mencocokkan email pada JWT dengan isi `admin_users`.
+Login dengan akun Supabase Auth lain tetap ditolak walaupun berhasil masuk.
+
+Jika database sudah berjalan sebelum perubahan ini, jalankan
+`supabase-migration-admin-rls.sql` satu kali di SQL Editor.
 
 ---
 
 ## Storage
 
-Bucket `media` di Supabase Storage menyimpan file gambar yang diupload lewat panel admin. Bucket bersifat **publik** — URL gambar bisa diakses langsung tanpa autentikasi. Upload dan hapus file hanya bisa dilakukan oleh admin yang sudah login.
+Bucket `media` di Supabase Storage menyimpan file gambar yang diupload lewat panel admin. Bucket bersifat **publik** — URL gambar bisa diakses langsung tanpa autentikasi. Upload, ubah, dan hapus file hanya bisa dilakukan oleh admin terdaftar di `admin_users`.

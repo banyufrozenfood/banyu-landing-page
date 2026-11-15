@@ -4,10 +4,12 @@ import { sortByOrder, nextOrder, normalizeOrderInput } from '../../lib/ordering.
 import { useSiteSettings } from '../../cms/SiteSettingsContext.jsx';
 import { uploadMediaFile } from '../../cms/store.js';
 import ImageCropper from '../../components/ui/ImageCropper.jsx';
+import { useToast } from '../../components/ui/Toast.jsx';
 import './AdminShared.css';
 import './AdminHeroSlides.css';
 
 export default function AdminHeroSlides() {
+  const toast = useToast();
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,10 +79,15 @@ export default function AdminHeroSlides() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Yakin ingin menghapus slide ini?')) {
+    if (!window.confirm('Yakin ingin menghapus slide ini?')) return;
+    try {
       const { error } = await supabase.from('hero_slides').delete().eq('id', id);
-      if (!error) fetchSlides();
-      else alert('Gagal menghapus: ' + error.message);
+      if (error) throw error;
+      toast.success('Slide berhasil dihapus.');
+      await fetchSlides();
+    } catch (err) {
+      console.error('Gagal menghapus slide:', err);
+      toast.error('Gagal menghapus slide. Silakan coba lagi.');
     }
   };
 
@@ -133,21 +140,19 @@ export default function AdminHeroSlides() {
       is_active: formData.is_active,
     };
 
-    let error;
-    if (formData.id) {
-      const res = await supabase.from('hero_slides').update(payload).eq('id', formData.id);
-      error = res.error;
-    } else {
-      const res = await supabase.from('hero_slides').insert([payload]);
-      error = res.error;
-    }
-
-    setSaving(false);
-    if (error) {
-      alert('Gagal menyimpan: ' + error.message);
-    } else {
+    try {
+      const res = formData.id
+        ? await supabase.from('hero_slides').update(payload).eq('id', formData.id)
+        : await supabase.from('hero_slides').insert([payload]);
+      if (res.error) throw res.error;
       setShowForm(false);
-      fetchSlides();
+      toast.success(formData.id ? 'Slide berhasil diperbarui.' : 'Slide berhasil ditambahkan.');
+      await fetchSlides();
+    } catch (err) {
+      console.error('Gagal menyimpan slide:', err);
+      toast.error('Gagal menyimpan slide. Silakan coba lagi.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -160,8 +165,11 @@ export default function AdminHeroSlides() {
         .from('hero_slides')
         .update({ is_active: !slide.is_active })
         .eq('id', slide.id);
-      if (!error) await fetchSlides();
-      else alert('Gagal mengubah status: ' + error.message);
+      if (error) throw error;
+      await fetchSlides();
+    } catch (err) {
+      console.error('Gagal mengubah status slide:', err);
+      toast.error('Gagal mengubah status slide. Silakan coba lagi.');
     } finally {
       setTogglingId(null)
     }
@@ -246,6 +254,7 @@ export default function AdminHeroSlides() {
 // ============================================
 function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSave, onCancel, isEdit }) {
   const { storageMode } = useSiteSettings();
+  const toast = useToast();
   const [cropOpen, setCropOpen] = useState(false);
   const [cropBusy, setCropBusy] = useState(false);
 
@@ -261,7 +270,8 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
       handleChange('image', item.url);
       setCropOpen(false);
     } catch (err) {
-      alert('Gagal menyimpan hasil crop: ' + err.message);
+      console.error('Gagal menyimpan hasil crop:', err);
+      toast.error('Gagal menyimpan hasil crop. Silakan coba lagi.');
     } finally {
       setCropBusy(false);
     }
@@ -297,11 +307,11 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
               <div className="toggle-switch">
                 <input
                   type="checkbox"
-                  id="is_active"
+                  id="hero-slide-is-active"
                   checked={formData.is_active}
                   onChange={(e) => handleChange('is_active', e.target.checked)}
                 />
-                <label htmlFor="is_active" className="toggle-label">
+                <label htmlFor="hero-slide-is-active" className="toggle-label">
                   <span className={formData.is_active ? 'on' : 'off'}>
                     {formData.is_active ? 'Aktif (Tampil di Website)' : 'Nonaktif (Disembunyikan)'}
                   </span>

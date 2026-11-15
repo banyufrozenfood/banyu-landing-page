@@ -7,7 +7,7 @@ import {
   isValidWhatsapp,
   isValidUrl,
 } from '../../cms/validate.js'
-import { validateMarketplaceCards } from '../../cms/homeContent.js'
+import { getChannelLogo, validateMarketplaceCards } from '../../cms/homeContent.js'
 import './AdminShared.css'
 import './AdminSettings.css'
 
@@ -65,9 +65,9 @@ function EditableList({ items, onChange, title, addLabel, makeItem, renderItem, 
         <div className="editable-list__row" key={item.id || i}>
           <div className="editable-list__fields">{renderItem(item, (patch) => update(i, patch), i)}</div>
           <div className="editable-list__controls">
-            <button type="button" title="Naik" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
-            <button type="button" title="Turun" disabled={i === safeItems.length - 1} onClick={() => move(i, 1)}>↓</button>
-            <button type="button" title="Hapus item" className="danger" onClick={() => onChange(safeItems.filter((_, idx) => idx !== i))}>🗑</button>
+            <button type="button" aria-label="Naikkan urutan" title="Naik" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
+            <button type="button" aria-label="Turunkan urutan" title="Turun" disabled={i === safeItems.length - 1} onClick={() => move(i, 1)}>↓</button>
+            <button type="button" aria-label="Hapus item" title="Hapus item" className="danger" onClick={() => onChange(safeItems.filter((_, idx) => idx !== i))}>🗑</button>
           </div>
         </div>
       ))}
@@ -412,9 +412,16 @@ export default function AdminSettings() {
                       <option value="gofood">GoFood</option>
                       <option value="grabmart">GrabMart</option>
                       <option value="whatsapp">WhatsApp</option>
+                      <option value="shopee">Shopee</option>
+                      <option value="tokopedia">Tokopedia</option>
                       <option value="custom">Kanal lain</option>
                     </select>
-                    <input placeholder="Icon / emoji" value={item.icon || ''} onChange={(e) => set({ icon: e.target.value })} />
+                    <input placeholder="Icon / emoji (cadangan)" value={item.icon || ''} onChange={(e) => set({ icon: e.target.value })} />
+                    <p className="field-hint">
+                      {getChannelLogo(item.channel)
+                        ? `Logo resmi dipakai otomatis dari ${getChannelLogo(item.channel)}. Emoji di atas hanya tampil bila file logo belum tersedia.`
+                        : 'Kanal ini belum punya logo resmi; kartu memakai emoji di atas.'}
+                    </p>
                     <textarea rows={2} placeholder="Deskripsi kartu" value={item.description || ''} onChange={(e) => set({ description: e.target.value })} />
                     <input placeholder={item.channel === 'whatsapp' ? 'Otomatis dari tab Kontak' : 'https://...'} value={item.url || ''} disabled={item.channel === 'whatsapp'} onChange={(e) => set({ url: e.target.value })} />
                     {err(`marketplace.cards.${i}.url`) && <p className="field-error">{err(`marketplace.cards.${i}.url`)}</p>}

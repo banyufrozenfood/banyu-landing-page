@@ -156,7 +156,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="admin-main">
+      <main id="main-content" className="admin-main">
         <header className="admin-header">
           <div className="admin-header__left">
             <button aria-expanded={isSidebarOpen} aria-controls="admin-navigation" className="btn-menu-toggle" onClick={toggleSidebar}>

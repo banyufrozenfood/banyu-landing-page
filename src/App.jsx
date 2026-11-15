@@ -31,12 +31,12 @@ class RouteErrorBoundary extends Component {
     return { hasError: true }
   }
   componentDidCatch(err) {
-    console.error('Route gagal dimuat:', err)
+    console.error(`${this.props.label || 'Halaman'} gagal dimuat:`, err)
   }
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ textAlign: 'center', padding: '100px 20px', minHeight: '60vh' }}>
+        <div style={{ textAlign: 'center', padding: '100px 20px', minHeight: '40vh' }}>
           <h2>Gagal memuat halaman</h2>
           <p style={{ marginBottom: '2rem' }}>Terjadi gangguan jaringan. Silakan muat ulang.</p>
           <button onClick={() => window.location.reload()} style={{ padding: '10px 20px' }}>
@@ -47,6 +47,16 @@ class RouteErrorBoundary extends Component {
     }
     return this.props.children
   }
+}
+
+// Satu boundary per halaman admin supaya kegagalan di satu halaman tidak
+// merobohkan seluruh panel, dan pesan error menyebut halaman yang gagal.
+function AdminPage({ label, children }) {
+  return (
+    <RouteErrorBoundary label={label}>
+      <Suspense fallback={<RouteFallback />}>{children}</Suspense>
+    </RouteErrorBoundary>
+  )
 }
 
 function NotFound() {
@@ -65,6 +75,7 @@ function NotFound() {
 function App() {
   return (
     <>
+      <a href="#main-content" className="skip-link">Lewati ke konten utama</a>
       <ScrollToTop />
       <AnalyticsTracker />
       <RouteErrorBoundary>
@@ -77,12 +88,12 @@ function App() {
 
           {/* Admin Protected Routes */}
           <Route element={<AdminLayout />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            <Route path="/admin/hero-slides" element={<AdminHeroSlides />} />
-            <Route path="/admin/brand-partners" element={<AdminBrandPartners />} />
-            <Route path="/admin/media" element={<AdminMedia />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/dashboard" element={<AdminPage label="Ringkasan"><AdminDashboard /></AdminPage>} />
+            <Route path="/admin/analytics" element={<AdminPage label="Analytics"><AdminAnalytics /></AdminPage>} />
+            <Route path="/admin/hero-slides" element={<AdminPage label="Slide Beranda"><AdminHeroSlides /></AdminPage>} />
+            <Route path="/admin/brand-partners" element={<AdminPage label="Brand Partner"><AdminBrandPartners /></AdminPage>} />
+            <Route path="/admin/media" element={<AdminPage label="Media Library"><AdminMedia /></AdminPage>} />
+            <Route path="/admin/settings" element={<AdminPage label="Pengaturan Website"><AdminSettings /></AdminPage>} />
           </Route>
 
           {/* Fallback untuk halaman yang tidak ditemukan */}

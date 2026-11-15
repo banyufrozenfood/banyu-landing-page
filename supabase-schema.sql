@@ -60,9 +60,9 @@ CREATE TABLE hero_slides (
 
 -- Insert default hero slides
 INSERT INTO hero_slides (title, subtitle, description, image, cta_text, cta_link, "order", is_active) VALUES
-('Frozen Food Berkualitas', 'Untuk Keluarga Indonesia', 'Produk beku pilihan dengan bahan terbaik, diproses higienis dan dikemas vakum untuk menjaga kesegaran.', 'https://placehold.co/1200x600/0099FF/white?text=Banyu+Frozen+Food', 'Lihat Produk', '/produk', 1, TRUE),
-('Praktis & Lezat', 'Siap Saji dalam Hitungan Menit', 'Nugget, sosis, dimsum, bakso — tinggal goreng atau kukus. Cocok untuk bekal sekolah dan menu harian.', 'https://placehold.co/1200x600/66CCFF/003366?text=Praktis+%26+Lezat', 'Pesan Sekarang', '/produk', 2, TRUE),
-('Pesan Mudah', 'Via Tokopedia, Shopee & WhatsApp', 'Pilih channel favorit kamu untuk memesan. Pengiriman cepat ke seluruh Indonesia.', 'https://placehold.co/1200x600/0077CC/white?text=Pesan+Mudah', 'Hubungi Kami', '/lokasi', 3, TRUE);
+('Frozen Food Berkualitas', 'Untuk Keluarga Indonesia', 'Produk beku pilihan dengan bahan terbaik, diproses higienis dan dikemas vakum untuk menjaga kesegaran.', 'https://placehold.co/1200x600/0099FF/white?text=Banyu+Frozen+Food', 'Cara Pesan', '/#cara-pesan', 1, TRUE),
+('Praktis & Lezat', 'Siap Saji dalam Hitungan Menit', 'Nugget, sosis, dimsum, bakso — tinggal goreng atau kukus. Cocok untuk bekal sekolah dan menu harian.', 'https://placehold.co/1200x600/66CCFF/003366?text=Praktis+%26+Lezat', 'Cara Pesan', '/#cara-pesan', 2, TRUE),
+('Pesan Mudah', 'Via GoFood, GrabMart & WhatsApp', 'Pilih channel favorit kamu untuk memesan. Pengiriman cepat ke area Cimahi dan Bandung.', 'https://placehold.co/1200x600/0077CC/white?text=Pesan+Mudah', 'Lihat Lokasi', '/#lokasi', 3, TRUE);
 
 -- ==============================================
 -- BARU: Brand Partners untuk Section "Brand Partner Kami"
@@ -86,6 +86,41 @@ INSERT INTO brand_partners (name, logo, website_url, "order", is_active) VALUES
 ('Cedea', 'https://placehold.co/160x80/F8FAFC/6B7280?text=Cedea', 'https://cedea.co.id', 5, TRUE),
 ('Golden Farm', 'https://placehold.co/160x80/F8FAFC/6B7280?text=Golden+Farm', 'https://goldenfarm.co.id', 6, TRUE);
 
+-- ==============================================
+-- Daftar admin & fungsi pengecekan akses
+-- Policy tulis di bawah hanya berlaku untuk email yang terdaftar di sini.
+-- WAJIB: daftarkan email admin setelah membuat akun Supabase Auth.
+--   INSERT INTO public.admin_users (email) VALUES ('emailkamu@contoh.com');
+-- ==============================================
+CREATE TABLE IF NOT EXISTS public.admin_users (
+  email TEXT PRIMARY KEY CHECK (email = lower(email))
+);
+
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admin read own membership" ON public.admin_users;
+CREATE POLICY "Admin read own membership" ON public.admin_users
+  FOR SELECT TO authenticated
+  USING (email = lower(auth.jwt() ->> 'email'));
+
+-- SECURITY DEFINER supaya pembacaan admin_users tidak terhalang RLS-nya sendiri.
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.admin_users
+    WHERE email = lower(auth.jwt() ->> 'email')
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO anon, authenticated;
+
 -- Enable Row Level Security
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
@@ -103,12 +138,12 @@ CREATE POLICY "Public read brand_partners" ON brand_partners FOR SELECT USING (i
 -- Public insert for reviews (customer submit review)
 CREATE POLICY "Public insert reviews" ON reviews FOR INSERT WITH CHECK (true);
 
--- Authenticated (admin) full access
-CREATE POLICY "Admin full access categories" ON categories FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full access products" ON products FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full access reviews" ON reviews FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full access hero_slides" ON hero_slides FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin full access brand_partners" ON brand_partners FOR ALL USING (auth.role() = 'authenticated');
+-- Admin (email terdaftar di admin_users) full access
+CREATE POLICY "Admin full access categories" ON categories FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin full access products" ON products FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin full access reviews" ON reviews FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin full access hero_slides" ON hero_slides FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin full access brand_partners" ON brand_partners FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- ==============================================
 -- BARU: CMS — Pengaturan Website (draft & publish)
@@ -126,8 +161,8 @@ ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 
 -- Publik boleh membaca (website menampilkan isi published)
 CREATE POLICY "Public read site_settings" ON site_settings FOR SELECT USING (true);
--- Hanya admin login yang boleh menyimpan/menerbitkan
-CREATE POLICY "Admin write site_settings" ON site_settings FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+-- Hanya admin terdaftar yang boleh menyimpan/menerbitkan
+CREATE POLICY "Admin write site_settings" ON site_settings FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- ==============================================
 -- BARU: CMS — Media Library (daftar gambar)
@@ -145,7 +180,7 @@ CREATE TABLE IF NOT EXISTS media_library (
 ALTER TABLE media_library ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public read media_library" ON media_library FOR SELECT USING (true);
-CREATE POLICY "Admin write media_library" ON media_library FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Admin write media_library" ON media_library FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- ==============================================
 -- BARU: Storage bucket "media" untuk upload gambar
@@ -158,13 +193,13 @@ ON CONFLICT (id) DO NOTHING;
 CREATE POLICY "Public read media files" ON storage.objects
   FOR SELECT USING (bucket_id = 'media');
 
--- Hanya admin login yang boleh upload/hapus file di bucket media
+-- Hanya admin terdaftar yang boleh upload/hapus file di bucket media
 CREATE POLICY "Admin upload media files" ON storage.objects
-  FOR INSERT TO authenticated WITH CHECK (bucket_id = 'media');
+  FOR INSERT TO authenticated WITH CHECK (bucket_id = 'media' AND public.is_admin());
 CREATE POLICY "Admin update media files" ON storage.objects
-  FOR UPDATE TO authenticated USING (bucket_id = 'media');
+  FOR UPDATE TO authenticated USING (bucket_id = 'media' AND public.is_admin()) WITH CHECK (bucket_id = 'media' AND public.is_admin());
 CREATE POLICY "Admin delete media files" ON storage.objects
-  FOR DELETE TO authenticated USING (bucket_id = 'media');
+  FOR DELETE TO authenticated USING (bucket_id = 'media' AND public.is_admin());
 
 -- Jika tabel products sudah dibuat sebelum kolom marketplace ditambahkan,
 -- jalankan blok ini juga. Aman dijalankan berulang.
@@ -201,6 +236,6 @@ ALTER TABLE whatsapp_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_order_items ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admin full access whatsapp_orders" ON whatsapp_orders
-  FOR ALL USING (auth.role() = 'authenticated');
+  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 CREATE POLICY "Admin full access whatsapp_order_items" ON whatsapp_order_items
-  FOR ALL USING (auth.role() = 'authenticated');
+  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());

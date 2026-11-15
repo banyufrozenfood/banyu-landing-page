@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { sortByOrder, nextOrder, normalizeOrderInput } from '../../lib/ordering.js';
 import ImagePicker from '../../components/ui/ImagePicker.jsx';
+import { useToast } from '../../components/ui/Toast.jsx';
 import './AdminBrandPartners.css';
 
 export default function AdminBrandPartners() {
+  const toast = useToast();
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,10 +72,15 @@ export default function AdminBrandPartners() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Yakin ingin menghapus brand partner ini?')) {
+    if (!window.confirm('Yakin ingin menghapus brand partner ini?')) return;
+    try {
       const { error } = await supabase.from('brand_partners').delete().eq('id', id);
-      if (!error) fetchPartners();
-      else alert('Gagal menghapus: ' + error.message);
+      if (error) throw error;
+      toast.success('Brand partner berhasil dihapus.');
+      await fetchPartners();
+    } catch (err) {
+      console.error('Gagal menghapus brand partner:', err);
+      toast.error('Gagal menghapus brand partner. Silakan coba lagi.');
     }
   };
 
@@ -85,8 +92,11 @@ export default function AdminBrandPartners() {
         .from('brand_partners')
         .update({ is_active: !partner.is_active })
         .eq('id', partner.id);
-      if (!error) await fetchPartners();
-      else alert('Gagal mengubah status: ' + error.message);
+      if (error) throw error;
+      await fetchPartners();
+    } catch (err) {
+      console.error('Gagal mengubah status brand partner:', err);
+      toast.error('Gagal mengubah status brand partner. Silakan coba lagi.');
     } finally {
       setTogglingId(null)
     }
@@ -132,21 +142,19 @@ export default function AdminBrandPartners() {
       is_active: formData.is_active,
     };
 
-    let error;
-    if (formData.id) {
-      const res = await supabase.from('brand_partners').update(payload).eq('id', formData.id);
-      error = res.error;
-    } else {
-      const res = await supabase.from('brand_partners').insert([payload]);
-      error = res.error;
-    }
-
-    setSaving(false);
-    if (error) {
-      alert('Gagal menyimpan: ' + error.message);
-    } else {
+    try {
+      const res = formData.id
+        ? await supabase.from('brand_partners').update(payload).eq('id', formData.id)
+        : await supabase.from('brand_partners').insert([payload]);
+      if (res.error) throw res.error;
       setShowForm(false);
-      fetchPartners();
+      toast.success(formData.id ? 'Brand partner berhasil diperbarui.' : 'Brand partner berhasil ditambahkan.');
+      await fetchPartners();
+    } catch (err) {
+      console.error('Gagal menyimpan brand partner:', err);
+      toast.error('Gagal menyimpan brand partner. Silakan coba lagi.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -170,7 +178,7 @@ export default function AdminBrandPartners() {
       {/* Visual Guide Card */}
       <div className="admin-guide-card">
         <div className="guide-header">
-          <span className="guide-icon">📍</span>
+          <span className="guide-icon">ðŸ“</span>
           <div>
             <h3>Panduan Visual: Di Mana Logo Ini Tampil?</h3>
             <p>Logo akan muncul di <strong>Section Brand Partner (Bagian Tengah Halaman Beranda)</strong> — area bawah judul "Brand Partner Kami" dan di atas footer.</p>
@@ -194,9 +202,9 @@ export default function AdminBrandPartners() {
               </div>
             </div>
             <div className="preview-notes">
-              <span>📐 Rasio: 2:1 (Lebar x Tinggi)</span>
-              <span>📱 Mobile: Otomatis di-resize, nama tetap terbaca</span>
-              <span>🔗 Website URL: akan muncul saat diklik (opsional)</span>
+              <span>ðŸ“ Rasio: 2:1 (Lebar x Tinggi)</span>
+              <span>ðŸ“± Mobile: Otomatis di-resize, nama tetap terbaca</span>
+              <span>ðŸ”— Website URL: akan muncul saat diklik (opsional)</span>
             </div>
           </div>
         </div>
@@ -305,11 +313,11 @@ function BrandPartnerForm({ formData, setFormData, errors, setErrors, saving, on
               <div className="toggle-switch">
                 <input
                   type="checkbox"
-                  id="is_active"
+                  id="brand-partner-is-active"
                   checked={formData.is_active}
                   onChange={(e) => handleChange('is_active', e.target.checked)}
                 />
-                <label htmlFor="is_active" className="toggle-label">
+                <label htmlFor="brand-partner-is-active" className="toggle-label">
                   <span className={formData.is_active ? 'on' : 'off'}>
                     {formData.is_active ? 'Aktif (Tampil di Website)' : 'Nonaktif (Disembunyikan)'}
                   </span>
@@ -329,7 +337,7 @@ function BrandPartnerForm({ formData, setFormData, errors, setErrors, saving, on
         {/* Right: Visual Reference */}
         <div className="reference-panel">
           <div className="reference-card">
-            <h4>📋 Referensi Cepat</h4>
+            <h4>ðŸ“‹ Referensi Cepat</h4>
             <div className="ref-item">
               <strong>Ukuran Ideal:</strong> 160 × 80 px (rasio 2:1)
             </div>
@@ -348,7 +356,7 @@ function BrandPartnerForm({ formData, setFormData, errors, setErrors, saving, on
           </div>
 
           <div className="reference-card example">
-            <h4>💡 Contoh Logo yang Baik</h4>
+            <h4>ðŸ’¡ Contoh Logo yang Baik</h4>
             <div className="example-logo">
               <img src="https://placehold.co/160x80/E5E7EB/9CA3AF?text=Brand" alt="Example Logo" loading="lazy" />
               <p className="example-logo-name">Nama Brand</p>
@@ -384,7 +392,7 @@ function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActiv
             <tr>
               <td colSpan="5" className="text-center">
                 <div className="empty-state">
-                  <span className="empty-icon">🏷️</span>
+                  <span className="empty-icon">ðŸ·ï¸</span>
                   <p>Belum ada brand partner</p>
                   <button className="btn-admin-primary" onClick={onAdd}>Tambah Brand Partner Pertama</button>
                 </div>

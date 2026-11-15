@@ -6,20 +6,32 @@ import LocationSection from '../components/LocationSection/LocationSection.jsx'
 import { supabase } from '../lib/supabase.js'
 import { sortByOrder } from '../lib/ordering.js'
 import { useSiteSettings } from '../cms/SiteSettingsContext.jsx'
-import { getAboutTags, getMarketplaceCards } from '../cms/homeContent.js'
+import { getAboutTags, getMarketplaceCards, DEFAULT_HERO_SLIDES, normalizeHeroSlide } from '../cms/homeContent.js'
 import { trackChannelClick } from '../lib/analytics.js'
+import { ArrowRightIcon } from '../components/ui/Icons.jsx'
 import './HomePage.css'
 
-function normalizeSlide(slide) {
-  const link = (slide?.cta?.link || '').trim()
-  const isLegacyCatalog = link === '/produk' || link.startsWith('/produk/') || link.startsWith('/produk?')
-  return {
-    ...slide,
-    cta: {
-      text: isLegacyCatalog ? 'Cara Pesan' : (slide?.cta?.text || 'Cara Pesan'),
-      link: isLegacyCatalog ? '/#cara-pesan' : (link || '/#cara-pesan'),
-    },
+// Menampilkan logo resmi kanal (public/logos/<channel>.svg). Kalau file logo
+// belum tersedia atau gagal dimuat, otomatis kembali ke emoji dari CMS supaya
+// kartu tidak pernah tampil kosong.
+function ChannelLogo({ logo, icon }) {
+  const [failed, setFailed] = useState(false)
+  const glyph = icon || '↗'
+
+  if (!logo || failed) {
+    return <span className="marketplace-card__glyph">{glyph}</span>
   }
+
+  return (
+    <img
+      className="marketplace-card__logo"
+      src={logo}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+    />
+  )
 }
 
 export default function HomePage() {
@@ -35,7 +47,7 @@ export default function HomePage() {
           .select('*')
           .order('order', { ascending: true })
 
-        if (slidesError) console.error('Error fetching hero slides:', slidesError)
+        if (slidesError) console.error('Gagal memuat slide beranda:', slidesError)
         else {
           setHeroSlides(
             sortByOrder((slides || []).filter((s) => s.is_active !== false)).map((s) => ({
@@ -54,10 +66,10 @@ export default function HomePage() {
           .select('*')
           .order('order', { ascending: true })
 
-        if (partnersError) console.error('Error fetching brand partners:', partnersError)
+        if (partnersError) console.error('Gagal memuat brand partner:', partnersError)
         else setBrandPartners(sortByOrder((partners || []).filter((p) => p.is_active !== false)))
       } catch (err) {
-        console.error('Error fetching data:', err)
+        console.error('Gagal memuat data beranda:', err)
       }
     }
 
@@ -76,34 +88,14 @@ export default function HomePage() {
     ? `https://wa.me/${waNumber}?text=${encodeURIComponent(contact.whatsappMessage || 'Halo Banyu Frozen Food, saya mau tanya stok dan cara pesan.')}`
     : null
 
-  const fallbackSlides = [
-    {
-      id: 'fallback-1',
-      title: 'Stok Makanan Praktis',
-      subtitle: 'Banyu Frozen Food • Cigugur Tengah',
-      description: 'Sosis, nugget, kornet, camilan Korea, sampai abon khas Cianjur. Harga Rp10.000–Rp49.000 per item.',
-      image: '',
-      cta: { text: 'Cara Pesan', link: '/#cara-pesan' },
-    },
-    {
-      id: 'fallback-2',
-      title: 'Pesan Antar GoFood & GrabMart',
-      subtitle: 'Cari Banyu Frozen Food',
-      description: 'GoFood area Bandung dan GrabMart dengan nama Banyu Frozen Food - Cigugur Tengah.',
-      image: '',
-      cta: { text: 'Cara Pesan', link: '/#cara-pesan' },
-    },
-    {
-      id: 'fallback-3',
-      title: 'Oleh-oleh Khas Cianjur',
-      subtitle: 'Abon & Gepuk Karwati',
-      description: 'Abon sapi, abon pedas, dan gepuk kering — cocok untuk oleh-oleh atau stok lauk praktis.',
-      image: '',
-      cta: { text: 'Chat WhatsApp', link: waUrl || '/#cara-pesan' },
-    },
-  ]
+  const fallbackSlides = DEFAULT_HERO_SLIDES.map((slide) => ({
+    ...slide,
+    cta: slide.id === 'default-3'
+      ? { ...slide.cta, text: 'Chat WhatsApp', link: waUrl || slide.cta.link }
+      : slide.cta,
+  }))
 
-  const effectiveHeroSlides = (heroSlides.length > 0 ? heroSlides : fallbackSlides).map(normalizeSlide)
+  const effectiveHeroSlides = (heroSlides.length > 0 ? heroSlides : fallbackSlides).map(normalizeHeroSlide)
 
   const marketplaceCards = getMarketplaceCards(home)
     .filter((card) => card.enabled !== false)
@@ -120,7 +112,8 @@ export default function HomePage() {
   return (
     <div className="home-page">
       <Navbar />
-      <HeroCarousel slides={effectiveHeroSlides} defaultSlides={fallbackSlides} />
+      <main id="main-content">
+      <HeroCarousel slides={effectiveHeroSlides} />
 
       {sections.advantages && (
         <section className="advantages">
@@ -185,15 +178,15 @@ export default function HomePage() {
                   key={card.id || `${card.channel}-${idx}`}
                   className={`marketplace-card marketplace-card--${card.channel || 'custom'}`}
                 >
-                  <span className="marketplace-card__icon" aria-hidden="true">{card.icon || '↗'}</span>
+                  <span className="marketplace-card__icon" aria-hidden="true">
+                    <ChannelLogo logo={card.logo} icon={card.icon} />
+                  </span>
                   <div className="marketplace-card__info">
                     <h3>{card.label}</h3>
                     <p>{card.description || ''}</p>
                   </div>
                   <span className="marketplace-card__arrow" aria-hidden="true">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
+                    <ArrowRightIcon size={24} strokeWidth={2} />
                   </span>
                 </a>
               ))}
@@ -252,6 +245,7 @@ export default function HomePage() {
       )}
 
       {sections.location && <LocationSection />}
+      </main>
 
       <Footer />
     </div>

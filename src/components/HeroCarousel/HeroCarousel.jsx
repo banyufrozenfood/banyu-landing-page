@@ -2,36 +2,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import './HeroCarousel.css'
 import { trackChannelClick } from '../../lib/analytics.js'
+import { DEFAULT_HERO_SLIDES } from '../../cms/homeContent.js'
+import { ArrowRightIcon, ChevronLeftIcon, ChevronRightIcon } from '../ui/Icons.jsx'
 
-const defaultSlides = [
-  {
-    id: 1,
-    title: 'Stok Makanan Praktis',
-    subtitle: 'Banyu Frozen Food • Cigugur Tengah',
-    description: 'Sosis, nugget, kornet, camilan Korea, sampai abon khas Cianjur. Harga Rp10.000–Rp49.000 per item.',
-    image: '',
-    cta: { text: 'Cara Pesan', link: '/#cara-pesan' },
-  },
-  {
-    id: 2,
-    title: 'Pesan Antar GoFood & GrabMart',
-    subtitle: 'Cari Banyu Frozen Food',
-    description: 'GoFood area Bandung dan GrabMart dengan nama Banyu Frozen Food - Cigugur Tengah.',
-    image: '',
-    cta: { text: 'Cara Pesan', link: '/#cara-pesan' },
-  },
-  {
-    id: 3,
-    title: 'Oleh-oleh Khas Cianjur',
-    subtitle: 'Abon & Gepuk Karwati',
-    description: 'Abon sapi, abon pedas, dan gepuk kering — cocok untuk oleh-oleh atau stok lauk praktis.',
-    image: '',
-    cta: { text: 'Cara Pesan', link: '/#cara-pesan' },
-  },
-]
-
-export default function HeroCarousel({ slides = defaultSlides }) {
-  const safeSlides = Array.isArray(slides) && slides.length > 0 ? slides.filter(Boolean) : defaultSlides
+export default function HeroCarousel({ slides }) {
+  const safeSlides = Array.isArray(slides) && slides.length > 0
+    ? slides.filter(Boolean)
+    : DEFAULT_HERO_SLIDES
   const [current, setCurrent] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
 
@@ -70,6 +47,18 @@ export default function HeroCarousel({ slides = defaultSlides }) {
     setIsAutoPlaying(false)
   }
 
+  // Dukungan papan ketik: panah kiri/kanan memindahkan slide saat fokus
+  // berada di dalam area carousel.
+  const handleKeyDown = (event) => {
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      handleArrowClick('next')
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      handleArrowClick('prev')
+    }
+  }
+
   const getChannelFromLink = (link) => {
     if (/wa\.me|whatsapp/i.test(link)) return 'whatsapp'
     if (/gofood/i.test(link)) return 'gofood'
@@ -78,7 +67,7 @@ export default function HeroCarousel({ slides = defaultSlides }) {
   }
 
   return (
-    <section className="hero">
+    <section className="hero" onKeyDown={handleKeyDown}>
       <div className="hero__carousel">
         {safeSlides.map((slide, index) => (
           <div
@@ -99,16 +88,12 @@ export default function HeroCarousel({ slides = defaultSlides }) {
                 slide.cta.link.startsWith('http') ? (
                   <a href={slide.cta.link} target="_blank" rel="noopener noreferrer" className="btn btn-accent hero__cta" onClick={() => { const channel = getChannelFromLink(slide.cta.link); if (channel) trackChannelClick(channel, window.location.pathname) }}>
                     {slide.cta.text || 'Lihat'}
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
+                    <ArrowRightIcon />
                   </a>
                 ) : (
                 <Link to={slide.cta.link} className="btn btn-accent hero__cta">
                   {slide.cta.text || 'Lihat'}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
+                  <ArrowRightIcon />
                 </Link>
                 )
               )}
@@ -116,24 +101,22 @@ export default function HeroCarousel({ slides = defaultSlides }) {
           </div>
         ))}
 
-        <button className="hero__arrow hero__arrow--prev" onClick={() => handleArrowClick('prev')} aria-label="Previous slide">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
+        <button className="hero__arrow hero__arrow--prev" onClick={() => handleArrowClick('prev')} aria-label="Slide sebelumnya">
+          <ChevronLeftIcon />
         </button>
-        <button className="hero__arrow hero__arrow--next" onClick={() => handleArrowClick('next')} aria-label="Next slide">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
+        <button className="hero__arrow hero__arrow--next" onClick={() => handleArrowClick('next')} aria-label="Slide berikutnya">
+          <ChevronRightIcon />
         </button>
 
-        <div className="hero__dots">
-          {safeSlides.map((_, index) => (
+        <div className="hero__dots" role="tablist" aria-label="Pilih slide beranda">
+          {safeSlides.map((slide, index) => (
             <button
-              key={index}
+              key={slide?.id ?? index}
+              type="button"
               className={`hero__dot${index === current ? ' hero__dot--active' : ''}`}
               onClick={() => goToSlide(index)}
-              aria-label={`Go to slide ${index + 1}`}
+              aria-label={`Ke slide ${index + 1}${slide?.title ? `: ${slide.title}` : ''}`}
+              aria-current={index === current ? 'true' : undefined}
             />
           ))}
         </div>

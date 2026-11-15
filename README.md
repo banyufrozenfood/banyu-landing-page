@@ -1,29 +1,35 @@
-# Banyu Frozen Food — Website Katalog
+# Banyu Frozen Food — Landing Page & Panel Admin
 
-Website resmi Banyu, toko frozen food lokal Cimahi. Pengunjung bisa melihat produk, menambah ke keranjang, lalu memesan sekaligus lewat satu pesan WhatsApp. Admin mengelola seluruh konten lewat panel tanpa menyentuh kode.
+Website resmi Banyu, toko frozen food lokal Cimahi. Pengunjung melihat profil toko, keunggulan, tautan marketplace, dan lokasi dalam satu halaman. Admin mengelola seluruh konten lewat panel tanpa menyentuh kode.
 
 ---
 
 ## Fitur
 
-### Halaman Publik
-- **Beranda** — Hero carousel, keunggulan toko, produk unggulan, tombol marketplace (Tokopedia/Shopee), brand partner
-- **Katalog Produk** (`/produk`) — Filter kategori, rentang harga, pencarian, urutan, pagination
-- **Detail Produk** (`/produk/:id`) — Breadcrumb, galeri foto, info harga & stok, tombol keranjang + Tokopedia/Shopee, tab deskripsi/spesifikasi, produk terkait
-- **Lokasi** (`/lokasi`) — Google Maps, jam operasional, kontak, tombol WhatsApp/telepon, galeri foto toko
+### Halaman Publik (`/`)
 
-### Keranjang Belanja
-Pengunjung mengisi nama dan alamat pengiriman di drawer keranjang, lalu menekan tombol "Pesan via WhatsApp". Sistem mencatat pesanan ke database (nomor order otomatis) dengan status pending, kemudian membuka WhatsApp dengan pesan yang sudah terformat rapi.
+Satu halaman (single page) berisi:
+
+- **Hero carousel** — slide gambar dengan teks dan tombol CTA
+- **Tentang & keunggulan** — teks toko dan poin keunggulan
+- **Kartu marketplace** — tautan Tokopedia dan Shopee (bisa diaktifkan per kartu)
+- **Brand partner** — logo mitra
+- **Lokasi** — peta, alamat, jam operasional, kontak, WhatsApp, dan galeri foto toko
+- **Footer** — kontak dan sosial media
+
+Tidak ada halaman katalog, keranjang, atau checkout. Pesanan dilakukan langsung lewat marketplace atau WhatsApp.
 
 ### Panel Admin (`/admin`)
-- Login dengan email + password (Supabase Auth)
-- Dashboard: total produk & kategori, pesanan menunggu konfirmasi, status website (draft/belum terbit), kartu panduan, aksi cepat
-- Kelola produk: tambah, edit, hapus — foto diisi sebagai URL gambar (pisahkan dengan koma jika lebih dari satu), dilengkapi toggle & link Tokopedia / Shopee per produk
-- Kelola kategori (nama + deskripsi), hero carousel, banner, brand partner
-- Media library: upload gambar, tambah dari link, filter kategori, filter status penggunaan (Digunakan / Belum digunakan + deteksi lokasi pemakaian), pencarian, salin link gambar
-- Pesanan WhatsApp (`/admin/orders`): review pesanan masuk dari keranjang web, konfirmasi pesanan (stok otomatis berkurang di database secara aman), atau batalkan pesanan (stok otomatis dikembalikan)
-- Kelola pengaturan situs: kontak & jam buka, sosial media, teks footer, isi beranda (termasuk toggle independen Tokopedia & Shopee di beranda), SEO — dengan alur Simpan Draft → Pratinjau → Terbitkan
-- Nama toko, logo, dan warna tema saat ini hanya bisa diubah lewat kode (`src/cms/defaults.js`), belum tersedia di panel admin
+
+- Login email + password (Supabase Auth)
+- **Ringkasan** — statistik konten dan status website (draft/terbit)
+- **Analytics** — kunjungan dan klik kanal
+- **Pengaturan Website** — kontak, jam buka, sosial media, teks footer, isi beranda, dan SEO dengan alur Simpan Draft → Pratinjau → Terbitkan
+- **Media Library** — upload gambar, tambah dari link, filter kategori dan status pemakaian, salin link
+- **Slide Beranda** — kelola hero carousel
+- **Brand Partner** — kelola logo mitra
+
+Nama toko, logo, dan warna tema masih diatur lewat `src/cms/defaults.js`.
 
 ---
 
@@ -31,11 +37,13 @@ Pengunjung mengisi nama dan alamat pengiriman di drawer keranjang, lalu menekan 
 
 | Bagian | Teknologi |
 |---|---|
-| Frontend | React 19 + Vite |
+| Frontend | React 19 + Vite 8 |
 | Styling | CSS murni (tanpa framework CSS) |
 | Routing | React Router v7 |
 | Database & Auth | Supabase (PostgreSQL + Row Level Security) |
 | Storage | Supabase Storage (bucket `media`) |
+| Lint | oxlint |
+| Test | `node --test` (tanpa framework) |
 | Deploy | Netlify & Vercel |
 
 ---
@@ -44,25 +52,26 @@ Pengunjung mengisi nama dan alamat pengiriman di drawer keranjang, lalu menekan 
 
 ```
 src/
-├── assets/          # Logo SVG
-├── cms/             # Sistem CMS: context, store, validasi, defaults
+├── assets/              # Logo SVG
+├── cms/                 # Context CMS, store Supabase, defaults, validasi, konten beranda
 ├── components/
-│   ├── AdminLayout/ # Layout sidebar admin
-│   ├── CartContext.jsx  # State keranjang belanja (localStorage)
+│   ├── AdminLayout/     # Layout sidebar admin
+│   ├── AnalyticsTracker/
 │   ├── Footer/
 │   ├── HeroCarousel/
+│   ├── LocationSection/ # Peta, info, dan galeri lokasi (dipakai beranda)
 │   ├── Navbar/
-│   ├── ProductCard/
-│   └── ui/          # CartDrawer, ImagePicker, ScrollToTop, Toast
+│   └── ui/              # ImagePicker, ImageCropper, Toast, ScrollToTop, Icons
 ├── lib/
-│   ├── ordering.js  # Helper kolom urutan numerik (sort, next, normalisasi)
-│   └── supabase.js  # Inisialisasi Supabase client
+│   ├── analytics.js     # Helper event analytics
+│   ├── ordering.js      # Helper kolom urutan numerik
+│   └── supabase.js      # Inisialisasi Supabase client
 └── pages/
-    ├── admin/       # Semua halaman panel admin
+    ├── admin/           # Halaman panel admin
     ├── HomePage.jsx
-    ├── LocationPage.jsx
-    ├── ProductDetailPage.jsx
-    └── ProductsPage.jsx
+    └── HomePage.css
+tests/                   # Test node:test
+docs/                    # Dokumentasi tambahan
 ```
 
 ---
@@ -70,12 +79,14 @@ src/
 ## Cara Menjalankan
 
 ### Prasyarat
+
 - Node.js 18+
 - Akun Supabase (gratis)
 
 ### Setup
 
 **1. Clone & install**
+
 ```bash
 git clone <url-repo>
 cd banyu-landing-page
@@ -83,28 +94,85 @@ npm install
 ```
 
 **2. Buat file `.env`**
+
+Salin dari `.env.example`:
+
 ```env
 VITE_SUPABASE_URL=https://xxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJ...
+VITE_SUPABASE_ANON_KEY=...
+# Opsional: batasi tampilan panel admin ke email tertentu (dipisah koma)
+# VITE_ADMIN_EMAILS=admin@contoh.com
 ```
-Nilai diambil dari Supabase Dashboard → Project Settings → API.
+
+Nilai diambil dari Supabase Dashboard → Project Settings → API. `VITE_ADMIN_EMAILS` hanya menyaring tampilan di browser, bukan pengaman data.
 
 **3. Setup database**
 
-Jalankan isi `supabase-schema.sql` di Supabase Dashboard → SQL Editor → New query → Run.
-Jika sebelumnya database sudah ada dan ingin memperbarui fitur marketplace per produk serta pesanan WhatsApp, jalankan:
-- `supabase-migration-product-marketplace.sql`
-- `supabase-migration-whatsapp-orders.sql`
+Jalankan di Supabase Dashboard → SQL Editor:
+
+1. `supabase-schema.sql` — tabel dan policy dasar
+2. `supabase-analytics.sql` — tabel `admin_users` dan `analytics_events`
+3. `supabase-migration-admin-rls.sql` — **opsional tetapi disarankan**: mengubah policy tulis menjadi admin-only berbasis tabel `admin_users`. Migrasi ini membatalkan diri jika `admin_users` masih kosong, jadi isi dulu:
+
+```sql
+insert into public.admin_users (email)
+values (lower('emailkamu@contoh.com'))
+on conflict (email) do nothing;
+```
+
+4. `supabase-migration-whatsapp-orders.sql` — **legacy**, hanya untuk database lama. Fitur checkout sudah dihapus dari aplikasi.
 
 **4. Buat akun admin**
 
 Supabase Dashboard → Authentication → Users → Add user. Isi email dan password, centang *Auto Confirm User*.
 
+Pastikan **Allow new users to sign up** dalam keadaan **OFF** agar tidak ada akun baru yang bisa dibuat sendiri.
+
 **5. Jalankan**
+
 ```bash
 npm run dev
 ```
-Buka `http://localhost:5173`. Admin panel di `http://localhost:5173/admin`.
+
+Buka `http://localhost:5173`. Panel admin di `http://localhost:5173/admin`.
+
+---
+
+## Scripts
+
+| Perintah | Fungsi |
+|---|---|
+| `npm run dev` | Jalankan dev server Vite |
+| `npm run build` | Build produksi ke `dist/` |
+| `npm run preview` | Pratinjau hasil build |
+| `npm run lint` | Jalankan oxlint |
+| `npm test` | Jalankan test `node --test` |
+
+---
+
+## Logo Kanal Pemesanan
+
+Kartu "Kanal Favorit" di beranda memakai logo resmi tiap platform. Taruh file
+logo di `public/logos/` dengan nama sesuai channel:
+
+| Channel | File yang dibutuhkan |
+|---|---|
+| GoFood | `public/logos/gofood.svg` |
+| GrabMart | `public/logos/grabmart.svg` |
+| WhatsApp | `public/logos/whatsapp.svg` |
+| Shopee | `public/logos/shopee.svg` |
+| Tokopedia | `public/logos/tokopedia.svg` |
+
+Ketentuan:
+
+- Format SVG paling ideal karena tajam di semua ukuran. PNG juga boleh: simpan dengan ekstensi yang benar (mis. `shopee.png`) lalu sesuaikan nilainya di `CHANNEL_LOGOS`. 
+- Latar transparan, rasio 1:1, area gambar memenuhi kanvas.
+- Logo akan diskalakan ke kotak 58×58 px (50×50 px di mobile) dengan `object-fit: contain`.
+- Bila file belum ada atau gagal dimuat, kartu otomatis kembali memakai emoji dari CMS, jadi tampilan tidak rusak.
+
+Pemetaan channel ke file ada di `CHANNEL_LOGOS` pada `src/cms/homeContent.js`.
+Menambah platform baru = tambah entri di peta itu, tambah opsi di
+`AdminSettings.jsx`, dan taruh filenya.
 
 ---
 
@@ -115,14 +183,24 @@ Buka `http://localhost:5173`. Admin panel di `http://localhost:5173/admin`.
 1. Push repo ke GitHub
 2. Hubungkan repo di Netlify → *New site from Git*
 3. Build command: `npm run build`, publish directory: `dist`
-4. Tambahkan environment variable `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` di Netlify → Site settings → Environment variables
-5. File `public/_redirects` sudah ada untuk menangani client-side routing
+4. Tambahkan environment variable `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY`
+5. File `public/_redirects` menangani client-side routing
 
 ### Vercel (alternatif)
 
 1. Import repo di Vercel → *Add New Project*
-2. Framework preset: Vite. Tambahkan environment variable yang sama seperti di atas
-3. File `vercel.json` sudah ada untuk rewrite semua route ke `/index.html`
+2. Framework preset: Vite. Tambahkan environment variable yang sama
+3. File `vercel.json` menangani rewrite semua route ke `/index.html`
+
+---
+
+## Keamanan
+
+- Anon key Supabase memang publik; pengaman data ada di RLS.
+- Jangan pernah memakai `service_role` key di frontend.
+- Sign-up publik Supabase harus tetap **OFF** selama policy database masih mengizinkan semua user login untuk menulis.
+- Audit lengkap dan status temuan: lihat `SECURITY_AUDIT.md`.
+- Ringkasan RLS dan cara menentukan admin: lihat `docs/Dokumentasi-Struktur-Database.md`.
 
 ---
 
