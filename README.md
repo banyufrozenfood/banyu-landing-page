@@ -12,7 +12,7 @@ Satu halaman (single page) berisi:
 
 - **Hero carousel** — slide gambar dengan teks dan tombol CTA
 - **Tentang & keunggulan** — teks toko dan poin keunggulan
-- **Kartu marketplace** — tautan Tokopedia dan Shopee (bisa diaktifkan per kartu)
+- **Kartu marketplace** — tautan GoFood, GrabMart, dan WhatsApp (Shopee/Tokopedia opsional)
 - **Brand partner** — logo mitra
 - **Lokasi** — peta, alamat, jam operasional, kontak, WhatsApp, dan galeri foto toko
 - **Footer** — kontak dan sosial media
@@ -80,7 +80,7 @@ docs/                    # Dokumentasi tambahan
 
 ### Prasyarat
 
-- Node.js 18+
+- Node.js `^20.19.0` atau `>=22.12.0` (syarat Vite 8)
 - Akun Supabase (gratis)
 
 ### Setup
@@ -180,11 +180,85 @@ Menambah platform baru = tambah entri di peta itu, tambah opsi di
 
 ### Netlify
 
-1. Push repo ke GitHub
-2. Hubungkan repo di Netlify → *New site from Git*
-3. Build command: `npm run build`, publish directory: `dist`
-4. Tambahkan environment variable `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY`
-5. File `public/_redirects` menangani client-side routing
+Netlify **membangun situs dari GitHub**, bukan dari folder lokal. Perubahan hanya
+muncul di situs setelah di-commit dan di-push ke branch yang dipantau Netlify.
+
+**Pengaturan build** (Netlify → Site configuration → Build & deploy → Build settings):
+
+| Pengaturan | Nilai |
+|---|---|
+| Build command | `npm run build` |
+| Publish directory | `dist` |
+| Production branch | `master` (sesuaikan dengan branch yang ingin dianggap produksi) |
+| Node version | `22` (Vite 8 membutuhkan Node `^20.19.0` atau `>=22.12.0`) |
+
+Node version bisa diatur lewat environment variable `NODE_VERSION=22`, atau
+dengan menambahkan `netlify.toml` bila ingin pengaturan ikut tersimpan di repo.
+
+**Environment variables** (Site configuration → Environment variables):
+
+| Key | Wajib | Keterangan |
+|---|---|---|
+| `VITE_SUPABASE_URL` | Ya | Project URL Supabase |
+| `VITE_SUPABASE_ANON_KEY` | Ya | Anon/publishable key Supabase |
+| `VITE_ADMIN_EMAILS` | Tidak | Filter email admin, pisahkan dengan koma |
+| `NODE_VERSION` | Tidak | Isi `22` bila build gagal karena versi Node |
+
+Nilai `VITE_*` ditanam saat proses build, jadi **setiap kali env var diubah,
+situs harus di-deploy ulang** agar perubahan terpakai.
+
+**Cara deploy perubahan:**
+
+1. Commit dan push ke branch produksi:
+
+   ```bash
+   git add .
+   git commit -m "pesan perubahan"
+   git push origin master
+   ```
+
+   Ganti `master` bila Netlify memantau branch lain.
+
+2. Buka Netlify → pilih site → **Deploys**. Deploy baru biasanya otomatis muncul.
+3. Untuk memaksa build ulang: **Trigger deploy → Clear cache and deploy site**.
+4. Cocokkan commit di log deploy dengan `git log -1 --oneline`.
+
+**Jika "Trigger deploy" tidak mengubah apa pun:**
+
+| Penyebab | Solusi |
+|---|---|
+| Perubahan belum di-commit/di-push | Netlify hanya membaca GitHub. Commit lalu push dulu. |
+| Branch salah | Cek **Production branch**. Repo ini punya `master` dan `security-audit`; perubahan di branch non-produksi hanya menjadi Deploy Preview, bukan situs utama. |
+| Trigger pada commit yang sama | Build ulang tetap menghasilkan kode yang sama. Push commit baru. |
+| Deploy gagal | Buka deploy terbaru → lihat log. Deploy gagal tidak mengganti situs yang sedang live. |
+| Env var berubah tapi build lama | `VITE_*` dibaca saat build. Redeploy setelah mengubahnya. |
+| Cache lama | **Trigger deploy → Clear cache and deploy site**. |
+
+**Aset & routing:**
+
+- `public/_redirects` berisi `/* /index.html 200` agar refresh di `/admin` tidak
+  404. Pastikan publish directory `dist` supaya file ini ikut tersalin.
+- Logo kanal pemesanan di `public/logos/` juga harus ikut ter-commit; file yang
+  hanya ada di laptop tidak akan ikut ter-deploy.
+
+**Deploy langsung dari laptop (opsional):**
+
+```bash
+npm run build
+npx netlify-cli deploy --prod --dir=dist
+```
+
+Login sekali dengan `npx netlify-cli login`, lalu hubungkan folder proyek dengan
+`npx netlify-cli link`. Cara ini mengunggah hasil build lokal tanpa lewat
+GitHub; cocok untuk tes cepat, tetapi commit + push tetap cara utama agar
+riwayat dan Deploy Preview tetap sinkron.
+
+**Setelah deploy:**
+
+- Tambahkan domain Netlify ke Supabase → Authentication → URL Configuration
+  (Site URL) agar tautan autentikasi mengarah ke domain yang benar.
+- Buka `/admin`, login, dan pastikan data termuat. Halaman kosong dengan error
+  env di console berarti `VITE_SUPABASE_*` belum diisi atau build belum diulang.
 
 ### Vercel (alternatif)
 
