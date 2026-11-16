@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, supabaseEnvMissing } from '../../lib/supabase.js';
+import { ADMIN_STATUS, getAdminAllowList, resolveAdminStatus } from '../../lib/authGuard.js';
 import './AdminLoginPage.css';
 
 function friendlyLoginError(message) {
@@ -16,24 +17,43 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // Menahan form sampai pengecekan sesi selesai supaya tidak berkedip
+  // "form login" lalu langsung pindah ke dashboard.
+  const [checking, setChecking] = useState(!supabaseEnvMissing);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (supabaseEnvMissing) return undefined
-    // Alihkan jika pengguna sudah punya sesi aktif.
     let mounted = true
-    const checkSession = async () => {
+    const allowList = getAdminAllowList()
+
+    const redirectIfAuthed = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted && session) {
-          navigate('/admin/dashboard');
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!mounted) return
+        if (resolveAdminStatus(session, allowList) === ADMIN_STATUS.authed) {
+          navigate('/admin/dashboard', { replace: true })
         }
       } catch {
         // abaikan: tetap di halaman login
+      } finally {
+        if (mounted) setChecking(false)
       }
     };
-    checkSession();
-    return () => { mounted = false }
+
+    redirectIfAuthed()
+
+    // Pengaman: bila sesi berubah (mis. logout di tab lain), form login harus
+    // tetap tampil dan tidak mengarahkan balik ke dashboard.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return
+      if (event === 'SIGNED_OUT' || !session) setChecking(false)
+    })
+
+    return () => {
+      mounted = false
+      subscription?.unsubscribe()
+    }
   }, [navigate]);
 
   const handleLogin = async (e) => {
@@ -61,19 +81,23 @@ export default function AdminLoginPage() {
       });
 
       if (error) {
-        console.error('Login gagal:', error.message);
+        console.error('Login gagal, status:', error.status || '-');
         setError(friendlyLoginError(error.message));
         setLoading(false);
       } else {
         setLoading(false);
-        navigate('/admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
       }
     } catch (err) {
-      console.error('Login gagal:', err);
+      console.error('Login gagal: gangguan jaringan atau tak terduga.', err?.name || '');
       setError(friendlyLoginError(err?.message || ''));
       setLoading(false);
     }
   };
+
+  if (checking) {
+    return <div className="admin-login-page admin-login-page--checking">Memeriksa sesi...</div>;
+  }
 
   return (
     <div className="admin-login-page">

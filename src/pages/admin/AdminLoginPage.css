@@ -7,6 +7,12 @@
   padding: 1.25rem;
 }
 
+/* Ditampilkan singkat saat memeriksa apakah pengguna sudah punya sesi. */
+.admin-login-page--checking {
+  color: #64748B;
+  font-size: 0.9rem;
+}
+
 .admin-login-card {
   background: white;
   padding: 2.5rem 2rem;
