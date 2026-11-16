@@ -192,33 +192,38 @@ export default function AdminHeroSlides() {
         )}
       </div>
 
-      {/* Visual Guide Card */}
+      {/* Panduan visual ringkas: satu contoh tampilan di HP */}
       <div className="admin-guide-card">
         <div className="guide-header">
-          <span className="guide-icon">📍</span>
+          <span className="guide-icon">📱</span>
           <div>
-            <h3>Panduan Visual: Di Mana Slide Ini Tampil?</h3>
-            <p>Slide akan muncul di <strong>Hero Carousel (Bagian Paling Atas Halaman Beranda)</strong> — area pertama yang dilihat pengunjung saat buka website.</p>
+            <h3>Tampilan di Website (HP)</h3>
+            <p>Slide muncul paling atas di halaman beranda. Di HP teks berada di <strong>tengah bawah</strong> dengan tombol selebar layar.</p>
           </div>
         </div>
         <div className="guide-preview">
-          <div className="preview-frame">
-            <div className="preview-label">TAMPILAN DI WEBSITE (Desktop)</div>
-            <div className="preview-hero preview-hero--demo">
-              <img src="/hero-guide-bg.png" alt="" className="preview-hero-bg" aria-hidden="true" />
-              <div className="preview-overlay" />
-              <div className="preview-content">
-                <span className="preview-subtitle">Subtitle (Teks kecil di atas judul)</span>
-                <h2 className="preview-title">Judul Utama (Heading Besar)</h2>
-                <p className="preview-desc">Deskripsi singkat — 1 hingga 2 baris di bawah judul</p>
-                <button className="preview-cta">Teks Tombol</button>
+          <div className="phone-frame">
+            <div className="phone-frame__screen">
+              <img src="/hero-guide-bg.png" alt="" className="hero-preview__bg" aria-hidden="true" />
+              <div className="hero-preview__overlay" />
+              <div className="hero-preview__content">
+                <span className="hero-preview__subtitle">Subtitle</span>
+                <h2 className="hero-preview__title">Judul Utama</h2>
+                <p className="hero-preview__desc">Deskripsi singkat, 1–2 baris di bawah judul</p>
+                <span className="hero-preview__cta">Teks Tombol</span>
+              </div>
+              <div className="hero-preview__dots" aria-hidden="true">
+                <span className="hero-preview__dot hero-preview__dot--active" />
+                <span className="hero-preview__dot" />
+                <span className="hero-preview__dot" />
               </div>
             </div>
-            <div className="preview-notes">
-              <span>Gambar: Full width, aspect ratio <strong>2:1 (1200×600px)</strong></span>
-              <span>Mobile: Gambar di-crop otomatis, teks tetap terbaca</span>
-            </div>
           </div>
+          <ul className="guide-preview__notes">
+            <li>Simulasi layar HP <strong>390px</strong>. Hero asli tingginya tetap <strong>480px</strong> (460px di layar kecil).</li>
+            <li>Gambar dipotong otomatis (<code>object-fit: cover</code>) — letakkan bagian penting di tengah.</li>
+            <li>Teks rata tengah dan didorong ke bawah; tombol melebar penuh; panah disembunyikan, navigasi lewat titik.</li>
+          </ul>
         </div>
       </div>
 
@@ -247,6 +252,25 @@ export default function AdminHeroSlides() {
       </div>
     </div>
   );
+}
+
+// ============================================
+// SUB-COMPONENT: Penghitung karakter
+// ============================================
+// Menampilkan sisa karakter dan berubah warna saat mendekati batas, supaya
+// admin tahu teksnya masih muat di layar HP sebelum menyimpan.
+function CharCount({ value = '', max, warnAt = 0.85 }) {
+  const length = (value || '').length
+  const ratio = max > 0 ? length / max : 0
+  const state = length > max ? 'over' : ratio >= warnAt ? 'near' : 'ok'
+
+  return (
+    <span className={`char-count char-count--${state}`} aria-live="polite">
+      {length}/{max}
+      {state === 'over' && ' — terlalu panjang'}
+      {state === 'near' && ' — hampir penuh'}
+    </span>
+  )
 }
 
 // ============================================
@@ -322,7 +346,10 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
             <div className="form-separator">KONTEN TEKS</div>
 
             <div className="form-group">
-              <label>Judul Utama <span className="required">*</span></label>
+              <div className="form-label-row">
+                <label>Judul Utama <span className="required">*</span></label>
+                <CharCount value={formData.title} max={60} />
+              </div>
               <input
                 type="text"
                 required
@@ -333,10 +360,16 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
               />
               {errors.title && <span className="error-text">{errors.title}</span>}
               <span className="help-text">Maks 60 karakter. Tampil besar di tengah slide.</span>
+              {formData.title.length > 40 && (
+                <span className="field-warning">Di HP judul panjang akan memakan 3 baris atau lebih. Sebaiknya di bawah 40 karakter.</span>
+              )}
             </div>
 
             <div className="form-group">
-              <label>Subtitle (Opsional)</label>
+              <div className="form-label-row">
+                <label>Subtitle (Opsional)</label>
+                <CharCount value={formData.subtitle} max={80} />
+              </div>
               <input
                 type="text"
                 maxLength={80}
@@ -348,7 +381,10 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
             </div>
 
             <div className="form-group">
-              <label>Deskripsi (Opsional)</label>
+              <div className="form-label-row">
+                <label>Deskripsi (Opsional)</label>
+                <CharCount value={formData.description} max={200} />
+              </div>
               <textarea
                 rows={3}
                 maxLength={200}
@@ -357,6 +393,9 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
                 placeholder="Contoh: Produk beku pilihan dengan bahan terbaik..."
               />
               <span className="help-text">Maks 200 karakter. 1-2 baris di bawah judul.</span>
+              {formData.description.length > 120 && (
+                <span className="field-warning">Di HP deskripsi sepanjang ini bisa menjadi 4 baris atau lebih dan menutupi gambar.</span>
+              )}
             </div>
 
             <div className="form-separator">GAMBAR & TOMBOL (CTA)</div>
@@ -377,25 +416,35 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
               </span>
             </div>
 
-            {/* Live Preview Hero */}
+            {/* Pratinjau live dalam bingkai HP: teks tengah-bawah seperti aslinya */}
             <div className="live-preview">
-              <label>Pratinjau Slide (Live)</label>
-              <div className="live-preview-hero">
-                <img
-                  src={previewImage}
-                  alt="Preview"
-                  className="live-preview-hero__bg"
-                  onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x600/E5E7EB/9CA3AF?text=Gambar+Tidak+Valid'; }}
-                />
-                <div className="live-preview-hero__overlay" />
-                <div className="live-preview-hero__content">
-                  {formData.subtitle && <span className="lp-subtitle">{formData.subtitle}</span>}
-                  <h2 className="lp-title">{formData.title || 'Judul Slide'}</h2>
-                  {formData.description && <p className="lp-desc">{formData.description}</p>}
-                  {formData.cta_text && <button className="lp-cta" type="button">{formData.cta_text}</button>}
-                </div>
-                {errors.image && <div className="preview-error">⚠️ URL gambar tidak valid</div>}
+              <div className="form-label-row">
+                <label>Pratinjau Slide di HP (Live)</label>
+                <span className="live-preview__hint">Simulasi 390px</span>
               </div>
+              <div className="phone-frame phone-frame--centered">
+                <div className="phone-frame__screen">
+                  <img
+                    src={previewImage}
+                    alt="Pratinjau slide"
+                    className="hero-preview__bg"
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x600/E5E7EB/9CA3AF?text=Gambar+Tidak+Valid'; }}
+                  />
+                  <div className="hero-preview__overlay" />
+                  <div className="hero-preview__content">
+                    {formData.subtitle && <span className="hero-preview__subtitle">{formData.subtitle}</span>}
+                    <h2 className="hero-preview__title">{formData.title || 'Judul Slide'}</h2>
+                    {formData.description && <p className="hero-preview__desc">{formData.description}</p>}
+                    {formData.cta_text && <span className="hero-preview__cta">{formData.cta_text}</span>}
+                  </div>
+                  <div className="hero-preview__dots" aria-hidden="true">
+                    <span className="hero-preview__dot hero-preview__dot--active" />
+                    <span className="hero-preview__dot" />
+                    <span className="hero-preview__dot" />
+                  </div>
+                </div>
+              </div>
+              {errors.image && <div className="preview-error">⚠️ URL gambar tidak valid</div>}
               {formData.image && (
                 <button
                   type="button"
@@ -420,7 +469,10 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
             )}
 
             <div className="form-group">
-              <label>Teks Tombol (CTA) <span className="required">*</span></label>
+              <div className="form-label-row">
+                <label>Teks Tombol (CTA) <span className="required">*</span></label>
+                <CharCount value={formData.cta_text} max={25} />
+              </div>
               <input
                 type="text"
                 required
@@ -532,10 +584,10 @@ function HeroSlidesTable({ slides, loading, onEdit, onDelete, onToggleActive, on
           ) : (
             slides.map(slide => (
               <tr key={slide.id}>
-                <td>
+                <td data-label="Urutan">
                   <span className="order-circle">{slide.order}</span>
                 </td>
-                <td>
+                <td data-label="Pratinjau">
                   <img
                     src={slide.image}
                     alt={slide.title}
@@ -543,14 +595,14 @@ function HeroSlidesTable({ slides, loading, onEdit, onDelete, onToggleActive, on
                     onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/140x70/E5E7EB/9CA3AF?text=Error'; }}
                   />
                 </td>
-                <td>
+                <td data-label="Konten">
                   <strong>{slide.title}</strong>
                   {slide.subtitle && <p className="slide-subtitle">{slide.subtitle}</p>}
                   <p className="slide-meta">
                     CTA: <code>{slide.cta_text}</code> → <code>{slide.cta_link}</code>
                   </p>
                 </td>
-                <td>
+                <td data-label="Status">
                   <button
                     className={`status-toggle ${slide.is_active ? 'active' : 'inactive'}`}
                     onClick={() => onToggleActive(slide)}
@@ -560,7 +612,7 @@ function HeroSlidesTable({ slides, loading, onEdit, onDelete, onToggleActive, on
                     {slide.is_active ? 'Aktif' : 'Nonaktif'}
                   </button>
                 </td>
-                <td>
+                <td data-label="Aksi">
                   <div className="action-buttons">
                     <button className="btn-action edit" onClick={() => onEdit(slide)} title="Edit">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>

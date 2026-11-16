@@ -114,6 +114,12 @@ export default function AdminLayout() {
     },
   ];
 
+  // Judul di header ikut halaman aktif supaya pengguna tahu posisinya,
+  // terutama di HP saat sidebar sedang tertutup.
+  const activeMenu = menuGroups
+    .flatMap((group) => group.items)
+    .find((item) => location.pathname === item.path);
+
   return (
     <div className="admin-layout">
       {/* Mobile Overlay */}
@@ -163,13 +169,18 @@ export default function AdminLayout() {
               <span aria-hidden="true">☰</span><span className="sr-only">Buka navigasi</span>
             </button>
             <div className="admin-header__title">
-              <span>ADMIN</span>
-              <h3>Admin Panel</h3>
+              <span className="admin-header__eyebrow">ADMIN</span>
+              <h3>{activeMenu?.label || 'Admin Panel'}</h3>
             </div>
           </div>
           <div className="admin-header__user">
-            <a href="/" target="_blank" rel="noopener noreferrer" className="btn-view-site">
-              Buka Website
+            <a href="/" target="_blank" rel="noopener noreferrer" className="btn-view-site" aria-label="Buka website di tab baru">
+              <svg className="btn-view-site__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <path d="M15 3h6v6" />
+                <path d="M10 14L21 3" />
+              </svg>
+              <span className="btn-view-site__text">Buka Website</span>
             </a>
           </div>
         </header>

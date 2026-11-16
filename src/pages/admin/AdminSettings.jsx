@@ -264,11 +264,9 @@ export default function AdminSettings() {
               <Field label="Pesan Otomatis WhatsApp" hint="Teks yang sudah terisi otomatis saat pengunjung klik tombol WhatsApp.">
                 <input value={form.contact.whatsappMessage} onChange={(e) => update((f) => { f.contact.whatsappMessage = e.target.value })} />
               </Field>
-              <div className="form-group-row" style={{ display: 'flex', gap: '1.5rem' }}>
-                <Field label="Email" error={err('contact.email')}>
-                  <input value={form.contact.email} onChange={(e) => update((f) => { f.contact.email = e.target.value })} />
-                </Field>
-              </div>
+              <Field label="Email" error={err('contact.email')}>
+                <input value={form.contact.email} onChange={(e) => update((f) => { f.contact.email = e.target.value })} />
+              </Field>
               <Field label="Alamat Singkat" hint="Muncul di footer.">
                 <input value={form.contact.address} onChange={(e) => update((f) => { f.contact.address = e.target.value })} />
               </Field>

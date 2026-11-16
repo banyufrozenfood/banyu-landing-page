@@ -392,7 +392,7 @@ function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActiv
             <tr>
               <td colSpan="5" className="text-center">
                 <div className="empty-state">
-                  <span className="empty-icon">ðŸ·ï¸</span>
+                  <span className="empty-icon">🏷️</span>
                   <p>Belum ada brand partner</p>
                   <button className="btn-admin-primary" onClick={onAdd}>Tambah Brand Partner Pertama</button>
                 </div>
@@ -401,10 +401,10 @@ function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActiv
           ) : (
             partners.map(partner => (
               <tr key={partner.id}>
-                <td>
+                <td data-label="Urutan">
                   <span className="order-circle">{partner.order}</span>
                 </td>
-                <td>
+                <td data-label="Pratinjau">
                   <img
                     src={partner.logo}
                     alt={partner.name}
@@ -412,12 +412,12 @@ function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActiv
                     onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/160x80/E5E7EB/9CA3AF?text=Error'; }}
                   />
                 </td>
-                <td>
+                <td data-label="Konten">
                   <strong>{partner.name}</strong>
                   {partner.website_url && <p className="partner-website">Website: <a href={partner.website_url} target="_blank" rel="noopener noreferrer">{partner.website_url}</a></p>}
                   <p className="partner-meta">Order: {partner.order}</p>
                 </td>
-                <td>
+                <td data-label="Status">
                   <button
                     className={`status-toggle ${partner.is_active ? 'active' : 'inactive'}`}
                     onClick={() => onToggleActive(partner)}
@@ -427,7 +427,7 @@ function BrandPartnersTable({ partners, loading, onEdit, onDelete, onToggleActiv
                     {partner.is_active ? 'Aktif' : 'Nonaktif'}
                   </button>
                 </td>
-                <td>
+                <td data-label="Aksi">
                   <div className="action-buttons">
                     <button className="btn-action edit" onClick={() => onEdit(partner)} title="Edit">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>

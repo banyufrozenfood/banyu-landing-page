@@ -101,7 +101,7 @@ export default function AdminLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="admin@banyu.com"
+              autoComplete="email"
             />
           </div>
           <div className="form-group">
@@ -112,7 +112,7 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="••••••••"
+              autoComplete="current-password"
             />
           </div>
           <button type="submit" className="btn-admin-login" disabled={loading}>
