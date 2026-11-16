@@ -192,37 +192,67 @@ export default function AdminHeroSlides() {
         )}
       </div>
 
-      {/* Panduan visual ringkas: satu contoh tampilan di HP */}
+      {/* Panduan visual ringkas: bandingkan tampilan laptop dan HP */}
       <div className="admin-guide-card">
         <div className="guide-header">
-          <span className="guide-icon">📱</span>
+          <span className="guide-icon">🖥️</span>
           <div>
-            <h3>Tampilan di Website (HP)</h3>
-            <p>Slide muncul paling atas di halaman beranda. Di HP teks berada di <strong>tengah bawah</strong> dengan tombol selebar layar.</p>
+            <h3>Tampilan di Website (Laptop &amp; HP)</h3>
+            <p>Slide muncul paling atas di halaman beranda. Di laptop teks berada di <strong>kiri tengah</strong>, sedangkan di HP teks pindah ke <strong>tengah bawah</strong> dengan tombol selebar layar.</p>
           </div>
         </div>
         <div className="guide-preview">
-          <div className="phone-frame">
-            <div className="phone-frame__screen">
-              <img src="/hero-guide-bg.png" alt="" className="hero-preview__bg" aria-hidden="true" />
-              <div className="hero-preview__overlay" />
-              <div className="hero-preview__content">
-                <span className="hero-preview__subtitle">Subtitle</span>
-                <h2 className="hero-preview__title">Judul Utama</h2>
-                <p className="hero-preview__desc">Deskripsi singkat, 1–2 baris di bawah judul</p>
-                <span className="hero-preview__cta">Teks Tombol</span>
-              </div>
-              <div className="hero-preview__dots" aria-hidden="true">
-                <span className="hero-preview__dot hero-preview__dot--active" />
-                <span className="hero-preview__dot" />
-                <span className="hero-preview__dot" />
+          <figure className="device-preview">
+            <figcaption className="device-preview__label">Tampilan di Laptop</figcaption>
+            <div className="laptop-frame">
+              <div className="laptop-frame__screen">
+                <div className="hero-preview hero-preview--desktop">
+                  <img src="/hero-guide-bg.png" alt="" className="hero-preview__bg" aria-hidden="true" />
+                  <div className="hero-preview__overlay" />
+                  <div className="hero-preview__content">
+                    <span className="hero-preview__subtitle">Subtitle</span>
+                    <h2 className="hero-preview__title">Judul Utama</h2>
+                    <p className="hero-preview__desc">Deskripsi singkat, 1–2 baris di bawah judul</p>
+                    <span className="hero-preview__cta">Teks Tombol</span>
+                  </div>
+                  <div className="hero-preview__dots" aria-hidden="true">
+                    <span className="hero-preview__dot hero-preview__dot--active" />
+                    <span className="hero-preview__dot" />
+                    <span className="hero-preview__dot" />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+            <div className="laptop-frame__base" aria-hidden="true" />
+          </figure>
+
+          <figure className="device-preview">
+            <figcaption className="device-preview__label">Tampilan di HP</figcaption>
+            <div className="phone-frame">
+              <div className="phone-frame__screen">
+                <div className="hero-preview hero-preview--mobile">
+                  <img src="/hero-guide-bg.png" alt="" className="hero-preview__bg" aria-hidden="true" />
+                  <div className="hero-preview__overlay" />
+                  <div className="hero-preview__content">
+                    <span className="hero-preview__subtitle">Subtitle</span>
+                    <h2 className="hero-preview__title">Judul Utama</h2>
+                    <p className="hero-preview__desc">Deskripsi singkat, 1–2 baris di bawah judul</p>
+                    <span className="hero-preview__cta">Teks Tombol</span>
+                  </div>
+                  <div className="hero-preview__dots" aria-hidden="true">
+                    <span className="hero-preview__dot hero-preview__dot--active" />
+                    <span className="hero-preview__dot" />
+                    <span className="hero-preview__dot" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </figure>
+
           <ul className="guide-preview__notes">
-            <li>Simulasi layar HP <strong>390px</strong>. Hero asli tingginya tetap <strong>480px</strong> (460px di layar kecil).</li>
-            <li>Gambar dipotong otomatis (<code>object-fit: cover</code>) — letakkan bagian penting di tengah.</li>
-            <li>Teks rata tengah dan didorong ke bawah; tombol melebar penuh; panah disembunyikan, navigasi lewat titik.</li>
+            <li><strong>Laptop:</strong> tinggi hero <strong>600px</strong>, teks rata kiri di tengah vertikal, tombol tidak melebar penuh, panah kiri/kanan tampil.</li>
+            <li><strong>HP:</strong> tinggi hero <strong>480px</strong> (460px di layar kecil), teks rata tengah didorong ke bawah, tombol melebar penuh, panah disembunyikan.</li>
+            <li>Gambar dipotong otomatis (<code>object-fit: cover</code>) — letakkan bagian penting di tengah agar aman di kedua ukuran.</li>
           </ul>
         </div>
       </div>
@@ -416,34 +446,72 @@ function HeroSlideForm({ formData, setFormData, errors, setErrors, saving, onSav
               </span>
             </div>
 
-            {/* Pratinjau live dalam bingkai HP: teks tengah-bawah seperti aslinya */}
+            {/* Pratinjau live: laptop dan HP supaya tata letak berbeda terlihat */}
             <div className="live-preview">
               <div className="form-label-row">
-                <label>Pratinjau Slide di HP (Live)</label>
-                <span className="live-preview__hint">Simulasi 390px</span>
+                <label>Pratinjau Slide (Live)</label>
+                <span className="live-preview__hint">Laptop 1280px &amp; HP 390px</span>
               </div>
-              <div className="phone-frame phone-frame--centered">
-                <div className="phone-frame__screen">
-                  <img
-                    src={previewImage}
-                    alt="Pratinjau slide"
-                    className="hero-preview__bg"
-                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x600/E5E7EB/9CA3AF?text=Gambar+Tidak+Valid'; }}
-                  />
-                  <div className="hero-preview__overlay" />
-                  <div className="hero-preview__content">
-                    {formData.subtitle && <span className="hero-preview__subtitle">{formData.subtitle}</span>}
-                    <h2 className="hero-preview__title">{formData.title || 'Judul Slide'}</h2>
-                    {formData.description && <p className="hero-preview__desc">{formData.description}</p>}
-                    {formData.cta_text && <span className="hero-preview__cta">{formData.cta_text}</span>}
+
+              <div className="live-preview__devices">
+                <figure className="device-preview">
+                  <figcaption className="device-preview__label">Laptop</figcaption>
+                  <div className="laptop-frame">
+                    <div className="laptop-frame__screen">
+                      <div className="hero-preview hero-preview--desktop">
+                        <img
+                          src={previewImage}
+                          alt="Pratinjau slide di laptop"
+                          className="hero-preview__bg"
+                          onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x600/E5E7EB/9CA3AF?text=Gambar+Tidak+Valid'; }}
+                        />
+                        <div className="hero-preview__overlay" />
+                        <div className="hero-preview__content">
+                          {formData.subtitle && <span className="hero-preview__subtitle">{formData.subtitle}</span>}
+                          <h2 className="hero-preview__title">{formData.title || 'Judul Slide'}</h2>
+                          {formData.description && <p className="hero-preview__desc">{formData.description}</p>}
+                          {formData.cta_text && <span className="hero-preview__cta">{formData.cta_text}</span>}
+                        </div>
+                        <div className="hero-preview__dots" aria-hidden="true">
+                          <span className="hero-preview__dot hero-preview__dot--active" />
+                          <span className="hero-preview__dot" />
+                          <span className="hero-preview__dot" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="hero-preview__dots" aria-hidden="true">
-                    <span className="hero-preview__dot hero-preview__dot--active" />
-                    <span className="hero-preview__dot" />
-                    <span className="hero-preview__dot" />
+                  <div className="laptop-frame__base" aria-hidden="true" />
+                </figure>
+
+                <figure className="device-preview device-preview--phone">
+                  <figcaption className="device-preview__label">HP</figcaption>
+                  <div className="phone-frame">
+                    <div className="phone-frame__screen">
+                      <div className="hero-preview hero-preview--mobile">
+                        <img
+                          src={previewImage}
+                          alt="Pratinjau slide di HP"
+                          className="hero-preview__bg"
+                          onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x600/E5E7EB/9CA3AF?text=Gambar+Tidak+Valid'; }}
+                        />
+                        <div className="hero-preview__overlay" />
+                        <div className="hero-preview__content">
+                          {formData.subtitle && <span className="hero-preview__subtitle">{formData.subtitle}</span>}
+                          <h2 className="hero-preview__title">{formData.title || 'Judul Slide'}</h2>
+                          {formData.description && <p className="hero-preview__desc">{formData.description}</p>}
+                          {formData.cta_text && <span className="hero-preview__cta">{formData.cta_text}</span>}
+                        </div>
+                        <div className="hero-preview__dots" aria-hidden="true">
+                          <span className="hero-preview__dot hero-preview__dot--active" />
+                          <span className="hero-preview__dot" />
+                          <span className="hero-preview__dot" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </figure>
               </div>
+
               {errors.image && <div className="preview-error">⚠️ URL gambar tidak valid</div>}
               {formData.image && (
                 <button
