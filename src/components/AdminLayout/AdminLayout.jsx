@@ -1,161 +1,67 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { supabase, supabaseEnvMissing } from '../../lib/supabase.js';
-import {
-  ADMIN_STATUS,
-  getAdminAllowList,
-  getLocalSession,
-  getVerifiedSession,
-  resolveAdminStatus,
-} from '../../lib/authGuard.js';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase } from '../../lib/supabase.js';
+import { useEffect, useState } from 'react';
 import './AdminLayout.css';
 import '../../pages/admin/AdminShared.css';
 
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [status, setStatus] = useState(ADMIN_STATUS.loading);
+  const [status, setStatus] = useState('loading'); // 'loading' | 'authed' | 'unauthed' | 'forbidden'
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  // Disimpan di ref supaya listener popstate/pageshow selalu memakai nilai
-  // terbaru tanpa perlu dipasang ulang.
-  const statusRef = useRef(ADMIN_STATUS.loading);
-  // Waktu verifikasi sesi terakhir ke server (0 = belum pernah).
-  const lastVerifiedRef = useRef(0);
 
-  const applyStatus = useCallback((next) => {
-    statusRef.current = next;
-    setStatus(next);
-  }, []);
-
-  const goToLogin = useCallback(() => {
-    // replace: entri riwayat halaman admin dibuang supaya tombol back tidak
-    // bisa mengembalikan panel setelah sesi hilang.
-    navigate('/admin', { replace: true });
-  }, [navigate]);
+  // Opsional: batasi email admin via VITE_ADMIN_EMAILS="a@x.com,b@y.com".
+  // Jika tidak diset, semua user terautentikasi diizinkan (perilaku lama) dan
+  // keamanan data tetap mengandalkan RLS Supabase.
+  const isEmailAllowed = (email) => {
+    const raw = (import.meta.env.VITE_ADMIN_EMAILS || '').trim();
+    if (!raw) return true;
+    const allow = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+    return allow.includes((email || '').toLowerCase());
+  };
 
   useEffect(() => {
-    let mounted = true;
-    const allowList = getAdminAllowList();
-
-    // Sesi diverifikasi ulang ke server setelah jeda ini agar token yang sudah
-    // dicabut tidak bisa dipakai masuk lewat tombol back, tanpa memanggil
-    // server pada setiap navigasi.
-    const REVERIFY_AFTER_MS = 60_000;
-
-    const markVerified = (verified) => {
-      if (verified) lastVerifiedRef.current = Date.now();
-    };
-
-    const logoutAndGoToLogin = async () => {
-      try {
-        await supabase.auth.signOut({ scope: 'local' });
-      } catch {
-        // Diabaikan: status lokal sudah dipaksa keluar di bawah.
-      }
-      if (!mounted) return;
-      applyStatus(ADMIN_STATUS.unauthed);
-      goToLogin();
-    };
-
-    // Ambil sesi yang sudah diverifikasi bila sudah lewat REVERIFY_AFTER_MS,
-    // selain itu cukup baca penyimpanan lokal (instan).
-    const getFreshSession = async () => {
-      if (Date.now() - lastVerifiedRef.current <= REVERIFY_AFTER_MS) {
-        return getLocalSession(supabase);
-      }
-      const { session, verified } = await getVerifiedSession(supabase);
-      markVerified(verified);
-      // Server tidak bisa dihubungi: pakai sesi lokal agar tidak memaksa
-      // logout hanya karena jaringan bermasalah.
-      return verified ? session : getLocalSession(supabase);
-    };
-
+    // Check if user is logged in
+    let mounted = true
     const checkUser = async () => {
-      // Tanpa env Supabase, klien memakai URL placeholder: jangan pernah
-      // menganggap pengguna masuk.
-      if (supabaseEnvMissing) {
-        applyStatus(ADMIN_STATUS.unauthed);
-        return;
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (!mounted) return
+        if (error || !session) {
+          setStatus('unauthed');
+          navigate('/admin', { replace: true });
+        } else if (!isEmailAllowed(session.user?.email)) {
+          await supabase.auth.signOut();
+          setStatus('forbidden');
+          navigate('/admin', { replace: true });
+        } else {
+          setStatus('authed');
+        }
+      } catch {
+        if (!mounted) return
+        setStatus('unauthed');
+        navigate('/admin', { replace: true });
       }
-      const verified = await getVerifiedSession(supabase);
-      markVerified(verified.verified);
-      if (!mounted) return;
-      const effective = verified.verified ? verified.session : await getLocalSession(supabase);
-      if (!mounted) return;
-      const next = resolveAdminStatus(effective, allowList);
-      if (next === ADMIN_STATUS.forbidden) {
-        await logoutAndGoToLogin();
-        return;
-      }
-      applyStatus(next);
-      if (next === ADMIN_STATUS.unauthed) goToLogin();
     };
-
     checkUser();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
+      if (!mounted) return
       if (event === 'SIGNED_OUT' || !session) {
-        applyStatus(ADMIN_STATUS.unauthed);
-        goToLogin();
-        return;
+        setStatus('unauthed');
+        navigate('/admin', { replace: true });
+      } else if (!isEmailAllowed(session.user?.email)) {
+        await supabase.auth.signOut();
+        setStatus('forbidden');
+        navigate('/admin', { replace: true });
+      } else {
+        setStatus('authed');
       }
-      // Hanya event yang benar-benar menandakan sesi baru yang boleh membuka
-      // panel. Event lain (mis. USER_UPDATED) tidak mengubah status.
-      if (!['SIGNED_IN', 'INITIAL_SESSION', 'TOKEN_REFRESHED'].includes(event)) return;
-      const next = resolveAdminStatus(session, allowList);
-      if (next === ADMIN_STATUS.forbidden) {
-        await logoutAndGoToLogin();
-        return;
-      }
-      applyStatus(next);
     });
-
-    // Tombol back/forward: pakai sesi yang masih segar (tanpa permintaan
-    // jaringan) supaya navigasi tidak terasa lambat, tetapi sesi tetap
-    // diverifikasi ulang ke server bila sudah lewat REVERIFY_AFTER_MS.
-    const handlePopState = async () => {
-      if (supabaseEnvMissing) return;
-      if (statusRef.current === ADMIN_STATUS.loading) return;
-
-      const session = await getFreshSession();
-      if (!mounted) return;
-
-      const next = resolveAdminStatus(session, allowList);
-      if (next === ADMIN_STATUS.forbidden) {
-        await logoutAndGoToLogin();
-        return;
-      }
-      applyStatus(next);
-      if (next === ADMIN_STATUS.unauthed) goToLogin();
-    };
-
-    // Halaman dipulihkan dari bfcache: status di memori bisa sudah basi.
-    const handlePageShow = async (event) => {
-      if (!event.persisted) return;
-      if (supabaseEnvMissing) return;
-      const { session, verified } = await getVerifiedSession(supabase);
-      markVerified(verified);
-      if (!mounted) return;
-      const next = resolveAdminStatus(session, allowList);
-      if (next === ADMIN_STATUS.forbidden) {
-        await logoutAndGoToLogin();
-        return;
-      }
-      applyStatus(next);
-      if (next === ADMIN_STATUS.unauthed) goToLogin();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('pageshow', handlePageShow);
-
     return () => {
-      mounted = false;
-      subscription?.unsubscribe();
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('pageshow', handlePageShow);
-    };
-  }, [navigate, applyStatus, goToLogin]);
+      mounted = false
+      subscription?.unsubscribe()
+    }
+  }, [navigate]);
 
   // Close sidebar on route change in mobile
   useEffect(() => {
@@ -176,21 +82,8 @@ export default function AdminLayout() {
   }, [isSidebarOpen])
 
   const handleLogout = async () => {
-    // Tutup panel lebih dulu supaya konten admin tidak sempat terlihat lagi,
-    // lalu hapus entri riwayat halaman admin agar tombol back tidak
-    // mengembalikan pengguna ke dashboard tanpa login ulang.
-    applyStatus(ADMIN_STATUS.unauthed);
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // Jaringan gagal: paksa keluar dari sisi klien saja.
-      try {
-        await supabase.auth.signOut({ scope: 'local' });
-      } catch {
-        // Diabaikan: status sudah 'unauthed'.
-      }
-    }
-    navigate('/admin', { replace: true });
+    await supabase.auth.signOut();
+    navigate('/admin');
   };
 
   const toggleSidebar = () => {
@@ -198,7 +91,7 @@ export default function AdminLayout() {
   };
 
   // Never render protected content until a session is confirmed.
-  if (status !== ADMIN_STATUS.authed) {
+  if (status !== 'authed') {
     return <div className="admin-loading">Memuat...</div>;
   }
 
