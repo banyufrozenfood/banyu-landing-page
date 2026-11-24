@@ -48,4 +48,11 @@ assert.deepEqual(summary.daily, [
   { date: '2026-11-08', visitors: 2, pageViews: 3 },
 ])
 
+// Event tanpa session_id tetap valid saat agregasi
+const summaryWithoutSession = aggregateAnalyticsEvents([
+  { event_type: 'page_view', event_name: '/', visitor_id: 'visitor-9', page_path: '/', created_at: '2026-11-08T08:00:00.000Z' },
+])
+assert.equal(summaryWithoutSession.visitors, 1)
+assert.equal(summaryWithoutSession.pageViews, 1)
+
 console.log('analytics helpers: ok')

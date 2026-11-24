@@ -71,11 +71,15 @@ export function shouldTrackPageView(storage, path) {
   }
 }
 
-export function validateAnalyticsEvent(event) {
+export function validateAnalyticsEvent(event, { requireSessionId = true } = {}) {
   if (!event || !EVENT_TYPES.has(event.event_type)) return false
   if (!event.event_name || typeof event.event_name !== 'string' || event.event_name.length > 120) return false
   if (!event.visitor_id || !/^[a-zA-Z0-9-]{8,128}$/.test(event.visitor_id)) return false
-  if (!event.session_id || !/^[a-zA-Z0-9-]{8,128}$/.test(event.session_id)) return false
+  if (requireSessionId) {
+    if (!event.session_id || !/^[a-zA-Z0-9-]{8,128}$/.test(event.session_id)) return false
+  } else if (event.session_id && !/^[a-zA-Z0-9-]{8,128}$/.test(event.session_id)) {
+    return false
+  }
   if (event.page_path && (!event.page_path.startsWith('/') || event.page_path.length > 2048)) return false
   if (event.event_type === 'channel_click' && !CHANNELS.has(event.event_name)) return false
   return event.event_type !== 'page_view' || event.event_name.startsWith('/')
@@ -86,7 +90,7 @@ export function aggregateAnalyticsEvents(events, { start, end } = {}) {
   const endMs = end ? new Date(end).getTime() : Infinity
   const filtered = (events || []).filter((event) => {
     const timestamp = new Date(event.created_at).getTime()
-    return validateAnalyticsEvent(event) && timestamp >= startMs && timestamp < endMs
+    return validateAnalyticsEvent(event, { requireSessionId: false }) && timestamp >= startMs && timestamp < endMs
   })
   const visitors = new Set(filtered.map((event) => event.visitor_id).filter(Boolean))
   const dailyMap = new Map()

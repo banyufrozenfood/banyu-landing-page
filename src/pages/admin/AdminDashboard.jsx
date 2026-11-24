@@ -88,7 +88,7 @@ export default function AdminDashboard() {
       try {
         const query = supabase
           .from('analytics_events')
-          .select('event_type, event_name, visitor_id, created_at')
+          .select('event_type, event_name, visitor_id, session_id, created_at')
           .gte('created_at', startOfDays(30).toISOString())
         const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 5000))
         const result = await Promise.race([query, timeout])
